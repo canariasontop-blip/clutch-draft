@@ -1,0 +1,10 @@
+node_modules/
+.env
+.pm2/
+.cache/
+.npm/
+.ssh/
+snap/
+*.db-shm
+*.db-wal
+.bash_history

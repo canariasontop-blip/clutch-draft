@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Draft</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #00ffcc;
+            --accent:  #a066ff;
+            --bg:      #050507;
+            --card:    #0f0f14;
+            --border:  rgba(255,255,255,0.06);
+        }
+        body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
+        body::before {
+            content:'';
+            position:fixed; inset:0;
+            background:
+                radial-gradient(ellipse at 5% 50%, rgba(0,255,204,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 95% 20%, rgba(160,102,255,0.04) 0%, transparent 50%);
+            pointer-events:none;
+        }
+
+        /* ── NAV ── */
+        nav {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 36px;
+            background:rgba(15,15,20,0.95);
+            border-bottom:1px solid var(--border);
+            backdrop-filter:blur(20px);
+            position:sticky; top:0; z-index:200;
+        }
+        .nav-logo { font-size:1.2rem; font-weight:900; letter-spacing:4px; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-links { display:flex; gap:6px; }
+        .nav-link { color:#555; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
+        .nav-link:hover,.nav-link.active { color:var(--primary); background:rgba(0,255,204,0.08); }
+        .nav-link.admin { color:var(--accent); }
+        .nav-link.admin:hover { background:rgba(160,102,255,0.08); }
+        .nav-user { display:flex; align-items:center; gap:10px; }
+        .nav-avatar { width:34px; height:34px; border-radius:50%; border:2px solid var(--primary); }
+        .logout { color:#ff4d4d; text-decoration:none; font-size:0.75rem; padding:6px 10px; border-radius:6px; }
+        .logout:hover { background:rgba(255,77,77,0.1); }
+
+        /* ── TIMER BANNER ── */
+        .turn-banner {
+            max-width:1400px; margin:24px auto;
+            padding:20px 36px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:16px;
+            display:flex; align-items:center; justify-content:space-between;
+            transition:0.4s;
+        }
+        .turn-banner.mi-turno {
+            border-color:rgba(0,255,204,0.4);
+            background:rgba(0,255,204,0.06);
+            box-shadow:0 0 30px rgba(0,255,204,0.08);
+            animation:glow 2s infinite;
+        }
+        @keyframes glow {
+            0%,100% { box-shadow:0 0 20px rgba(0,255,204,0.05); }
+            50%      { box-shadow:0 0 40px rgba(0,255,204,0.15); }
+        }
+        .turn-info h2 { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:4px; }
+        .turn-nombre { font-size:1.4rem; font-weight:900; color:var(--primary); }
+        .turn-badge {
+            background:rgba(0,255,204,0.15); color:var(--primary);
+            padding:6px 14px; border-radius:8px;
+            font-size:0.8rem; font-weight:700; letter-spacing:1px;
+        }
+        .timer-display {
+            font-size:2.5rem; font-weight:900;
+            font-family:'Courier New',monospace;
+            color:var(--primary);
+            min-width:80px; text-align:right;
+        }
+        .timer-display.warning { color:#ffcc00 !important; }
+        .timer-display.danger  { color:#ff4d4d !important; animation:blink 0.5s infinite; }
+        @keyframes blink { 50% { opacity:0.5; } }
+
+        /* Draft cerrado */
+        .draft-cerrado {
+            max-width:1400px; margin:24px auto;
+            padding:20px 36px;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:16px;
+            text-align:center;
+            color:#444; font-size:0.9rem;
+        }
+
+        /* ── MAIN LAYOUT ── */
+        .container { max-width:1400px; margin:0 auto; padding:0 24px 40px; }
+        .draft-grid {
+            display:grid;
+            grid-template-columns:320px 1fr;
+            gap:20px;
+            align-items:start;
+        }
+
+        /* ── MI EQUIPO (left panel) ── */
+        .team-panel {
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:20px;
+            padding:24px;
+            position:sticky; top:90px;
+        }
+        .panel-title { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+        .pos-slot {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; border-radius:10px;
+            background:rgba(255,255,255,0.02);
+            border:1px solid var(--border);
+            margin-bottom:8px;
+            transition:0.2s;
+        }
+        .pos-slot.filled { background:rgba(0,255,204,0.04); border-color:rgba(0,255,204,0.15); }
+        .pos-badge-sm {
+            font-size:0.65rem; font-weight:700; padding:3px 7px;
+            border-radius:5px; min-width:36px; text-align:center;
+        }
+        .pos-DC   { background:rgba(0,255,204,0.15);  color:#00ffcc; }
+        .pos-MC   { background:rgba(160,102,255,0.15); color:#a066ff; }
+        .pos-CARR { background:rgba(255,204,0,0.15);  color:#ffcc00; }
+        .pos-DFC  { background:rgba(255,77,77,0.15);  color:#ff4d4d; }
+        .pos-POR  { background:rgba(51,153,255,0.15); color:#3399ff; }
+        .slot-nombre { flex:1; font-size:0.85rem; font-weight:600; }
+        .slot-vacio  { color:#333; font-size:0.8rem; font-style:italic; }
+
+        .limites-grid {
+            display:grid; grid-template-columns:repeat(5,1fr); gap:6px;
+            margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
+        }
+        .limite-box { text-align:center; }
+        .limite-num { font-size:1rem; font-weight:900; }
+        .limite-label { font-size:0.6rem; color:#444; text-transform:uppercase; margin-top:2px; }
+        .limite-full { color:#ff4d4d !important; }
+
+        .no-capitan-msg {
+            text-align:center; padding:20px 0;
+            color:#333; font-size:0.85rem; line-height:1.6;
+        }
+
+        /* ── LISTA DE JUGADORES (right) ── */
+        .players-panel {
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:20px;
+            padding:24px;
+        }
+
+        .filters {
+            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
+        }
+        .filter-btn {
+            padding:7px 16px; border-radius:8px;
+            border:1px solid var(--border);
+            background:transparent; color:#555;
+            font-size:0.8rem; font-weight:600; cursor:pointer;
+            transition:0.2s; text-transform:uppercase;
+        }
+        .filter-btn.active, .filter-btn:hover { color:#fff; border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); }
+        .filter-btn.active.dc   { border-color:#00ffcc; color:#00ffcc; background:rgba(0,255,204,0.08); }
+        .filter-btn.active.mc   { border-color:#a066ff; color:#a066ff; background:rgba(160,102,255,0.08); }
+        .filter-btn.active.carr { border-color:#ffcc00; color:#ffcc00; background:rgba(255,204,0,0.08); }
+        .filter-btn.active.dfc  { border-color:#ff4d4d; color:#ff4d4d; background:rgba(255,77,77,0.08); }
+        .filter-btn.active.por  { border-color:#3399ff; color:#3399ff; background:rgba(51,153,255,0.08); }
+
+        .search-box {
+            width:100%; background:rgba(255,255,255,0.03);
+            border:1px solid var(--border); border-radius:10px;
+            padding:10px 16px; color:#fff; font-size:0.9rem;
+            margin-bottom:20px; outline:none; transition:0.2s;
+        }
+        .search-box:focus { border-color:rgba(0,255,204,0.3); }
+        .search-box::placeholder { color:#333; }
+
+        .players-grid {
+            display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;
+        }
+
+        .player-card {
+            background:rgba(255,255,255,0.02);
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:16px;
+            transition:0.25s;
+            position:relative;
+            overflow:hidden;
+        }
+        .player-card:hover { border-color:rgba(255,255,255,0.15); transform:translateY(-3px); }
+        .player-card.mi-turno-pick:hover {
+            border-color:rgba(0,255,204,0.4);
+            background:rgba(0,255,204,0.04);
+            cursor:pointer;
+        }
+
+        .player-foto {
+            width:52px; height:52px; border-radius:50%;
+            object-fit:cover; margin-bottom:10px;
+            border:2px solid var(--border);
+        }
+        .player-nombre { font-size:0.9rem; font-weight:700; margin-bottom:4px; }
+        .player-pos { display:inline-block; }
+        .player-tel { font-size:0.7rem; color:#444; margin-top:6px; }
+        .player-tel i { margin-right:4px; }
+
+        .btn-pick {
+            display:none;
+            width:100%; margin-top:12px;
+            padding:9px; border-radius:8px;
+            border:none; background:var(--primary); color:#000;
+            font-weight:700; font-size:0.8rem; cursor:pointer;
+            transition:0.2s;
+        }
+        .btn-pick:hover { background:#fff; }
+        .mi-turno-pick .btn-pick { display:block; }
+
+        .no-players { text-align:center; color:#333; padding:40px; grid-column:1/-1; }
+
+        /* Orden de draft */
+        .snake-order {
+            margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
+        }
+        .order-title { font-size:0.65rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
+        .order-list { display:flex; flex-direction:column; gap:6px; }
+        .order-item {
+            display:flex; align-items:center; gap:10px;
+            padding:8px 10px; border-radius:8px;
+            font-size:0.8rem; font-weight:600;
+            transition:0.2s;
+        }
+        .order-item.activo { background:rgba(0,255,204,0.08); color:var(--primary); border:1px solid rgba(0,255,204,0.2); }
+        .order-item.otro   { color:#444; }
+        .order-num { font-size:0.65rem; color:#333; width:16px; }
+
+        @media (max-width:900px) {
+            .draft-grid { grid-template-columns:1fr; }
+            .team-panel { position:static; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <div class="nav-links">
+        <a href="/hub"           class="nav-link">Hub</a>
+        <a href="/draft"         class="nav-link active">Draft</a>
+        <a href="/clasificacion" class="nav-link">Clasificación</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar">
+        <span style="font-size:0.85rem;font-weight:600;"><%= user.username %></span>
+        <a href="/logout" class="logout"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<!-- TURN BANNER -->
+<% if (draftEstado === 'abierto') { %>
+    <div class="turn-banner <%= turnoActual === user.username ? 'mi-turno' : '' %>" id="turn-banner">
+        <div class="turn-info">
+            <h2>Turno actual</h2>
+            <div class="turn-nombre" id="turn-nombre"><%= turnoActual %></div>
+        </div>
+        <% if (turnoActual === user.username) { %>
+            <span class="turn-badge" id="mi-turno-badge">⚡ ES TU TURNO</span>
+        <% } else { %>
+            <span class="turn-badge" id="mi-turno-badge" style="display:none;">⚡ ES TU TURNO</span>
+        <% } %>
+        <div class="timer-display" id="timer"><%= tiempoRestante %></div>
+    </div>
+<% } else { %>
+    <div class="draft-cerrado">
+        <i class="fas fa-lock" style="margin-right:8px;"></i>
+        El draft está cerrado. Espera a que el administrador lo abra.
+    </div>
+<% } %>
+
+<div class="container">
+<div class="draft-grid">
+
+<!-- ── PANEL IZQUIERDO: Mi Equipo ── -->
+    <div class="team-panel">
+        <div class="panel-title"><i class="fas fa-shield-alt"></i> Mi Equipo</div>
+
+        <% if (user.esCapitan) { %>
+
+            <!-- Renombrar equipo -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size:0.7rem; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
+                    Nombre del equipo
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <input 
+                        type="text" 
+                        id="inputNombreEquipo"
+                        placeholder="<%= miEquipo?.nombre_equipo || user.username %>"
+                        value="<%= miEquipo?.nombre_equipo || '' %>"
+                        style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#fff; padding:8px 12px; border-radius:8px; font-size:0.85rem; outline:none;"
+                    >
+                    <button 
+                        onclick="renombrarEquipo()"
+                        style="background:var(--primary); color:#000; border:none; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.8rem;">
+                        OK
+                    </button>
+                </div>
+                <div id="msg-renombrar" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
+                    ✅ Nombre actualizado
+                </div>
+            </div>
+
+            <!-- Subir escudo -->
+            <div style="margin-bottom: 20px;">
+                <div style="font-size:0.7rem; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
+                    Escudo del equipo
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <% if (miEquipo?.logo_url) { %>
+                        <img src="<%= miEquipo.logo_url %>" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(0,255,204,0.3);">
+                    <% } %>
+                    <label style="flex:1; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.8rem; color:#555; text-align:center;">
+                        <i class="fas fa-upload" style="margin-right:6px;"></i>
+                        Subir escudo
+                        <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
+                    </label>
+                </div>
+                <div id="msg-escudo" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
+                    ✅ Escudo actualizado
+                </div>
+            </div>
+                    </button>
+                </div>
+                <div id="msg-renombrar" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
+                    ✅ Nombre actualizado
+                </div>
+            </div>
+
+            <!-- Lista de jugadores fichados -->
+            <% const POSORDEN = ['POR','DFC','CARR','MC','DC']; %>
+            <% POSORDEN.forEach(pos => { %>
+                <% const delPos = misJugadores.filter(j => j.posicion === pos); %>
+                <% const lim = LIMS[pos]; %>
+                <% for (let i = 0; i < lim; i++) { %>
+                    <div class="pos-slot <%= delPos[i] ? 'filled' : 'empty' %>" data-pos="<%= pos %>">
+                        <span class="pos-badge-sm pos-<%= pos %>"><%= pos %></span>
+                        <% if (delPos[i]) { %>
+                            <span class="slot-nombre"><%= delPos[i].nombre %></span>
+                            <span class="slot-vacio" style="display:none;">Vacío</span>
+                        <% } else { %>
+                            <span class="slot-nombre" style="display:none;"></span>
+                            <span class="slot-vacio">Vacío</span>
+                        <% } %>
+                    </div>
+                <% } %>
+            <% }) %>
+
+        <% } else { %>
+            <div class="no-capitan-msg">
+                <i class="fas fa-discord" style="font-size:2rem;color:#333;margin-bottom:12px;display:block;"></i>
+                Regístrate como capitán en Discord con <strong>!panel</strong> para ver tu equipo aquí.
+            </div>
+        <% } %>
+
+        <!-- Orden snake -->
+        <% if (teams.length > 0) { %>
+            <div class="snake-order">
+                <div class="order-title">Orden de picks</div>
+                <div class="order-list">
+                    <% teams.forEach((t, i) => { %>
+                        <div class="order-item <%= t.capitan_username === turnoActual ? 'activo' : 'otro' %>"
+                             data-capitan="<%= t.capitan_username %>">
+                            <span class="order-num"><%= i+1 %></span>
+                            <%= t.capitan_username %>
+                            <i class="fas fa-caret-right order-arrow" style="margin-left:auto;<%= t.capitan_username !== turnoActual ? 'display:none;' : '' %>"></i>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+    <!-- ── PANEL DERECHO: Jugadores disponibles ── -->
+    <div class="players-panel">
+        <div class="panel-title"><i class="fas fa-users"></i> Jugadores disponibles (<span id="count"><%= jugadores.length %></span>)</div>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="filtrar('TODOS', this)">Todos</button>
+            <button class="filter-btn dc"   onclick="filtrar('DC',   this)">DC</button>
+            <button class="filter-btn carr" onclick="filtrar('CARR', this)">CARR</button>
+            <button class="filter-btn mc"   onclick="filtrar('MC',   this)">MC</button>
+            <button class="filter-btn dfc"  onclick="filtrar('DFC',  this)">DFC</button>
+            <button class="filter-btn por"  onclick="filtrar('POR',  this)">POR</button>
+        </div>
+
+        <input type="text" class="search-box" placeholder="Buscar jugador..." oninput="buscar(this.value)" id="search">
+
+        <div class="players-grid" id="players-grid">
+            <% const esMiTurno = draftEstado === 'abierto' && turnoActual === user.username && user.esCapitan; %>
+            <% jugadores.forEach(j => { %>
+                <div class="player-card <%= esMiTurno ? 'mi-turno-pick' : '' %>"
+                     data-id="<%= j.discord_id %>"
+                     data-pos="<%= j.posicion %>"
+                     data-nombre="<%= j.nombre.toLowerCase() %>"
+                     onclick="<%= esMiTurno ? `fichar('${j.discord_id}', '${j.nombre}')` : '' %>">
+                    <img src="<%= j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png' %>"
+                         class="player-foto" alt="">
+                    <div class="player-nombre"><%= j.nombre %></div>
+                    <span class="pos-badge-sm pos-<%= j.posicion %> player-pos"><%= j.posicion %></span>
+                    <% if (j.telefono) { %>
+                        <div class="player-tel"><i class="fab fa-whatsapp"></i><%= j.telefono %></div>
+                    <% } %>
+                    <% if (esMiTurno) { %>
+                        <button class="btn-pick">⚡ FICHAR</button>
+                    <% } %>
+                </div>
+            <% }) %>
+            <% if (jugadores.length === 0) { %>
+                <div class="no-players">No hay jugadores disponibles</div>
+            <% } %>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    window.__CLUTCH__ = {
+        username:  '<%= user.username %>',
+        esCapitan: <%= user.esCapitan ? "true" : "false" %>,
+        turno:     '<%= turnoActual %>',
+        estado:    '<%= draftEstado %>',
+        timer:     <%= tiempoRestante %>,
+    };
+
+    async function renombrarEquipo() {
+        const nombre = document.getElementById('inputNombreEquipo').value.trim();
+        if (!nombre) return;
+
+        const res = await fetch('/equipo/renombrar', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ nombre_equipo: nombre })
+        });
+
+        if (res.ok) {
+            const msg = document.getElementById('msg-renombrar');
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 3000);
+        async function subirEscudo(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('escudo', input.files[0]);
+
+    const res = await fetch('/equipo/escudo', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (res.ok) {
+        const data = await res.json();
+        const msg = document.getElementById('msg-escudo');
+        msg.style.display = 'block';
+        setTimeout(() => {
+            msg.style.display = 'none';
+            location.reload();
+        }, 1500);
+    }
+}
+        }
+    }
+</script>
+<script src="/js/main.js"></script>
+</body>
+</html>

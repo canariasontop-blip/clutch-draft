@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #00ffcc;
+            --accent:  #a066ff;
+            --bg:      #050507;
+            --card:    #0f0f14;
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        /* Fondo animado */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(0,255,204,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(160,102,255,0.07) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+        .login-card {
+            position: relative;
+            background: var(--card);
+            border: 1px solid rgba(0,255,204,0.15);
+            border-radius: 24px;
+            padding: 60px 50px;
+            width: 420px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,255,204,0.05);
+        }
+        .logo {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #555;
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #1a1a2e;
+            margin: 30px 0;
+        }
+        .btn-discord {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #5865F2;
+            color: #fff;
+            text-decoration: none;
+            padding: 16px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-discord:hover {
+            background: #4752C4;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(88,101,242,0.4);
+        }
+        .btn-discord i { font-size: 1.3rem; }
+        .info-text {
+            margin-top: 25px;
+            color: #333;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+        <% if (error) { %>
+        .error-msg {
+            background: rgba(255,77,77,0.1);
+            border: 1px solid rgba(255,77,77,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+        <% } %>
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="login-card">
+        <div class="logo">CLUTCH</div>
+        <div class="subtitle">Draft System</div>
+
+        <% if (error) { %>
+            <div class="error-msg"><i class="fas fa-exclamation-triangle"></i> <%= error %></div>
+        <% } %>
+
+        <a href="/auth/discord" class="btn-discord">
+            <i class="fab fa-discord"></i>
+            ENTRAR CON DISCORD
+        </a>
+        <hr class="divider">
+        <p class="info-text">
+            Necesitas una cuenta de Discord para acceder.<br>
+            Solo usamos tu nombre de usuario y avatar.
+        </p>
+    </div>
+</body>
+</html>

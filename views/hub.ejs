@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #00ffcc;
+            --accent:  #a066ff;
+            --bg:      #050507;
+            --card:    #0f0f14;
+            --border:  rgba(255,255,255,0.06);
+        }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 10% 20%, rgba(0,255,204,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(160,102,255,0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* ── NAV ── */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: rgba(15,15,20,0.9);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-logo {
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 8px; align-items: center; }
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: 0.2s;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--primary); background: rgba(0,255,204,0.08); }
+        .nav-link.admin-link { color: var(--accent); }
+        .nav-link.admin-link:hover { background: rgba(160,102,255,0.1); }
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
+        .nav-username { font-size: 0.9rem; font-weight: 600; }
+        .logout-btn {
+            color: #ff4d4d;
+            text-decoration: none;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+        .logout-btn:hover { background: rgba(255,77,77,0.1); }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1300px; margin: 0 auto; padding: 40px 30px; }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .hero p { color: #444; font-size: 0.95rem; letter-spacing: 2px; }
+
+        /* Draft status banner */
+        .draft-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 16px 30px;
+            border-radius: 12px;
+            margin-bottom: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+        .draft-banner.abierto {
+            background: rgba(0,255,204,0.08);
+            border: 1px solid rgba(0,255,204,0.3);
+            color: var(--primary);
+        }
+        .draft-banner.cerrado {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: #444;
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .dot.pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .stat-card:hover { border-color: rgba(0,255,204,0.2); transform: translateY(-3px); }
+        .stat-card .num {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Main grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .card:last-child { margin-bottom: 0; }
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Clasificación top 5 */
+        .rank-list { list-style: none; }
+        .rank-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .rank-item:last-child { border-bottom: none; }
+        .rank-pos {
+            font-size: 1.2rem;
+            font-weight: 900;
+            width: 30px;
+            text-align: center;
+        }
+        .rank-pos.gold   { color: #ffd700; }
+        .rank-pos.silver { color: #c0c0c0; }
+        .rank-pos.bronze { color: #cd7f32; }
+        .rank-pos.other  { color: #333; }
+        .rank-name { flex: 1; font-weight: 600; }
+        .rank-pts {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .rank-record { font-size: 0.75rem; color: #444; }
+
+        /* Últimos fichajes */
+        .fichaje-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .fichaje-item:last-child { border-bottom: none; }
+        .pos-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 5px;
+            min-width: 38px;
+            text-align: center;
+        }
+        .pos-DC   { background: rgba(0,255,204,0.15);  color: #00ffcc; }
+        .pos-MC   { background: rgba(160,102,255,0.15); color: #a066ff; }
+        .pos-CARR { background: rgba(255,204,0,0.15);  color: #ffcc00; }
+        .pos-DFC  { background: rgba(255,77,77,0.15);  color: #ff4d4d; }
+        .pos-POR  { background: rgba(51,153,255,0.15); color: #3399ff; }
+        .fichaje-info { flex: 1; }
+        .fichaje-nombre { font-size: 0.9rem; font-weight: 600; }
+        .fichaje-equipo { font-size: 0.75rem; color: #444; }
+
+        /* Accesos rápidos */
+        .quick-links { display: flex; flex-direction: column; gap: 10px; }
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            text-decoration: none;
+            color: #ccc;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: 0.25s;
+        }
+        .quick-link:hover {
+            background: rgba(0,255,204,0.06);
+            border-color: rgba(0,255,204,0.25);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        .quick-link i { width: 20px; text-align: center; font-size: 1rem; }
+        .quick-link.accent-link:hover {
+            background: rgba(160,102,255,0.06);
+            border-color: rgba(160,102,255,0.25);
+            color: var(--accent);
+        }
+
+        /* Turno actual */
+        .turno-card {
+            background: rgba(0,255,204,0.05);
+            border: 1px solid rgba(0,255,204,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .turno-label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+        .turno-nombre { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            nav { padding: 14px 20px; }
+            .hero h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <div class="nav-links">
+        <a href="/hub"           class="nav-link active">Hub</a>
+        <a href="/draft"         class="nav-link">Draft</a>
+        <a href="/clasificacion" class="nav-link">Clasificación</a>
+        <% if (user.esAdmin) { %>
+            <a href="/admin" class="nav-link admin-link"><i class="fas fa-shield-alt"></i> Admin</a>
+        <% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>CLUTCH DRAFT</h1>
+        <p>Centro de operaciones</p>
+    </div>
+
+    <!-- Estado del draft -->
+    <div class="draft-banner <%= draftEstado %>">
+        <div class="dot <%= draftEstado === 'abierto' ? 'pulse' : '' %>"></div>
+        <% if (draftEstado === 'abierto') { %>
+            DRAFT EN CURSO — Turno de <strong>&nbsp;<%= turnoActual %></strong>
+        <% } else { %>
+            DRAFT CERRADO — En espera de inicio
+        <% } %>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="num"><%= totalJugadores %></div>
+            <div class="label">Jugadores inscritos</div>
+        </div>
+        <div class="stat-card">
+            <div class="num"><%= totalFichados %></div>
+            <div class="label">Fichados</div>
+        </div>
+        <div class="stat-card">
+            <div class="num"><%= totalEquipos %></div>
+            <div class="label">Equipos</div>
+        </div>
+        <div class="stat-card">
+            <div class="num"><%= totalJugadores - totalFichados %></div>
+            <div class="label">Disponibles</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- IZQUIERDA -->
+        <div>
+            <!-- Clasificación TOP 5 -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-trophy"></i> Clasificación — Top 5</div>
+                <% if (top5.length > 0) { %>
+                    <ul class="rank-list">
+                        <% top5.forEach((eq, i) => { %>
+                            <li class="rank-item">
+                                <span class="rank-pos <%= i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'other' %>">
+                                    #<%= i + 1 %>
+                                </span>
+                                <span class="rank-name"><%= eq.equipo_nombre %></span>
+                                <span class="rank-record"><%= eq.pg %>V <%= eq.pe %>E <%= eq.pp %>D</span>
+                                <span class="rank-pts"><%= eq.puntos %> pts</span>
+                            </li>
+                        <% }) %>
+                    </ul>
+                    <a href="/clasificacion" style="display:block; margin-top:16px; font-size:0.8rem; color:var(--primary); text-decoration:none;">
+                        Ver tabla completa →
+                    </a>
+                <% } else { %>
+                    <p style="color:#333; font-size:0.9rem;">La clasificación estará disponible cuando comiencen los partidos.</p>
+                <% } %>
+            </div>
+
+            <!-- Últimos fichajes -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-bolt"></i> Últimos fichajes</div>
+                <% if (ultimosFichajes.length > 0) { %>
+                    <% ultimosFichajes.forEach(f => { %>
+                        <div class="fichaje-item">
+                            <span class="pos-badge pos-<%= f.posicion %>"><%= f.posicion %></span>
+                            <div class="fichaje-info">
+                                <div class="fichaje-nombre"><%= f.nombre %></div>
+                                <div class="fichaje-equipo">→ <%= f.equipo %></div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p style="color:#333; font-size:0.9rem;">Los fichajes aparecerán aquí en tiempo real.</p>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- DERECHA -->
+        <div>
+            <!-- Turno actual (si el draft está abierto) -->
+            <% if (draftEstado === 'abierto') { %>
+                <div class="turno-card" style="margin-bottom: 16px;">
+                    <div class="turno-label">Turno actual</div>
+                    <div class="turno-nombre" id="turno-live"><%= turnoActual %></div>
+                </div>
+            <% } %>
+
+            <!-- Accesos rápidos -->
+            <div class="card">
+                <div class="card-title"><i class="fas fa-th"></i> Navegación</div>
+                <div class="quick-links">
+                    <a href="/draft" class="quick-link">
+                        <i class="fas fa-users"></i> Ir al Draft
+                    </a>
+                    <a href="/clasificacion" class="quick-link">
+                        <i class="fas fa-table"></i> Clasificación
+                    </a>
+                    <% if (!user.esCapitan) { %>
+                        <a href="#" class="quick-link" style="opacity:0.4; cursor:not-allowed;">
+                            <i class="fas fa-crown"></i> Mi Equipo (regístrate en Discord)
+                        </a>
+                    <% } else { %>
+                        <a href="/draft" class="quick-link">
+                            <i class="fas fa-crown"></i> Mi Equipo
+                        </a>
+                    <% } %>
+                    <% if (user.esAdmin) { %>
+                        <a href="/admin" class="quick-link accent-link">
+                            <i class="fas fa-shield-alt"></i> Panel de Admin
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Info del sistema -->
+            <div class="card" style="margin-top: 16px;">
+                <div class="card-title"><i class="fas fa-info-circle"></i> Sistema</div>
+                <p style="font-size:0.82rem; color:#444; line-height:1.7;">
+                    Inscríbete en el draft desde el servidor de Discord.<br>
+                    Los capitanes fichan jugadores por turnos (snake draft).<br>
+                    Sigue los partidos en la sección de Clasificación.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    window.__CLUTCH__ = {
+        username:  '<%= user.username %>',
+        esCapitan: <%= user.esCapitan ? "true" : "false" %>,
+    };
+</script>
+<script src="/js/main.js"></script>
+</body>
+</html>

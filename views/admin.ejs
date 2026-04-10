@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#00ffcc; --accent:#a066ff; --danger:#ff4d4d; --bg:#050507; --card:#0f0f14; --border:rgba(255,255,255,0.06); }
+        body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
+
+        nav {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 36px; background:rgba(15,15,20,0.95);
+            border-bottom:1px solid var(--border); backdrop-filter:blur(20px);
+            position:sticky; top:0; z-index:200;
+        }
+        .nav-logo { font-size:1.2rem; font-weight:900; letter-spacing:4px; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-links { display:flex; gap:6px; }
+        .nav-link { color:#555; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
+        .nav-link:hover { color:#fff; background:rgba(255,255,255,0.05); }
+        .nav-link.active { color:var(--accent); background:rgba(160,102,255,0.08); }
+        .nav-user { display:flex; align-items:center; gap:10px; }
+        .nav-avatar { width:34px; height:34px; border-radius:50%; border:2px solid var(--accent); }
+        .logout { color:#ff4d4d; text-decoration:none; font-size:0.75rem; padding:6px 10px; border-radius:6px; }
+
+        .container { max-width:1300px; margin:0 auto; padding:32px 24px; }
+
+        /* Título */
+        .page-header { margin-bottom:32px; }
+        .page-header h1 { font-size:1.6rem; font-weight:900; letter-spacing:3px; color:var(--accent); }
+        .page-header p { color:#444; font-size:0.85rem; margin-top:4px; }
+
+        /* Stats row */
+        .stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
+        .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; text-align:center; }
+        .stat-num { font-size:1.8rem; font-weight:900; color:var(--primary); }
+        .stat-label { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-top:4px; }
+
+        /* Sections */
+        .section { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; margin-bottom:20px; }
+        .section.danger { border-left:4px solid var(--danger); }
+        .section-title { font-size:0.75rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:3px; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+        .section-title i { color:var(--primary); }
+
+        /* Botones */
+        .btn { padding:10px 20px; border-radius:9px; border:none; font-weight:700; cursor:pointer; font-size:0.8rem; letter-spacing:1px; text-transform:uppercase; transition:0.2s; display:inline-flex; align-items:center; gap:7px; text-decoration:none; }
+        .btn-primary { background:var(--primary); color:#000; }
+        .btn-primary:hover { background:#fff; }
+        .btn-danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
+        .btn-danger:hover { background:var(--danger); color:#000; }
+        .btn-warning { background:#ffcc00; color:#000; }
+        .btn-warning:hover { background:#fff; }
+        .btn-ghost { background:rgba(255,255,255,0.04); color:#ccc; border:1px solid var(--border); }
+        .btn-ghost:hover { background:rgba(255,255,255,0.08); color:#fff; }
+        .btn-accent { background:var(--accent); color:#fff; }
+        .btn-accent:hover { background:#8a50e0; }
+
+        /* Inputs */
+        input[type=text], input[type=number], select {
+            background:rgba(255,255,255,0.04);
+            border:1px solid var(--border); color:#fff;
+            padding:10px 14px; border-radius:9px; outline:none;
+            font-size:0.85rem; transition:0.2s;
+        }
+        input:focus, select:focus { border-color:rgba(0,255,204,0.3); }
+        input::placeholder { color:#333; }
+        select option { background:#1a1a2e; }
+
+        /* Log */
+        .log-box {
+            background:#000; padding:14px; border-radius:10px;
+            font-family:'Courier New',monospace; color:var(--primary);
+            height:160px; overflow-y:auto; font-size:0.8rem;
+            border:1px solid #1a1a2e; display:flex; flex-direction:column-reverse;
+        }
+        .log-entry { border-left:2px solid var(--primary); padding-left:8px; margin-bottom:4px; }
+        .log-entry span { color:#333; }
+
+        /* Tablas */
+        table { width:100%; border-collapse:collapse; }
+        th { text-align:left; color:#444; padding:10px 14px; border-bottom:1px solid var(--border); font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; }
+        td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:0.85rem; vertical-align:middle; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:rgba(255,255,255,0.015); }
+
+        /* Grid de controles */
+        .controls-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .controls-grid.three { grid-template-columns:1fr 1fr 1fr; }
+        .form-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+        .form-group { display:flex; flex-direction:column; gap:6px; }
+        .form-label { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:2px; }
+
+        /* Tabs */
+        .tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:0; }
+        .tab-btn { padding:10px 20px; background:transparent; border:none; color:#444; font-size:0.8rem; font-weight:600; cursor:pointer; letter-spacing:1px; text-transform:uppercase; border-bottom:2px solid transparent; transition:0.2s; margin-bottom:-1px; }
+        .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        /* Search */
+        .search-row { display:flex; gap:10px; margin-bottom:14px; }
+        .search-input { flex:1; }
+
+        .pos-badge { font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:5px; }
+        .pos-DC   { background:rgba(0,255,204,0.15);  color:#00ffcc; }
+        .pos-MC   { background:rgba(160,102,255,0.15); color:#a066ff; }
+        .pos-CARR { background:rgba(255,204,0,0.15);  color:#ffcc00; }
+        .pos-DFC  { background:rgba(255,77,77,0.15);  color:#ff4d4d; }
+        .pos-POR  { background:rgba(51,153,255,0.15); color:#3399ff; }
+
+        .estado-badge { font-size:0.7rem; padding:3px 8px; border-radius:5px; font-weight:600; }
+        .estado-pendiente   { background:rgba(255,204,0,0.12); color:#ffcc00; }
+        .estado-en_juego    { background:rgba(0,255,204,0.12); color:#00ffcc; }
+        .estado-finalizado  { background:rgba(255,255,255,0.06); color:#666; }
+
+        @media (max-width:900px) {
+            .stats-row { grid-template-columns:repeat(3,1fr); }
+            .controls-grid, .controls-grid.three { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <div class="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/clasificacion" class="nav-link">Clasificación</a>
+        <a href="/admin" class="nav-link active">Admin</a>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar">
+        <span style="font-size:0.85rem;font-weight:600;"><%= user.username %></span>
+        <a href="/logout" class="logout"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1><i class="fas fa-shield-alt"></i> PANEL DE CONTROL</h1>
+        <p>Control total del sistema Clutch Draft</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-num" style="color:<%= draftEstado === 'abierto' ? 'var(--primary)' : '#444' %>">
+                <%= draftEstado.toUpperCase() %>
+            </div>
+            <div class="stat-label">Estado</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num"><%= turnoActual || '—' %></div>
+            <div class="stat-label">Turno actual</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num"><%= fichados %>/<%= total %></div>
+            <div class="stat-label">Fichados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num"><%= equipos.length %></div>
+            <div class="stat-label">Equipos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num"><%= rondaActual %></div>
+            <div class="stat-label">Ronda</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('draft', this)">Draft</button>
+        <button class="tab-btn" onclick="showTab('fase2', this)">Fase 2</button>
+        <button class="tab-btn" onclick="showTab('jugadores', this)">Jugadores</button>
+        <button class="tab-btn" onclick="showTab('capitanes', this)">Capitanes</button>
+        <button class="tab-btn" onclick="showTab('partidos', this)">Partidos</button>
+        <button class="tab-btn" onclick="showTab('sistema', this)">Sistema</button>
+    </div>
+
+    <!-- ══ TAB: DRAFT ══ -->
+    <div id="tab-draft" class="tab-content active">
+
+        <!-- Actividad -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-terminal"></i> Registro de actividad</div>
+            <div class="log-box" id="log-box">
+                <div class="log-entry"><span>[sistema]</span> Panel cargado y listo.</div>
+            </div>
+        </div>
+
+        <!-- Controles del draft -->
+        <div class="section">
+            <div class="section-title"><i class="fas fa-play"></i> Control del draft</div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <% if (draftEstado === 'cerrado') { %>
+                        <form action="/admin/abrir-draft" method="POST">
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                <i class="fas fa-play"></i> ABRIR DRAFT
+                            </button>
+                        </form>
+                    <% } else { %>
+                        <form action="/admin/cerrar-draft" method="POST">
+                            <button type="submit" class="btn btn-danger" style="width:100%;" onclick="return confirm('¿Cerrar el draft?')">
+                                <i class="fas fa-stop"></i> CERRAR DRAFT
+                            </button>
+                        </form>
+                    <% } %>
+
+                    <form action="/admin/saltar-turno" method="POST">
+                        <button type="submit" class="btn btn-warning" style="width:100%;" onclick="return confirm('¿Saltar turno?')">
+                            <i class="fas fa-forward"></i> SALTAR TURNO
+                        </button>
+                    </form>
+
+                    <form action="/admin/deshacer-pick" method="POST">
+                        <button type="submit" class="btn btn-ghost" style="width:100%;" onclick="return confirm('¿Deshacer el último pick?')">
+                            <i class="fas fa-undo"></i> DESHACER ÚLTIMO PICK
+                        </button>
+                    </form>
+                </div>
+
+                <div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label class="form-label">Tiempo por turno (segundos)</label>
+                        <form action="/admin/tiempo-turno" method="POST" class="form-row">
+                            <select name="segundos">
+                                <option value="60"  <%= tiempoTurno == 60  ? 'selected':'' %>>1 minuto</option>
+                                <option value="90"  <%= tiempoTurno == 90  ? 'selected':'' %>>90 segundos</option>
+                                <option value="120" <%= tiempoTurno == 120 ? 'selected':'' %>>2 minutos</option>
+                                <option value="180" <%= tiempoTurno == 180 ? 'selected':'' %>>3 minutos</option>
+                                <option value="300" <%= tiempoTurno == 300 ? 'selected':'' %>>5 minutos</option>
+                            </select>
+                            <button type="submit" class="btn btn-accent">Aplicar</button>
+                        </form>
+                    </div>
+
+                    <div style="background:rgba(255,77,77,0.05); border:1px solid rgba(255,77,77,0.2); border-radius:12px; padding:16px;">
+                        <div class="form-label" style="color:var(--danger); margin-bottom:10px;">Zona de peligro</div>
+                        <form action="/admin/reset-draft" method="POST" onsubmit="return confirm('⚠️ ESTO BORRARÁ TODO EL DRAFT. ¿Continuar?')">
+                            <button type="submit" class="btn btn-danger" style="width:100%;">
+                                <i class="fas fa-trash-alt"></i> RESETEAR TODO EL DRAFT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: FASE 2 ══ -->
+    <div id="tab-fase2" class="tab-content">
+
+        <!-- Inscripciones -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-door-closed"></i> Inscripciones</div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#555; font-size:0.82rem; line-height:1.6;">
+                        El cierre automático ocurre a las <strong style="color:var(--primary);">23:00</strong> (Europe/Madrid).<br>
+                        Usa este botón para cerrarlo manualmente en cualquier momento.<br>
+                        Al cerrar: se deshabilita el panel de Discord, se cuentan equipos posibles,
+                        se lanza la votación de precio (20 min) y la encuesta de capitanes si faltan.
+                    </p>
+                    <form action="/admin/cerrar-inscripciones" method="POST"
+                          onsubmit="return confirm('¿Cerrar inscripciones ahora? Se lanzarán las votaciones en Discord.')">
+                        <button type="submit" class="btn btn-danger" style="width:100%;">
+                            <i class="fas fa-lock"></i> CERRAR INSCRIPCIONES AHORA
+                        </button>
+                    </form>
+                </div>
+                <div style="background:rgba(0,255,204,0.03); border:1px solid rgba(0,255,204,0.1); border-radius:12px; padding:16px;">
+                    <div class="form-label" style="margin-bottom:12px; color:var(--primary);">Secuencia automática</div>
+                    <div style="display:flex;flex-direction:column;gap:8px; font-size:0.8rem; color:#555; line-height:1.5;">
+                        <div><span style="color:var(--primary);">①</span> Panel de Discord deshabilitado</div>
+                        <div><span style="color:var(--primary);">②</span> Anuncio con total inscritos + equipos posibles + formato</div>
+                        <div><span style="color:var(--primary);">③</span> Votación de precio (10 / 15 / 20 €) — 20 min</div>
+                        <div><span style="color:var(--primary);">④</span> Encuesta de candidatos a capitán (si faltan)</div>
+                        <div><span style="color:var(--primary);">⑤</span> Panel de confirmación de pago con botón "He pagado"</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Votación de precio -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-euro-sign"></i> Votación de precio</div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#555; font-size:0.82rem; line-height:1.6;">
+                        La votación se cierra sola a los <strong style="color:#ffcc00;">20 minutos</strong> del cierre de inscripciones.<br>
+                        Si necesitas cerrarla antes (porque todos ya han votado, o para agilizar), usa este botón.<br>
+                        El precio ganador se guarda en la DB y se anuncia en Discord.
+                    </p>
+                    <form action="/admin/cerrar-votacion-precio" method="POST"
+                          onsubmit="return confirm('¿Cerrar la votación de precio ahora y anunciar el ganador?')">
+                        <button type="submit" class="btn btn-warning" style="width:100%;">
+                            <i class="fas fa-gavel"></i> CERRAR VOTACIÓN DE PRECIO AHORA
+                        </button>
+                    </form>
+                </div>
+                <div style="background:rgba(255,204,0,0.03); border:1px solid rgba(255,204,0,0.1); border-radius:12px; padding:16px;">
+                    <div class="form-label" style="margin-bottom:12px; color:#ffcc00;">¿Qué pasa al cerrar?</div>
+                    <div style="display:flex;flex-direction:column;gap:8px; font-size:0.8rem; color:#555; line-height:1.5;">
+                        <div><span style="color:#ffcc00;">①</span> Se cuentan votos (10€ / 15€ / 20€)</div>
+                        <div><span style="color:#ffcc00;">②</span> Se anuncia el precio ganador en Discord</div>
+                        <div><span style="color:#ffcc00;">③</span> Se publica el panel de confirmación de pago</div>
+                        <div><span style="color:#ffcc00;">④</span> Los capitanes pulsan "He pagado" → DM al admin</div>
+                        <div><span style="color:#ffcc00;">⑤</span> Admin aprueba/rechaza desde el DM de Discord</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info de pagos -->
+        <div class="section">
+            <div class="section-title"><i class="fas fa-credit-card"></i> Flujo de pagos</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+                <div style="background:rgba(255,255,255,0.02); border-radius:10px; padding:16px; border:1px solid var(--border);">
+                    <div style="font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Capitán</div>
+                    <div style="font-size:0.82rem; color:#888; line-height:1.6;">
+                        1. Paga por PayPal<br>
+                        2. Pulsa "He pagado" en Discord<br>
+                        3. Espera confirmación del admin
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02); border-radius:10px; padding:16px; border:1px solid var(--border);">
+                    <div style="font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Admin (tú)</div>
+                    <div style="font-size:0.82rem; color:#888; line-height:1.6;">
+                        1. Recibes DM en Discord<br>
+                        2. Verificas el pago en PayPal<br>
+                        3. Pulsas ✅ o ❌ en el DM
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02); border-radius:10px; padding:16px; border:1px solid var(--border);">
+                    <div style="font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Sistema</div>
+                    <div style="font-size:0.82rem; color:#888; line-height:1.6;">
+                        Al aprobar: rol Capitán automático<br>
+                        + entrada en DB teams<br>
+                        + notificación al usuario
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Torneo -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-trophy"></i> Generador de torneo</div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#555; font-size:0.82rem; line-height:1.6;">
+                        Genera automáticamente el calendario, los canales privados por partido
+                        y anuncia el torneo en Discord.<br>
+                        El formato se decide según el nº de equipos registrados.<br>
+                        <strong style="color:var(--primary);">Asegúrate de tener los capitanes registrados antes de generar.</strong>
+                    </p>
+                    <form action="/admin/generar-torneo" method="POST"
+                          onsubmit="return confirm('¿Generar el torneo ahora? Se crearán todos los partidos y canales privados en Discord.')">
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <i class="fas fa-trophy"></i> GENERAR TORNEO
+                        </button>
+                    </form>
+                    <form action="/admin/actualizar-clasificacion" method="POST">
+                        <button type="submit" class="btn btn-ghost" style="width:100%;">
+                            <i class="fas fa-sync-alt"></i> Actualizar clasificación en Discord
+                        </button>
+                    </form>
+                </div>
+                <div style="background:rgba(0,255,204,0.03); border:1px solid rgba(0,255,204,0.1); border-radius:12px; padding:16px;">
+                    <div class="form-label" style="margin-bottom:12px; color:var(--primary);">Formatos por nº de equipos</div>
+                    <div style="display:flex;flex-direction:column;gap:6px; font-size:0.8rem; color:#555;">
+                        <div><span style="color:var(--primary);">4 eq.</span> → Liga todos vs todos, ida</div>
+                        <div><span style="color:var(--primary);">5-6 eq.</span> → 2 grupos + Final</div>
+                        <div><span style="color:var(--primary);">8 eq.</span> → Liga todos vs todos, ida</div>
+                        <div><span style="color:var(--primary);">9-12 eq.</span> → 2 grupos + Semis + Final</div>
+                        <div><span style="color:var(--primary);">12+ eq.</span> → Liga completa</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Limpieza -->
+        <div class="section danger" style="margin-bottom:20px;">
+            <div class="section-title">
+                <i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i>
+                <span style="color:var(--danger);">Limpieza de torneo</span>
+            </div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#555; font-size:0.82rem; line-height:1.6;">
+                        Borra todos los canales privados de partidos, limpia el calendario y la
+                        clasificación de Discord, y resetea la tabla de clasificación en la DB.<br>
+                        <strong style="color:var(--danger);">No borra jugadores ni equipos.</strong>
+                    </p>
+                    <form action="/admin/limpiar-torneo" method="POST"
+                          onsubmit="return confirm('⚠️ ¿Limpiar el torneo? Se borrarán los canales de partidos y se reseteará la clasificación.')">
+                        <button type="submit" class="btn btn-danger" style="width:100%;">
+                            <i class="fas fa-trash-alt"></i> LIMPIAR TORNEO
+                        </button>
+                    </form>
+                </div>
+                <div style="background:rgba(255,77,77,0.03); border:1px solid rgba(255,77,77,0.1); border-radius:12px; padding:16px;">
+                    <div class="form-label" style="margin-bottom:12px; color:var(--danger);">Qué se borra</div>
+                    <div style="display:flex;flex-direction:column;gap:6px; font-size:0.8rem; color:#555;">
+                        <div><span style="color:var(--danger);">✗</span> Canales privados de partidos</div>
+                        <div><span style="color:var(--danger);">✗</span> Mensajes del canal calendario</div>
+                        <div><span style="color:var(--danger);">✗</span> Mensajes del canal clasificación</div>
+                        <div><span style="color:var(--danger);">✗</span> Tabla de matches en la DB</div>
+                        <div><span style="color:var(--danger);">✗</span> Stats de clasificación (puntos, goles...)</div>
+                        <div><span style="color:#2ecc71;">✓</span> Jugadores y equipos se conservan</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: JUGADORES ══ -->
+    <div id="tab-jugadores" class="tab-content">
+        <div class="section">
+            <div class="section-title"><i class="fas fa-users"></i> Jugadores registrados (<%= total %>)</div>
+            <div class="search-row">
+                <input type="text" class="search-input" placeholder="Buscar jugador..." oninput="filtrarJugadores(this.value)">
+            </div>
+            <div style="max-height:500px; overflow-y:auto;">
+                <table id="tabla-jugadores">
+                    <thead>
+                        <tr>
+                            <th>Jugador</th><th>Posición</th><th>Teléfono</th><th>Equipo</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% jugadores.forEach(j => { %>
+                        <tr>
+                            <td style="font-weight:600;"><%= j.nombre %></td>
+                            <td><span class="pos-badge pos-<%= j.posicion %>"><%= j.posicion %></span></td>
+                            <td style="color:#555; font-size:0.8rem;"><%= j.telefono || '—' %></td>
+                            <td style="color:<%= j.equipo ? 'var(--primary)' : '#444' %>; font-size:0.85rem;">
+                                <%= j.equipo || 'Libre' %>
+                            </td>
+                            <td>
+                                <div style="display:flex; gap:6px;">
+                                    <% if (j.equipo) { %>
+                                        <form action="/admin/liberar-jugador" method="POST" style="display:inline;">
+                                            <input type="hidden" name="discord_id" value="<%= j.discord_id %>">
+                                            <button type="submit" class="btn btn-ghost" style="padding:5px 10px; font-size:0.7rem;">Liberar</button>
+                                        </form>
+                                    <% } %>
+                                    <form action="/admin/borrar-jugador" method="POST" style="display:inline;" onsubmit="return confirm('¿Borrar a <%= j.nombre %>?')">
+                                        <input type="hidden" name="discord_id" value="<%= j.discord_id %>">
+                                        <button type="submit" class="btn btn-danger" style="padding:5px 10px; font-size:0.7rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: CAPITANES ══ -->
+    <div id="tab-capitanes" class="tab-content">
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-crown"></i> Registrar capitán</div>
+            <form action="/admin/registrar-capitan" method="POST" class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Discord ID</label>
+                    <input type="text" name="capitan_id" placeholder="123456789012345678" required style="width:220px;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Username exacto</label>
+                    <input type="text" name="capitan_username" placeholder="username" required style="width:180px;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="align-self:flex-end;">
+                    <i class="fas fa-plus"></i> Añadir
+                </button>
+            </form>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><i class="fas fa-list"></i> Capitanes registrados (<%= equipos.length %>)</div>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Capitán</th><th>Jugadores fichados</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    <% equipos.forEach((eq, i) => { %>
+                        <% const nJugadores = jugadores.filter(j => j.equipo === eq.capitan_username).length; %>
+                        <tr>
+                            <td style="color:#444;"><%= i+1 %></td>
+                            <td style="font-weight:700; color:var(--primary);"><%= eq.capitan_username %></td>
+                            <td><%= nJugadores %> jugadores</td>
+                            <td>
+                                <form action="/admin/eliminar-capitan" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar a <%= eq.capitan_username %>?')">
+                                    <input type="hidden" name="capitan_id" value="<%= eq.capitan_id %>">
+                                    <button type="submit" class="btn btn-danger" style="padding:5px 10px; font-size:0.7rem;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══ TAB: PARTIDOS ══ -->
+    <div id="tab-partidos" class="tab-content">
+        <div class="controls-grid" style="margin-bottom:20px;">
+            <!-- Crear enfrentamiento -->
+            <div class="section">
+                <div class="section-title"><i class="fas fa-plus"></i> Crear enfrentamiento</div>
+                <form action="/admin/crear-match" method="POST">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label">Equipo local</label>
+                        <select name="equipo1" style="width:100%;">
+                            <% equipos.forEach(e => { %>
+                                <option value="<%= e.capitan_username %>"><%= e.capitan_username %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label">Equipo visitante</label>
+                        <select name="equipo2" style="width:100%;">
+                            <% equipos.forEach(e => { %>
+                                <option value="<%= e.capitan_username %>"><%= e.capitan_username %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label class="form-label">Jornada</label>
+                        <input type="number" name="jornada" value="<%= jornadaActual %>" min="1" style="width:100%;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class="fas fa-plus"></i> Crear
+                    </button>
+                </form>
+            </div>
+
+            <!-- Cargar resultado -->
+            <div class="section">
+                <div class="section-title"><i class="fas fa-flag-checkered"></i> Cargar resultado</div>
+                <form action="/admin/resultado-match" method="POST">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label">Partido</label>
+                        <select name="match_id" style="width:100%;">
+                            <% matches.filter(m => m.estado !== 'finalizado').forEach(m => { %>
+                                <option value="<%= m.id %>">J<%= m.jornada %> — <%= m.equipo1 %> vs <%= m.equipo2 %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="form-row" style="margin-bottom:14px;">
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Goles local</label>
+                            <input type="number" name="goles1" min="0" placeholder="0" style="width:100%;">
+                        </div>
+                        <div style="align-self:flex-end;padding-bottom:10px;color:#444;font-weight:700;">—</div>
+                        <div class="form-group" style="flex:1;">
+                            <label class="form-label">Goles visitante</label>
+                            <input type="number" name="goles2" min="0" placeholder="0" style="width:100%;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-accent" style="width:100%;">
+                        <i class="fas fa-check"></i> Registrar resultado
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de partidos -->
+        <div class="section">
+            <div class="section-title"><i class="fas fa-calendar"></i> Todos los partidos</div>
+            <% if (matches.length > 0) { %>
+                <table>
+                    <thead>
+                        <tr><th>J</th><th>Local</th><th>Resultado</th><th>Visitante</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                        <% matches.forEach(m => { %>
+                            <tr>
+                                <td style="color:#444;">J<%= m.jornada %></td>
+                                <td style="font-weight:600;"><%= m.equipo1 %></td>
+                                <td style="text-align:center; font-weight:900; font-size:1.1rem; color:var(--primary);">
+                                    <%= m.goles1 !== null ? `${m.goles1} - ${m.goles2}` : '— vs —' %>
+                                </td>
+                                <td style="font-weight:600;"><%= m.equipo2 %></td>
+                                <td><span class="estado-badge estado-<%= m.estado %>"><%= m.estado %></span></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p style="color:#333; font-size:0.9rem;">No hay partidos creados aún.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- ══ TAB: SISTEMA ══ -->
+    <div id="tab-sistema" class="tab-content">
+
+        <!-- Cierre manual de torneo -->
+        <div class="section" style="margin-bottom:20px; border-left:4px solid var(--primary);">
+            <div class="section-title"><i class="fas fa-flag-checkered"></i> Cierre de torneo</div>
+            <div class="controls-grid">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <p style="color:#555; font-size:0.82rem; line-height:1.6;">
+                        El sistema detecta automáticamente cuando todos los partidos
+                        están finalizados y cierra el torneo.<br>
+                        Si quieres cerrarlo manualmente antes: guarda el historial,
+                        anuncia el campeón en Discord y limpia los canales.
+                    </p>
+                    <form action="/admin/cerrar-torneo" method="POST"
+                          onsubmit="return confirm('¿Cerrar el torneo ahora? Se guardará el historial, se anunciará el campeón y se limpiarán los canales.')">
+                        <button type="submit" class="btn btn-primary" style="width:100%;">
+                            <i class="fas fa-flag-checkered"></i> CERRAR TORNEO Y GUARDAR HISTORIAL
+                        </button>
+                    </form>
+                </div>
+                <div style="background:rgba(0,255,204,0.03); border:1px solid rgba(0,255,204,0.1); border-radius:12px; padding:16px;">
+                    <div class="form-label" style="margin-bottom:10px; color:var(--primary);">Cierre automático</div>
+                    <div style="font-size:0.8rem; color:#555; line-height:1.7;">
+                        El cron comprueba cada <strong style="color:#888;">5 minutos</strong>
+                        si todos los partidos están finalizados.<br>
+                        Si lo están: guarda historial → anuncia campeón → limpia Discord → resetea stats.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de torneos -->
+        <div class="section" style="margin-bottom:20px;">
+            <div class="section-title"><i class="fas fa-history"></i> Historial de torneos</div>
+            <% if (historial && historial.length > 0) { %>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Fecha</th>
+                                <th>Equipos</th>
+                                <th>Formato</th>
+                                <th>🥇 Campeón</th>
+                                <th>🥈 Subcampeón</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% historial.forEach((t, i) => { %>
+                                <tr>
+                                    <td style="color:#444;"><%= historial.length - i %></td>
+                                    <td style="color:#555; font-size:0.8rem;">
+                                        <%= new Date(t.fecha_fin).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'}) %>
+                                    </td>
+                                    <td style="text-align:center;"><%= t.n_equipos %></td>
+                                    <td style="font-size:0.8rem; color:#666;"><%= t.formato %></td>
+                                    <td style="font-weight:700; color:var(--primary);"><%= t.campeon %></td>
+                                    <td style="color:#888;"><%= t.subcampeon %></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <p style="color:#333; font-size:0.85rem;">No hay torneos anteriores registrados.</p>
+            <% } %>
+        </div>
+
+        <!-- Zona de peligro -->
+        <div class="section danger">
+            <div class="section-title"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i>
+                <span style="color:var(--danger);">Zona de peligro</span>
+            </div>
+            <div class="controls-grid">
+                <form action="/admin/reset-draft" method="POST" onsubmit="return confirm('⚠️ ESTO BORRARÁ TODO EL DRAFT. ¿Continuar?')">
+                    <button type="submit" class="btn btn-danger" style="width:100%;">
+                        <i class="fas fa-sync-alt"></i> RESETEAR DRAFT COMPLETO
+                    </button>
+                    <p style="color:#333; font-size:0.75rem; margin-top:8px;">Borra todos los equipos, picks y reinicia el draft.</p>
+                </form>
+                <div style="color:#333; font-size:0.85rem; line-height:1.7; padding:10px;">
+                    <strong style="color:#555;">Info del sistema</strong><br>
+                    DB: SQLite (WAL)<br>
+                    Ronda actual: <%= rondaActual %><br>
+                    Jornada actual: <%= jornadaActual %><br>
+                    Tiempo de turno: <%= tiempoTurno %>s
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    window.__CLUTCH__ = {
+        username: '<%= user.username %>',
+        esAdmin:  true,
+    };
+</script>
+<script src="/js/main.js"></script>
+</body>
+</html>

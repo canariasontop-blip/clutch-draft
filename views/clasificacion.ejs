@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Clasificación</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root { --primary:#00ffcc; --accent:#a066ff; --bg:#050507; --card:#0f0f14; --border:rgba(255,255,255,0.06); --gold:#ffd700; --silver:#c0c0c0; --bronze:#cd7f32; }
+        body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
+        body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse at 50% 0%, rgba(0,255,204,0.04) 0%, transparent 60%); pointer-events:none; }
+
+        nav { display:flex; align-items:center; justify-content:space-between; padding:16px 36px; background:rgba(15,15,20,0.95); border-bottom:1px solid var(--border); backdrop-filter:blur(20px); position:sticky; top:0; z-index:200; }
+        .nav-logo { font-size:1.2rem; font-weight:900; letter-spacing:4px; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-links { display:flex; gap:6px; }
+        .nav-link { color:#555; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
+        .nav-link:hover, .nav-link.active { color:var(--primary); background:rgba(0,255,204,0.08); }
+        .nav-link.admin { color:var(--accent); }
+        .nav-user { display:flex; align-items:center; gap:10px; }
+        .nav-avatar { width:34px; height:34px; border-radius:50%; border:2px solid var(--primary); }
+        .logout { color:#ff4d4d; text-decoration:none; font-size:0.75rem; padding:6px 10px; border-radius:6px; }
+
+        .container { max-width:1200px; margin:0 auto; padding:40px 24px; }
+
+        .page-title { text-align:center; margin-bottom:40px; }
+        .page-title h1 { font-size:2.5rem; font-weight:900; letter-spacing:6px; text-transform:uppercase; background:linear-gradient(135deg,#fff,var(--primary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; }
+        .page-title p { color:#444; font-size:0.85rem; letter-spacing:2px; }
+
+        .main-grid { display:grid; grid-template-columns:1fr 380px; gap:24px; align-items:start; }
+
+        /* Tabla clasificación */
+        .tabla-card { background:var(--card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+        .tabla-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+        .tabla-header h2 { font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:3px; color:#555; }
+
+        table { width:100%; border-collapse:collapse; }
+        thead th { padding:12px 16px; text-align:left; font-size:0.65rem; color:#444; text-transform:uppercase; letter-spacing:2px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.01); }
+        thead th.center { text-align:center; }
+        tbody tr { transition:0.15s; }
+        tbody tr:hover { background:rgba(255,255,255,0.02); }
+        tbody tr.top1 { background:rgba(255,215,0,0.03); }
+        tbody tr.top2 { background:rgba(192,192,192,0.02); }
+        tbody tr.top3 { background:rgba(205,127,50,0.02); }
+        td { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.025); font-size:0.88rem; vertical-align:middle; }
+        td.center { text-align:center; color:#555; }
+        tbody tr:last-child td { border-bottom:none; }
+
+        .pos-cell { font-size:1.1rem; font-weight:900; width:40px; text-align:center; }
+        .pos-gold   { color:var(--gold); }
+        .pos-silver { color:var(--silver); }
+        .pos-bronze { color:var(--bronze); }
+        .pos-other  { color:#333; }
+
+        .equipo-cell { font-weight:700; }
+        .pts-cell { font-weight:900; font-size:1rem; color:var(--primary); text-align:center; }
+
+        .dif-cell { font-size:0.8rem; font-weight:600; text-align:center; }
+        .dif-pos { color:#2ecc71; }
+        .dif-neg { color:#ff4d4d; }
+        .dif-neu { color:#555; }
+
+        /* Jornadas */
+        .jornadas-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:24px; }
+        .card-title { font-size:0.7rem; font-weight:700; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .card-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+        .jornada-group { margin-bottom:20px; }
+        .jornada-label { font-size:0.7rem; color:var(--primary); text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+
+        .match-row {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; border-radius:10px;
+            background:rgba(255,255,255,0.02); border:1px solid var(--border);
+            margin-bottom:8px; font-size:0.85rem;
+        }
+        .match-equipo { flex:1; font-weight:600; }
+        .match-equipo.right { text-align:right; }
+        .match-score {
+            min-width:50px; text-align:center;
+            font-weight:900; font-size:0.95rem;
+        }
+        .match-score.live { color:var(--primary); }
+        .match-score.done { color:#ccc; }
+        .match-score.pending { color:#333; }
+
+        .estado-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:#333;
+        }
+        .estado-dot.finalizado  { background:#555; }
+        .estado-dot.pendiente   { background:#ffcc00; }
+        .estado-dot.en_juego    { background:var(--primary); animation:blink 1s infinite; }
+        @keyframes blink { 50% { opacity:0; } }
+
+        .no-data { text-align:center; color:#333; font-size:0.9rem; padding:30px; }
+
+        @media (max-width:900px) { .main-grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <div class="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/clasificacion" class="nav-link active">Clasificación</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar">
+        <span style="font-size:0.85rem;font-weight:600;"><%= user.username %></span>
+        <a href="/logout" class="logout"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-title">
+        <h1>Clasificación</h1>
+        <p>Jornada actual: <%= jornadaActual %></p>
+    </div>
+
+    <div class="main-grid">
+
+        <!-- Tabla -->
+        <div class="tabla-card">
+            <div class="tabla-header">
+                <h2><i class="fas fa-trophy" style="color:var(--gold);margin-right:8px;"></i> Tabla de posiciones</h2>
+            </div>
+            <% if (tabla.length > 0) { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="center">#</th>
+                            <th>Equipo</th>
+                            <th class="center">PJ</th>
+                            <th class="center">PG</th>
+                            <th class="center">PE</th>
+                            <th class="center">PP</th>
+                            <th class="center">GF</th>
+                            <th class="center">GC</th>
+                            <th class="center">DIF</th>
+                            <th class="center">PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% tabla.forEach((eq, i) => { %>
+                            <% const dif = eq.gf - eq.gc; %>
+                            <tr class="<%= i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '' %>">
+                                <td class="pos-cell <%= i === 0 ? 'pos-gold' : i === 1 ? 'pos-silver' : i === 2 ? 'pos-bronze' : 'pos-other' %>">
+                                    <%= i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1 %>
+                                </td>
+                                <td class="equipo-cell">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <%
+            const teamData = equiposMap[eq.capitan_id];
+            const logoUrl = teamData?.logo_url || null;
+        %>
+        <% if (logoUrl) { %>
+            <img src="<%= logoUrl %>" style="width:28px; height:28px; border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.1);">
+        <% } else { %>
+            <div style="width:28px; height:28px; border-radius:6px; background:rgba(0,255,204,0.1); display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#00ffcc; font-weight:900;">
+                <%= eq.equipo_nombre.charAt(0).toUpperCase() %>
+            </div>
+        <% } %>
+        <%= eq.equipo_nombre %>
+    </div>
+</td>
+                                <td class="center"><%= eq.pj %></td>
+                                <td class="center"><%= eq.pg %></td>
+                                <td class="center"><%= eq.pe %></td>
+                                <td class="center"><%= eq.pp %></td>
+                                <td class="center"><%= eq.gf %></td>
+                                <td class="center"><%= eq.gc %></td>
+                                <td class="dif-cell <%= dif > 0 ? 'dif-pos' : dif < 0 ? 'dif-neg' : 'dif-neu' %>">
+                                    <%= dif > 0 ? '+' : '' %><%= dif %>
+                                </td>
+                                <td class="pts-cell"><%= eq.puntos %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <div class="no-data">
+                    <i class="fas fa-clock" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+                    La clasificación estará disponible cuando comiencen los partidos.
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Resultados por jornada -->
+        <div class="jornadas-card">
+            <div class="card-title"><i class="fas fa-calendar-alt"></i> Resultados</div>
+
+            <% if (matches.length > 0) { %>
+                <%
+                    // Agrupar por jornada
+                    const byJornada = {};
+                    matches.forEach(m => {
+                        if (!byJornada[m.jornada]) byJornada[m.jornada] = [];
+                        byJornada[m.jornada].push(m);
+                    });
+                    const jornadas = Object.keys(byJornada).sort((a,b) => b - a);
+                %>
+                <% jornadas.forEach(j => { %>
+                    <div class="jornada-group">
+                        <div class="jornada-label">Jornada <%= j %></div>
+                        <% byJornada[j].forEach(m => { %>
+                            <div class="match-row">
+                                <span class="match-equipo"><%= m.equipo1 %></span>
+                                <span class="match-score <%= m.estado === 'finalizado' ? 'done' : m.estado === 'en_juego' ? 'live' : 'pending' %>">
+                                    <% if (m.goles1 !== null) { %>
+                                        <%= m.goles1 %> - <%= m.goles2 %>
+                                    <% } else { %>
+                                        vs
+                                    <% } %>
+                                </span>
+                                <span class="match-equipo right"><%= m.equipo2 %></span>
+                                <div class="estado-dot <%= m.estado %>"></div>
+                                <% if (m.canal_discord) { %>
+                                    <a href="https://discord.com/channels/<%= guildId %>/<%= m.canal_discord %>"
+                                       target="_blank"
+                                       title="Ir al canal del partido"
+                                       style="color:#5865F2; font-size:0.75rem; text-decoration:none; white-space:nowrap;">
+                                        <i class="fab fa-discord"></i>
+                                    </a>
+                                <% } %>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="no-data">No hay partidos programados aún.</div>
+            <% } %>
+        </div>
+
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    socket.on('resultado', () => setTimeout(() => location.reload(), 500));
+</script>
+</body>
+</html>

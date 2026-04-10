@@ -1,0 +1,11 @@
+const db = require('./database/db');
+db.prepare('DELETE FROM matches').run();
+db.prepare('DELETE FROM picks').run();
+db.prepare('UPDATE players SET equipo=NULL').run();
+db.prepare("DELETE FROM players WHERE discord_id LIKE 'player_%'").run();
+db.prepare("DELETE FROM teams WHERE capitan_id LIKE 'test_%'").run();
+db.prepare("DELETE FROM clasificacion WHERE capitan_id LIKE 'test_%'").run();
+db.prepare("UPDATE settings SET value='cerrado' WHERE key='draft_estado'").run();
+db.prepare("UPDATE settings SET value='' WHERE key='turno_actual'").run();
+console.log('✅ Datos de prueba limpiados');
+db.close();
