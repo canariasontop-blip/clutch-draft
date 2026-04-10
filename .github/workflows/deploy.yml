@@ -1,0 +1,22 @@
+name: Deploy a Hetzner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desplegar via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: 116.203.96.243
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root
+            git pull origin main
+            npm install --production
+            pm2 restart all
