@@ -244,6 +244,198 @@
             .draft-grid { grid-template-columns:1fr; }
             .team-panel { position:static; }
         }
+
+        /* ── MODAL DE SELECCIÓN DE POSICIÓN ── */
+        .pos-modal-overlay {
+            display:none;
+            position:fixed; inset:0;
+            background:rgba(0,0,0,0.85);
+            backdrop-filter:blur(6px);
+            z-index:500;
+            align-items:center; justify-content:center;
+        }
+        .pos-modal-overlay.visible { display:flex; }
+
+        .pos-modal {
+            background:var(--card);
+            border:1px solid rgba(0,255,204,0.2);
+            border-radius:20px;
+            padding:28px;
+            width:min(96vw, 680px);
+            max-height:92vh;
+            overflow-y:auto;
+            box-shadow:0 0 60px rgba(0,255,204,0.08);
+            position:relative;
+        }
+
+        .pos-modal-header {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-bottom:20px;
+        }
+        .pos-modal-title {
+            font-size:0.7rem; color:var(--primary);
+            text-transform:uppercase; letter-spacing:3px; font-weight:700;
+        }
+        .pos-modal-close {
+            background:rgba(255,255,255,0.05);
+            border:1px solid var(--border);
+            border-radius:8px;
+            color:#555; cursor:pointer;
+            padding:6px 10px; font-size:0.85rem;
+            transition:0.2s;
+        }
+        .pos-modal-close:hover { color:#fff; border-color:rgba(255,255,255,0.2); }
+
+        /* Formaciones */
+        .formation-tabs {
+            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
+        }
+        .formation-tab {
+            padding:6px 14px; border-radius:8px;
+            border:1px solid var(--border);
+            background:transparent; color:#555;
+            font-size:0.75rem; font-weight:700; cursor:pointer;
+            transition:0.2s; letter-spacing:1px;
+        }
+        .formation-tab:hover { color:#fff; border-color:rgba(255,255,255,0.2); }
+        .formation-tab.active {
+            color:var(--primary);
+            border-color:rgba(0,255,204,0.4);
+            background:rgba(0,255,204,0.08);
+        }
+
+        /* Campo de fútbol */
+        .field-layout {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+            align-items:start;
+        }
+
+        .field-wrap {
+            position:relative;
+            background: linear-gradient(180deg,
+                #2d6a2d 0%, #2a622a 12.5%, #2d6a2d 12.5%, #2d6a2d 25%,
+                #2a622a 25%, #2a622a 37.5%, #2d6a2d 37.5%, #2d6a2d 50%,
+                #2a622a 50%, #2a622a 62.5%, #2d6a2d 62.5%, #2d6a2d 75%,
+                #2a622a 75%, #2a622a 87.5%, #2d6a2d 87.5%, #2d6a2d 100%);
+            border-radius:10px;
+            border:2px solid rgba(255,255,255,0.1);
+            overflow:hidden;
+            aspect-ratio:0.65;
+        }
+
+        /* Líneas del campo SVG */
+        .field-lines {
+            position:absolute; inset:0; width:100%; height:100%;
+            pointer-events:none;
+        }
+
+        /* Posiciones en el campo */
+        .field-positions {
+            position:absolute; inset:0;
+            width:100%; height:100%;
+        }
+
+        .field-dot {
+            position:absolute;
+            width:44px; height:44px;
+            border-radius:50%;
+            border:2.5px solid currentColor;
+            display:flex; align-items:center; justify-content:center;
+            font-size:0.6rem; font-weight:800; letter-spacing:0.5px;
+            cursor:pointer;
+            transform:translate(-50%, -50%);
+            transition:0.2s;
+            background:rgba(5,5,7,0.7);
+            backdrop-filter:blur(4px);
+            z-index:10;
+        }
+        .field-dot:hover {
+            transform:translate(-50%, -50%) scale(1.15);
+            box-shadow:0 0 20px currentColor;
+        }
+        .field-dot.available { animation:pulsePos 2s infinite; }
+        .field-dot.filled { opacity:0.4; cursor:default; pointer-events:none; }
+        .field-dot.selected { transform:translate(-50%, -50%) scale(1.2); box-shadow:0 0 25px currentColor; }
+        @keyframes pulsePos {
+            0%,100% { box-shadow:0 0 0 0 rgba(currentColor,0.3); }
+            50% { box-shadow:0 0 0 8px rgba(currentColor,0); }
+        }
+
+        .fd-dc   { color:#00ffcc; }
+        .fd-mc   { color:#a066ff; }
+        .fd-carr { color:#ffcc00; }
+        .fd-dfc  { color:#ff4d4d; }
+        .fd-por  { color:#3399ff; }
+        .fd-mcd  { color:#ff9900; }
+        .fd-cam  { color:#a066ff; }
+        .fd-ext  { color:#ffcc00; }
+
+        /* Panel info del campo */
+        .field-info-panel {
+            background:rgba(0,0,0,0.3);
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:16px;
+            min-height:200px;
+            display:flex; flex-direction:column; justify-content:center; align-items:center;
+        }
+        .field-info-placeholder { color:#333; font-size:0.8rem; text-align:center; }
+
+        .field-pos-detail { width:100%; }
+        .fpd-pos-name {
+            font-size:1.1rem; font-weight:900;
+            margin-bottom:4px;
+        }
+        .fpd-pos-label {
+            font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:2px;
+            margin-bottom:16px;
+        }
+        .fpd-jugador-sel {
+            background:rgba(255,255,255,0.03);
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:12px;
+            display:flex; align-items:center; gap:10px;
+            margin-bottom:12px;
+        }
+        .fpd-jugador-sel img {
+            width:36px; height:36px; border-radius:50%;
+            object-fit:cover; border:2px solid var(--border);
+        }
+        .fpd-jugador-nombre { font-size:0.85rem; font-weight:700; }
+        .fpd-jugador-pos { font-size:0.65rem; color:#555; }
+
+        .btn-confirmar-pick {
+            width:100%;
+            padding:10px;
+            border-radius:10px;
+            border:none;
+            background:var(--primary); color:#000;
+            font-weight:800; font-size:0.85rem;
+            cursor:pointer; transition:0.2s;
+            letter-spacing:1px;
+        }
+        .btn-confirmar-pick:hover { background:#fff; transform:translateY(-1px); }
+        .btn-confirmar-pick:disabled { background:#222; color:#444; cursor:not-allowed; transform:none; }
+
+        /* Jugador seleccionado pendiente de posición */
+        .jugador-a-fichar-banner {
+            display:none;
+            background:rgba(0,255,204,0.06);
+            border:1px solid rgba(0,255,204,0.25);
+            border-radius:12px;
+            padding:14px 16px;
+            margin-bottom:16px;
+            align-items:center; gap:12px;
+        }
+        .jugador-a-fichar-banner.visible { display:flex; }
+        .jab-foto { width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid rgba(0,255,204,0.4); }
+        .jab-nombre { font-size:0.9rem; font-weight:700; color:var(--primary); }
+        .jab-sub { font-size:0.7rem; color:#555; }
+        .jab-cancel { margin-left:auto; background:none; border:none; color:#555; cursor:pointer; font-size:0.9rem; padding:4px; }
+        .jab-cancel:hover { color:#ff4d4d; }
     </style>
 </head>
 <body>
@@ -409,7 +601,7 @@
                      data-id="<%= j.discord_id %>"
                      data-pos="<%= j.posicion %>"
                      data-nombre="<%= j.nombre.toLowerCase() %>"
-                     onclick="<%= esMiTurno ? `fichar('${j.discord_id}', '${j.nombre}')` : '' %>">
+                     onclick="<%= esMiTurno ? `ficharConModal('${j.discord_id}', '${j.nombre}', '${j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png'}', '${j.posicion}')` : '' %>">
                     <img src="<%= j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png' %>"
                          class="player-foto" alt="">
                     <div class="player-nombre"><%= j.nombre %></div>
@@ -418,7 +610,7 @@
                         <div class="player-tel"><i class="fab fa-whatsapp"></i><%= j.telefono %></div>
                     <% } %>
                     <% if (esMiTurno) { %>
-                        <button class="btn-pick">⚡ FICHAR</button>
+                        <button class="btn-pick" onclick="event.stopPropagation();ficharConModal('<%= j.discord_id %>', '<%= j.nombre %>', '<%= j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png' %>', '<%= j.posicion %>')">⚡ FICHAR</button>
                     <% } %>
                 </div>
             <% }) %>
@@ -431,8 +623,274 @@
 </div>
 </div>
 
+<!-- ── MODAL SELECCIÓN DE POSICIÓN ── -->
+<div class="pos-modal-overlay" id="pos-modal-overlay">
+    <div class="pos-modal">
+        <div class="pos-modal-header">
+            <div class="pos-modal-title">ES TU TURNO — SELECCIONA UNA POSICION</div>
+            <button class="pos-modal-close" onclick="cerrarModalPosicion()">···</button>
+        </div>
+        <div class="formation-tabs" id="formation-tabs"></div>
+        <div class="field-layout">
+            <div class="field-wrap" id="field-wrap">
+                <svg class="field-lines" viewBox="0 0 200 310" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="5" width="190" height="300" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+                    <rect x="45" y="5" width="110" height="55" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <rect x="75" y="5" width="50" height="22" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                    <line x1="5" y1="155" x2="195" y2="155" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <circle cx="100" cy="155" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <circle cx="100" cy="155" r="2" fill="rgba(255,255,255,0.3)"/>
+                    <rect x="45" y="250" width="110" height="55" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                    <rect x="75" y="283" width="50" height="22" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                    <circle cx="100" cy="45" r="2" fill="rgba(255,255,255,0.3)"/>
+                    <circle cx="100" cy="265" r="2" fill="rgba(255,255,255,0.3)"/>
+                </svg>
+                <div class="field-positions" id="field-positions"></div>
+            </div>
+            <div class="field-info-panel" id="field-info-panel">
+                <div class="field-info-placeholder" id="field-placeholder">
+                    <i class="fas fa-hand-pointer" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#333;"></i>
+                    Clicka en una posicion del campo
+                </div>
+                <div class="field-pos-detail" id="field-pos-detail" style="display:none;">
+                    <div class="fpd-pos-name" id="fpd-pos-name"></div>
+                    <div class="fpd-pos-label" id="fpd-pos-label"></div>
+                    <div id="fpd-jugadores-list"></div>
+                    <button class="btn-confirmar-pick" id="btn-confirmar-pick" disabled onclick="confirmarPickConPosicion()">
+                        ⚡ CONFIRMAR FICHAJE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script>
+    // ── CAMPO DE POSICIONES ────────────────────────────────────────
+    const FORMATIONS = {
+        '4-3-3': [
+            { pos:'DC',   x:35,  y:12, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:12, label:'Delantero Centro' },
+            { pos:'CARR', x:18,  y:28, label:'Carrilero Izq' },
+            { pos:'CAM',  x:50,  y:28, label:'Mediapunta' },
+            { pos:'CARR', x:82,  y:28, label:'Carrilero Der' },
+            { pos:'MCD',  x:36,  y:45, label:'Mediocentro Def' },
+            { pos:'MCD',  x:64,  y:45, label:'Mediocentro Def' },
+            { pos:'DFC',  x:22,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:78,  y:63, label:'Defensa Central' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '4-4-2': [
+            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
+            { pos:'CARR', x:18,  y:30, label:'Extremo Izq' },
+            { pos:'MC',   x:40,  y:30, label:'Mediocampista' },
+            { pos:'MC',   x:60,  y:30, label:'Mediocampista' },
+            { pos:'CARR', x:82,  y:30, label:'Extremo Der' },
+            { pos:'DFC',  x:22,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:42,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:62,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:82,  y:63, label:'Defensa Lateral' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '4-2-3-1': [
+            { pos:'DC',   x:50,  y:10, label:'Delantero Centro' },
+            { pos:'CARR', x:20,  y:25, label:'Extremo Izq' },
+            { pos:'CAM',  x:50,  y:25, label:'Mediapunta' },
+            { pos:'CARR', x:80,  y:25, label:'Extremo Der' },
+            { pos:'MCD',  x:36,  y:45, label:'Mediocentro Def' },
+            { pos:'MCD',  x:64,  y:45, label:'Mediocentro Def' },
+            { pos:'DFC',  x:20,  y:63, label:'Lateral Izq' },
+            { pos:'DFC',  x:40,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:60,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:80,  y:63, label:'Lateral Der' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '3-5-2': [
+            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
+            { pos:'CARR', x:18,  y:30, label:'Carrilero Izq' },
+            { pos:'MC',   x:38,  y:33, label:'Mediocampista' },
+            { pos:'CAM',  x:58,  y:25, label:'Mediapunta' },
+            { pos:'MC',   x:72,  y:38, label:'Mediocampista' },
+            { pos:'CARR', x:88,  y:30, label:'Carrilero Der' },
+            { pos:'DFC',  x:25,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:75,  y:63, label:'Defensa Central' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '3-1-4-2': [
+            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
+            { pos:'CARR', x:18,  y:28, label:'Carrilero Izq' },
+            { pos:'MC',   x:38,  y:28, label:'Mediocampista' },
+            { pos:'MC',   x:62,  y:28, label:'Mediocampista' },
+            { pos:'CARR', x:82,  y:28, label:'Carrilero Der' },
+            { pos:'MCD',  x:50,  y:45, label:'Pivote' },
+            { pos:'DFC',  x:25,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:75,  y:63, label:'Defensa Central' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '4-1-2-1-2': [
+            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
+            { pos:'CAM',  x:50,  y:23, label:'Mediapunta' },
+            { pos:'MC',   x:30,  y:37, label:'Mediocampista' },
+            { pos:'MC',   x:70,  y:37, label:'Mediocampista' },
+            { pos:'MCD',  x:50,  y:50, label:'Pivote' },
+            { pos:'DFC',  x:20,  y:63, label:'Lateral Izq' },
+            { pos:'DFC',  x:40,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:60,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:80,  y:63, label:'Lateral Der' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+        '5-3-2': [
+            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
+            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
+            { pos:'MC',   x:30,  y:35, label:'Mediocampista' },
+            { pos:'MC',   x:50,  y:30, label:'Mediocampista' },
+            { pos:'MC',   x:70,  y:35, label:'Mediocampista' },
+            { pos:'CARR', x:12,  y:55, label:'Carrilero Izq' },
+            { pos:'DFC',  x:30,  y:60, label:'Defensa Central' },
+            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
+            { pos:'DFC',  x:70,  y:60, label:'Defensa Central' },
+            { pos:'CARR', x:88,  y:55, label:'Carrilero Der' },
+            { pos:'POR',  x:50,  y:82, label:'Portero' },
+        ],
+    };
+
+    const POS_COLORS = {
+        DC:'#00ffcc', MC:'#a066ff', CARR:'#ffcc00',
+        DFC:'#ff4d4d', POR:'#3399ff', MCD:'#ff9900', CAM:'#a066ff', EXT:'#ffcc00'
+    };
+
+    const POS_CLASS = {
+        DC:'fd-dc', MC:'fd-mc', CARR:'fd-carr',
+        DFC:'fd-dfc', POR:'fd-por', MCD:'fd-mcd', CAM:'fd-cam', EXT:'fd-ext'
+    };
+
+    let _modalJugadorId   = null;
+    let _modalJugadorNom  = null;
+    let _modalJugadorFoto = null;
+    let _modalJugadorPos  = null; // posición real del jugador
+    let _posSeleccionada  = null; // slot del campo seleccionado
+    let _formacionActual  = '4-3-3';
+
+    function abrirModalPosicion(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion) {
+        _modalJugadorId   = jugadorId;
+        _modalJugadorNom  = jugadorNombre;
+        _modalJugadorFoto = jugadorFoto || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        _modalJugadorPos  = jugadorPosicion;
+        _posSeleccionada  = null;
+
+        // Construir tabs
+        const tabsEl = document.getElementById('formation-tabs');
+        tabsEl.innerHTML = '';
+        Object.keys(FORMATIONS).forEach(f => {
+            const btn = document.createElement('button');
+            btn.className = 'formation-tab' + (f === _formacionActual ? ' active' : '');
+            btn.textContent = f;
+            btn.onclick = () => cambiarFormacion(f, btn);
+            tabsEl.appendChild(btn);
+        });
+
+        renderField(_formacionActual);
+        document.getElementById('pos-modal-overlay').classList.add('visible');
+        resetFieldInfo();
+    }
+
+    function cerrarModalPosicion() {
+        document.getElementById('pos-modal-overlay').classList.remove('visible');
+        _modalJugadorId = null;
+        _posSeleccionada = null;
+    }
+
+    function cambiarFormacion(f, btn) {
+        _formacionActual = f;
+        _posSeleccionada = null;
+        document.querySelectorAll('.formation-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderField(f);
+        resetFieldInfo();
+    }
+
+    function renderField(formacion) {
+        const positions = FORMATIONS[formacion] || [];
+        const container = document.getElementById('field-positions');
+        container.innerHTML = '';
+
+        positions.forEach((p, i) => {
+            const dot = document.createElement('div');
+            dot.className = `field-dot ${POS_CLASS[p.pos] || ''}`;
+            dot.style.left = p.x + '%';
+            dot.style.top  = p.y + '%';
+            dot.textContent = p.pos;
+            dot.dataset.index = i;
+            dot.dataset.pos   = p.pos;
+            dot.dataset.label = p.label;
+            dot.onclick = () => seleccionarSlot(i, p);
+            container.appendChild(dot);
+        });
+    }
+
+    function seleccionarSlot(index, posData) {
+        // Deseleccionar anterior
+        document.querySelectorAll('.field-dot').forEach(d => d.classList.remove('selected'));
+        const dot = document.querySelector(`.field-dot[data-index="${index}"]`);
+        if (dot) dot.classList.add('selected');
+
+        _posSeleccionada = posData;
+
+        // Mostrar info panel
+        document.getElementById('field-placeholder').style.display = 'none';
+        document.getElementById('field-pos-detail').style.display  = 'block';
+
+        const color = POS_COLORS[posData.pos] || '#fff';
+        document.getElementById('fpd-pos-name').textContent  = posData.pos;
+        document.getElementById('fpd-pos-name').style.color  = color;
+        document.getElementById('fpd-pos-label').textContent = posData.label;
+
+        // Jugador seleccionado para fichar
+        const listEl = document.getElementById('fpd-jugadores-list');
+        listEl.innerHTML = `
+            <div class="fpd-jugador-sel">
+                <img src="${_modalJugadorFoto}" alt="">
+                <div>
+                    <div class="fpd-jugador-nombre">${_modalJugadorNom}</div>
+                    <div class="fpd-jugador-pos">${_modalJugadorPos}</div>
+                </div>
+            </div>`;
+
+        document.getElementById('btn-confirmar-pick').disabled = false;
+    }
+
+    function resetFieldInfo() {
+        document.getElementById('field-placeholder').style.display = 'block';
+        document.getElementById('field-pos-detail').style.display  = 'none';
+        document.getElementById('btn-confirmar-pick').disabled = true;
+    }
+
+    async function confirmarPickConPosicion() {
+        if (!_modalJugadorId) return;
+        cerrarModalPosicion();
+        // Llama a la función fichar original
+        await fichar(_modalJugadorId, _modalJugadorNom);
+    }
+
+    // Override fichar para que abra el modal de posición
+    const _ficharOriginal = window.fichar;
+    window.ficharConModal = function(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion) {
+        abrirModalPosicion(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion);
+    };
+
+    // Cerrar modal al clicar fondo
+    document.getElementById('pos-modal-overlay').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalPosicion();
+    });
+
     window.__CLUTCH__ = {
         username:  '<%= user.username %>',
         esCapitan: <%= user.esCapitan ? "true" : "false" %>,
