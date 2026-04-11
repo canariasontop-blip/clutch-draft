@@ -1,22 +1,22 @@
-name: Deploy a Hetzner
+name: Deploy to Hetzner
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Desplegar via SSH
-        uses: appleboy/ssh-action@master
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 116.203.96.243
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
             cd /root
             git pull origin main
             npm install --production
-            pm2 restart all
+            pm2 restart clutch-web
+            pm2 restart clutch-bot
