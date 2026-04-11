@@ -11,9 +11,15 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 116.203.96.243 >> ~/.ssh/known_hosts
+
+      - name: Check key
+        run: |
+          wc -c ~/.ssh/id_ed25519
+          head -1 ~/.ssh/id_ed25519
+          tail -1 ~/.ssh/id_ed25519
 
       - name: Deploy via SSH
         run: |
