@@ -93,6 +93,7 @@ const CATEGORIA_ID        = '1489288382289805445';
 const CANAL_PANEL_ADMIN   = '1494351892409483355';
 const CANAL_NORMATIVA     = '1489288889305792673';
 const CANAL_INSCRIPCIONES = '1489288999250952476';
+const CATEGORIA_INFO      = '1489288783252820151';
 const CATEGORIA_DRAFT     = '1489289040992927815';
 
 // ── Estado en memoria ────────────────────────────────────────
@@ -2089,7 +2090,20 @@ async function comprobarLimpiezaAutomatica() {
 //  NORMATIVA — publicar en canal dedicado
 // ══════════════════════════════════════════════════════════════
 async function publicarGuiaApp(guild) {
-    const canal = await guild.channels.fetch(CANAL_NORMATIVA);
+    // Buscar canal existente o crearlo en la categoría info
+    let canal = guild.channels.cache.find(c => c.name === '📱-instalar-app' && c.parentId === CATEGORIA_INFO);
+    if (!canal) {
+        canal = await guild.channels.create({
+            name: '📱-instalar-app',
+            type: 0,
+            parent: CATEGORIA_INFO,
+            permissionOverwrites: [
+                { id: guild.id, allow: ['ViewChannel', 'ReadMessageHistory'], deny: ['SendMessages'] },
+            ],
+        });
+    } else {
+        await borrarMensajesCanal(canal);
+    }
 
     const embedAndroid = new EmbedBuilder()
         .setTitle('🤖 Android — Chrome')
@@ -4652,7 +4666,7 @@ client.on('interactionCreate', async (interaction) => {
 
             } else if (id === 'admp_guia_app') {
                 await publicarGuiaApp(guild);
-                await interaction.editReply({ content: '✅ Guía de instalación de la app publicada en el canal 📜-normativa.' });
+                await interaction.editReply({ content: '✅ Guía de instalación publicada en 📱-instalar-app.' });
 
             } else if (id === 'admp_formatos') {
                 await publicarFormatos(guild);
