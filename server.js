@@ -108,11 +108,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', 1);
 app.use(session({
     secret:            process.env.SESSION_SECRET || 'clutch-secret-dev',
     resave:            false,
     saveUninitialized: false,
-    cookie:            { maxAge: 86400000 }
+    cookie:            { maxAge: 86400000, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' }
 }));
 
 const pickLimiter = rateLimit({
@@ -1975,7 +1976,8 @@ const uploadEscudo = multer({
     }
 });
 
-app.post('/equipo/escudo', requireLogin, (req, res) => {
+app.post('/equipo/escudo', (req, res) => {
+    if (!req.session.user) return res.status(401).json({ error: 'Sesión expirada, recarga la página.' });
     uploadEscudo.single('escudo')(req, res, (err) => {
         if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'La imagen supera 8MB.' : err.message });
         if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });

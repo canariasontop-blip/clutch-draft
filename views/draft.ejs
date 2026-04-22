@@ -609,7 +609,7 @@
             <button type="button" class="team-upload-sm" onclick="document.getElementById('inputEscudo').click()">
                 <i class="fas fa-upload" style="margin-right:4px;font-size:0.65rem;"></i>Subir escudo
             </button>
-            <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
+            <input type="file" id="inputEscudo" accept="image/*" style="display:none;">
             <div id="msg-escudo" class="team-msg-sm">✅ Actualizado</div>
         </div>
         <!-- Contactos WhatsApp plantilla -->
@@ -1414,7 +1414,7 @@ async function subirEscudo(input){
             m.textContent='❌ '+(data.error||'Error al subir');m.style.color='#ff4d4d';
         }
     } catch(e){
-        m.textContent='❌ Error de conexión';m.style.color='#ff4d4d';
+        m.textContent='❌ '+(e.message||'Error de red');m.style.color='#ff4d4d';
     }
     setTimeout(()=>m.style.display='none',3000);
     input.value='';
