@@ -606,10 +606,10 @@
                 <button class="team-btn-sm" onclick="renombrarEquipo()">OK</button>
             </div>
             <div id="msg-renombrar" class="team-msg-sm">✅ Guardado</div>
-            <label class="team-upload-sm">
+            <button type="button" class="team-upload-sm" onclick="document.getElementById('inputEscudo').click()">
                 <i class="fas fa-upload" style="margin-right:4px;font-size:0.65rem;"></i>Subir escudo
-                <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
-            </label>
+            </button>
+            <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
             <div id="msg-escudo" class="team-msg-sm">✅ Actualizado</div>
         </div>
         <!-- Contactos WhatsApp plantilla -->

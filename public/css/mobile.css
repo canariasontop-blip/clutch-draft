@@ -740,6 +740,22 @@
   .picks-counter-val { font-size: 1.3rem !important; }
   .avail-badge-num { font-size: 1.5rem !important; }
   .team-input-sm { font-size: 0.8rem !important; }
+  .team-upload-sm {
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 0.82rem !important;
+    background: none !important;
+    border: 1px dashed rgba(255,255,255,0.2) !important;
+    color: #aaa !important;
+    width: 100% !important;
+    border-radius: 9px !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent;
+  }
 
   .form-picker-drop {
     left: 0 !important;
