@@ -14,20 +14,14 @@ app.post('/deploy', (req, res) => {
     if (branch && branch !== 'refs/heads/main') return res.status(200).send('Rama ignorada');
 
     res.status(200).send('Deploy iniciado');
-    console.log('[deploy] Ejecutando deploy en /root...');
+    console.log('[deploy] Ejecutando deploy...');
 
-    const cmd = 'git pull origin main && npm install --production && /usr/bin/pm2 restart all';
-    exec(cmd, {
-        cwd: '/root',
-        env: { ...process.env, HOME: '/root', PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' }
+    exec('bash /root/deploy.sh', {
+        env: { ...process.env, HOME: '/root', PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' },
+        detached: true
     }, (err, stdout, stderr) => {
-        if (err) {
-            console.error('[deploy] ❌ Error:', err.message);
-            console.error('[deploy] stderr:', stderr);
-            console.error('[deploy] stdout:', stdout);
-        } else {
-            console.log('[deploy] ✅ Deploy completado:', stdout || '(sin output)');
-        }
+        if (err) console.error('[deploy] ❌ Error:', err.message, stderr);
+        else console.log('[deploy] ✅ Script ejecutado');
     });
 });
 
