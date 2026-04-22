@@ -1968,23 +1968,25 @@ const storage = multer.diskStorage({
 });
 const uploadEscudo = multer({
     storage,
-    limits: { fileSize: 2 * 1024 * 1024 },
+    limits: { fileSize: 8 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (!file.mimetype.startsWith('image/')) return cb(new Error('Solo imágenes'));
         cb(null, true);
     }
 });
 
-app.post('/equipo/escudo', requireLogin, uploadEscudo.single('escudo'), (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
-    const userId = req.session.user.id;
-    const equipo = db.prepare(`SELECT * FROM teams WHERE capitan_id=?`).get(userId);
-    if (!equipo) return res.status(403).json({ error: 'No eres capitán.' });
-
-    const logo_url = `/uploads/escudos/${req.file.filename}`;
-    db.prepare(`UPDATE teams SET logo_url=? WHERE capitan_id=?`).run(logo_url, userId);
-    io.emit('equipo-renombrado', { capitan: req.session.user.username });
-    res.json({ ok: true, logo_url });
+app.post('/equipo/escudo', requireLogin, (req, res) => {
+    uploadEscudo.single('escudo')(req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'La imagen supera 8MB.' : err.message });
+        if (!req.file) return res.status(400).json({ error: 'No se subió ningún archivo.' });
+        const userId = req.session.user.id;
+        const equipo = db.prepare(`SELECT * FROM teams WHERE capitan_id=?`).get(userId);
+        if (!equipo) return res.status(403).json({ error: 'No eres capitán.' });
+        const logo_url = `/uploads/escudos/${req.file.filename}`;
+        db.prepare(`UPDATE teams SET logo_url=? WHERE capitan_id=?`).run(logo_url, userId);
+        io.emit('equipo-renombrado', { capitan: req.session.user.username });
+        res.json({ ok: true, logo_url });
+    });
 });
 
 // ══════════════════════════════════════════════════════════════

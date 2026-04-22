@@ -1402,7 +1402,7 @@ async function subirEscudo(input){
     m.textContent='⏳ Subiendo...';m.style.display='block';m.style.color='#aaa';
     try{
         const fd=new FormData();fd.append('escudo',input.files[0]);
-        const res=await fetch('/equipo/escudo',{method:'POST',body:fd});
+        const res=await fetch('/equipo/escudo',{method:'POST',body:fd,credentials:'same-origin'});
         const data=await res.json();
         if(res.ok && data.logo_url){
             const el=document.getElementById('team-escudo-img');
