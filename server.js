@@ -1916,7 +1916,7 @@ io.on('connection', (socket) => {
 // ══════════════════════════════════════════════════════════════
 app.post('/equipo/formacion', requireLogin, (req, res) => {
     const { formacion } = req.body;
-    const FORMACIONES_VALIDAS = ['4-3-3','4-4-2','4-2-3-1','3-5-2','3-1-4-2','4-1-2-1-2','5-3-2'];
+    const FORMACIONES_VALIDAS = ['3-5-2','3-1-4-2'];
     if (!FORMACIONES_VALIDAS.includes(formacion))
         return res.status(400).json({ error: 'Formación no válida.' });
 
