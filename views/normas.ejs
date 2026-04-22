@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Reglamento</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.12;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.82);}
+        /* Contenido sobre el video */
+        body>*:not(#bg-video-wrap){position:relative;z-index:1;}
+        nav{z-index:200!important;}
+        .normas-hero,.normas-main,.norma-section,.norma-card,.banned-img-block,
+        .alturas-table,.alert-row,.aviso-final{position:relative;z-index:1;}
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
+
+        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:58px;background:rgba(3,3,10,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
+        .nav-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .nav-links{display:flex;gap:2px;}
+        .nav-link{color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;padding:6px 13px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+        .nav-link.admin-lnk{color:var(--accent);}
+        .nav-user{display:flex;align-items:center;gap:10px;}
+        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
+        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
+        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;}
+
+        /* HERO NORMAS */
+        .normas-hero{
+            text-align:center;padding:60px 24px 40px;
+            border-bottom:1px solid var(--border);
+            background:linear-gradient(180deg,rgba(0,255,204,0.03) 0%,transparent 100%);
+        }
+        .normas-eyebrow{
+            display:inline-flex;align-items:center;gap:8px;
+            font-size:0.65rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+            color:var(--primary);border:1px solid rgba(0,255,204,0.2);
+            padding:6px 16px;border-radius:20px;margin-bottom:18px;
+        }
+        .normas-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:3px;margin-bottom:10px;}
+        .normas-sub{color:#aaa;font-size:0.88rem;letter-spacing:2px;text-transform:uppercase;}
+
+        /* MAIN */
+        .normas-main{max-width:860px;margin:0 auto;padding:50px 24px 80px;}
+
+        /* SECTION GRUPOS */
+        .norma-section{margin-bottom:50px;}
+        .norma-section-title{
+            font-family:var(--font-display);font-size:1.4rem;letter-spacing:2px;
+            color:var(--primary);margin-bottom:20px;
+            display:flex;align-items:center;gap:10px;
+        }
+        .norma-section-title::after{content:'';flex:1;height:1px;background:rgba(0,255,204,0.15);}
+
+        /* CARD DE NORMA */
+        .norma-card{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:14px;padding:20px 22px;margin-bottom:10px;
+            display:flex;gap:18px;align-items:flex-start;
+            transition:0.2s;
+        }
+        .norma-card:hover{border-color:rgba(255,255,255,0.1);}
+        .norma-icon{
+            width:44px;height:44px;border-radius:10px;flex-shrink:0;
+            display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+        }
+        .ni-green{background:rgba(0,255,204,0.1);color:var(--primary);}
+        .ni-red{background:rgba(255,77,77,0.1);color:#ff4d4d;}
+        .ni-yellow{background:rgba(255,204,0,0.1);color:#ffcc00;}
+        .ni-purple{background:rgba(160,102,255,0.1);color:var(--accent);}
+        .ni-blue{background:rgba(51,153,255,0.1);color:#3399ff;}
+        .ni-gold{background:rgba(240,192,64,0.1);color:var(--gold);}
+        .norma-body{}
+        .norma-name{font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+        .ni-green ~ .norma-body .norma-name{color:var(--primary);}
+        .ni-red ~ .norma-body .norma-name{color:#ff4d4d;}
+        .ni-yellow ~ .norma-body .norma-name{color:#ffcc00;}
+        .ni-purple ~ .norma-body .norma-name{color:var(--accent);}
+        .ni-blue ~ .norma-body .norma-name{color:#3399ff;}
+        .ni-gold ~ .norma-body .norma-name{color:var(--gold);}
+        .norma-text{font-size:0.9rem;color:#ccc;line-height:1.7;}
+        .norma-text strong{color:#ccc;}
+        .norma-text em{color:var(--primary);font-style:normal;font-weight:700;}
+
+        /* ALTURAS TABLE */
+        .alturas-table{
+            display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+            background:var(--border);border-radius:10px;overflow:hidden;margin:12px 0;
+        }
+        .altura-cell{background:var(--card);padding:14px;text-align:center;}
+        .altura-lbl{font-size:0.6rem;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+        .altura-val{font-family:var(--font-display);font-size:1.6rem;}
+        .av-red{color:#ff4d4d;}
+        .av-yellow{color:#ffcc00;}
+        .av-green{color:var(--primary);}
+
+        /* ALERT ROWS */
+        .alert-row{
+            border-radius:8px;padding:10px 14px;margin-top:8px;
+            font-size:0.82rem;display:flex;align-items:center;gap:8px;
+        }
+        .alert-row.danger{background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.2);color:#ff4d4d;}
+        .alert-row.warn{background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.2);color:#ffcc00;}
+
+        /* BANNED PERKS IMAGE */
+        .banned-img-block{
+            background:var(--card);border:1px solid var(--border);border-radius:14px;
+            padding:20px;text-align:center;margin-bottom:10px;
+        }
+        .banned-img-block img{max-width:100%;border-radius:8px;}
+
+        /* AVISO GENERAL */
+        .aviso-final{
+            background:rgba(0,255,204,0.04);border:1px solid rgba(0,255,204,0.15);
+            border-radius:14px;padding:24px;text-align:center;margin-top:30px;
+        }
+        .aviso-final p{color:#ccc;font-size:0.9rem;line-height:1.8;}
+        .aviso-final strong{color:var(--primary);}
+
+        /* ── FORMATOS DE COMPETICIÓN ── */
+        .fmts-grid{display:flex;flex-direction:column;gap:14px;}
+        .fmt-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.2s;}
+        .fmt-card:hover{border-color:rgba(255,255,255,.1);}
+        .fmt-card summary{list-style:none;}
+        .fmt-card summary::-webkit-details-marker{display:none;}
+        .fmt-hdr{
+            padding:18px 22px;display:flex;align-items:center;gap:14px;
+            cursor:pointer;user-select:none;
+        }
+        details[open] .fmt-hdr{border-bottom:1px solid var(--border);}
+        .fmt-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+        .fmt-meta{flex:1;}
+        .fmt-name{font-family:var(--font-display);font-size:1.05rem;letter-spacing:2px;}
+        .fmt-sub{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+        .fmt-pill{font-size:.58rem;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}
+        .fmt-toggle{color:#555;font-size:.75rem;flex-shrink:0;transition:.2s;}
+        details[open] .fmt-toggle{transform:rotate(180deg);color:var(--primary);}
+        .fmt-body{padding:18px 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .fmt-phase{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:14px;}
+        .fmt-phase.full{grid-column:1/-1;}
+        .fph-ttl{font-size:.58rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+        .fph-list{list-style:none;margin:0;padding:0;}
+        .fph-list li{font-size:.8rem;color:#bbb;padding:5px 0;line-height:1.6;border-bottom:1px solid rgba(255,255,255,.03);display:flex;gap:7px;}
+        .fph-list li:last-child{border-bottom:none;padding-bottom:0;}
+        .fph-list li .arr{flex-shrink:0;color:var(--primary);}
+        .clasi-rows{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+        .clasi-item{font-size:.75rem;padding:6px 10px;border-radius:6px;display:flex;align-items:center;gap:8px;}
+        .clasi-item.up{background:rgba(0,255,204,.07);border:1px solid rgba(0,255,204,.15);color:var(--primary);}
+        .clasi-item.mid{background:rgba(255,204,0,.06);border:1px solid rgba(255,204,0,.12);color:#ffcc00;}
+        .clasi-item.out{background:rgba(255,77,77,.05);border:1px solid rgba(255,77,77,.1);color:#ff4d4d;opacity:.8;}
+        .clasi-pos{font-family:var(--font-display);font-size:.95rem;width:56px;flex-shrink:0;}
+        .desempate-ol{counter-reset:dc;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+        .desempate-ol li{counter-increment:dc;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:7px;font-size:.82rem;color:#ccc;}
+        .desempate-ol li::before{content:counter(dc);font-family:var(--font-display);font-size:1.1rem;color:var(--primary);width:22px;text-align:center;flex-shrink:0;}
+
+        @media(max-width:768px){
+            nav{padding:0 12px;height:52px;}
+            .nav-link{font-size:0.62rem;padding:4px 8px;}
+            .nav-username{display:none;}
+            .alturas-table{grid-template-columns:1fr;}
+            .fmt-body{grid-template-columns:1fr;}
+            .fmt-phase.full{grid-column:auto;}
+        }
+
+        </style>
+</head>
+<body>
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_ruta-normas.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link active">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="normas-hero">
+    <div class="normas-eyebrow"><i class="fas fa-book"></i> Reglamento Oficial</div>
+    <h1 class="normas-title">NORMAS PARA CAPITANES</h1>
+    <p class="normas-sub">Lee y respeta el reglamento. El Staff tiene la última palabra en cualquier decisión.</p>
+</div>
+
+<div class="normas-main">
+
+    <!-- BANNED PERKS -->
+    <div class="norma-section">
+        <div class="norma-section-title"><i class="fas fa-ban"></i> Restricciones de Juego</div>
+
+        <div class="banned-img-block">
+            <img src="/uploads/playstyles_banneados.png" alt="Estilos de juego vetados" style="max-width:480px;width:100%;border-radius:12px;">
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-yellow"><i class="fas fa-ruler-vertical"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Reglamento de Alturas</div>
+                <div class="norma-text">Se aplican límites de altura según posición:</div>
+                <div class="alturas-table">
+                    <div class="altura-cell">
+                        <div class="altura-lbl">DFC (Centrales)</div>
+                        <div class="altura-val av-red">187cm máx.</div>
+                    </div>
+                    <div class="altura-cell">
+                        <div class="altura-lbl">Otras posiciones</div>
+                        <div class="altura-val av-yellow">182cm máx.</div>
+                    </div>
+                    <div class="altura-cell">
+                        <div class="altura-lbl">Portero</div>
+                        <div class="altura-val av-green">192cm máx.</div>
+                    </div>
+                </div>
+                <div class="alert-row danger"><i class="fas fa-exclamation-triangle"></i> Sobrepasar el límite de altura conlleva <strong>penalización como capitan.</strong></div>
+                <div class="alert-row warn"><i class="fas fa-exclamation-circle"></i> Abuso detectado conlleva <strong>partido perdido.</strong></div>
+                <div class="alert-row warning"><i class="fas fa-exclamation-circle"></i> Obligación de <strong>grabar siempre las alturas.</strong></div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-purple"><i class="fas fa-shield-alt"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">SUBIDA DE LOS DFC EN EL PARTIDO</div>
+                <div class="norma-text">
+                    Los defensas <strong>no pueden subir al ataque de forma fija</strong> hasta el <em>minuto 75</em>.
+                    Las subidas puntuales son permitidas, pero la táctica fija de ataque está prohibida antes de ese minuto.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROTOCOLO -->
+    <div class="norma-section">
+        <div class="norma-section-title"><i class="fas fa-wifi"></i> Protocolo de Partido</div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-blue"><i class="fas fa-plug"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Reinicios</div>
+                <div class="norma-text">
+                    <strong>Salidas:</strong> Solo una vez y <em>antes del minuto 10</em>.<br>
+                    <strong>Estricto:</strong> Tras el minuto 10, se acaba con los que estén. No se repetirá el partido por desconexiones tardías.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-green"><i class="fas fa-users"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Reemplazo por Ausencia</div>
+                <div class="norma-text">
+                    Si un jugador elegido <strong>no se presenta</strong>, el capitán debe avisar a la Administración.
+                    El uso de jugadores fuera de lista es <em>excepcional</em> y requiere aprobación previa del Staff.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-red"><i class="fas fa-times-circle"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Cláusula Anti-Trol</div>
+                <div class="norma-text">
+                    Si un jugador va a arbitraje por <strong>"trollear"</strong>, el capitán busca sustituto inmediato.
+                    Deben presentarse pruebas al Staff. El Staff evaluará y tomará la decisión final.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-blue"><i class="fas fa-id-card"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Verificación de IDs</div>
+                <div class="norma-text">
+                    Si se confirma que el jugador inscrito está usando el ID correcto,
+                    <strong>no se perderá el partido por errores de forma en el ID</strong>.
+                    La verificación es responsabilidad compartida entre el capitán y el Staff.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRAFT -->
+    <div class="norma-section">
+        <div class="norma-section-title"><i class="fas fa-clipboard-list"></i> Reglas del Draft</div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-green"><i class="fas fa-random"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Sistema Snake Draft</div>
+                <div class="norma-text">
+                    El orden de selección sigue el sistema <em>snake</em>: en rondas impares se va de 1 al último capitán,
+                    en rondas pares al revés. Cada capitán tiene <strong>90 segundos</strong> por turno.
+                    Si el tiempo expira, el turno se salta automáticamente.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-yellow"><i class="fas fa-user-check"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Límites de Plantilla</div>
+                <div class="norma-text">
+                    Cada equipo puede fichar un máximo de:
+                    <strong>2 DC · 3 MC · 2 CARR · 3 DFC · 1 POR</strong>.
+                    No se pueden sobrepasar estos límites bajo ningún concepto.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-purple"><i class="fas fa-lock"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Cambio de Formación</div>
+                <div class="norma-text">
+                    La formación solo puede modificarse mientras el draft está <em>cerrado</em>.
+                    Una vez abierto el draft, la formación queda <strong>bloqueada</strong> hasta el siguiente período de cierre.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMINISTRACIÓN -->
+    <div class="norma-section">
+        <div class="norma-section-title"><i class="fas fa-gavel"></i> Autoridad Administrativa</div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-gold"><i class="fas fa-balance-scale"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Autoridad Administrativa</div>
+                <div class="norma-text">
+                    El criterio del Staff <em>prevalece sobre el texto escrito</em>.
+                    <strong>¡La última palabra siempre es de los Admins!</strong>
+                    Cualquier situación no contemplada en este reglamento será resuelta por el Staff a su criterio.
+                </div>
+            </div>
+        </div>
+
+        <div class="norma-card">
+            <div class="norma-icon ni-red"><i class="fas fa-user-slash"></i></div>
+            <div class="norma-body">
+                <div class="norma-name">Sanciones</div>
+                <div class="norma-text">
+                    El incumplimiento de normas puede conllevar: <strong>advertencia</strong>, <strong>pérdida de partido</strong>,
+                    <strong>expulsión del torneo</strong> o <em>baneo permanente de futuras ediciones</em>.
+                    La gravedad de la sanción la determina el Staff.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMATOS DE COMPETICIÓN -->
+    <div class="norma-section">
+        <div class="norma-section-title"><i class="fas fa-trophy"></i> Formatos de Competición</div>
+        <p style="color:#888;font-size:.82rem;margin-bottom:18px;line-height:1.7;">El formato se determina automáticamente según el número de equipos participantes. Pulsa cada formato para ver todos los detalles.</p>
+
+        <div class="fmts-grid">
+
+            <!-- 4 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(160,102,255,.12);color:var(--accent);"><i class="fas fa-users"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--accent);">LIGUILLA</div>
+                        <div class="fmt-sub">Formato para 4 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(160,102,255,.12);color:var(--accent);">4 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Fase Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos los equipos en una tabla única.</li>
+                            <li><span class="arr">▸</span> Cada equipo juega <strong>3 partidos</strong> (uno contra cada rival).</li>
+                            <li><span class="arr">▸</span> Sin fases eliminatorias: gana quien más puntos acumule.</li>
+                            <li><span class="arr">▸</span> Emparejamientos decididos por sistema Swiss (orden por puntos).</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Clasificación Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º</span> <span>Campeón</span></div>
+                            <div class="clasi-item up" style="border-color:rgba(0,255,204,.08);opacity:.75"><span class="clasi-pos">2º</span> <span>Subcampeón</span></div>
+                            <div class="clasi-item out" style="opacity:.5"><span class="clasi-pos">3º–4º</span> <span>Clasificados</span></div>
+                        </div>
+                        <p style="font-size:.72rem;color:#666;margin-top:10px;">En caso de empate en puntos se aplican criterios de desempate.</p>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 6 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(240,192,64,.1);color:var(--gold);"><i class="fas fa-cut"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--gold);">CHAMPIONS — CORTE DIRECTO</div>
+                        <div class="fmt-sub">Formato para 6 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(240,192,64,.1);color:var(--gold);">6 EQ · 3–4 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--gold);">Fase de Liga Única — 3 o 4 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos en <strong>una sola tabla</strong>. No hay grupos separados.</li>
+                            <li><span class="arr">▸</span> Emparejamientos Swiss: rivales de nivel similar cada jornada.</li>
+                            <li><span class="arr">▸</span> <strong>El Corte:</strong> Al terminar la liga, solo los <em>4 primeros</em> siguen compitiendo.</li>
+                            <li><span class="arr">▸</span> 5º y 6º quedan eliminados al finalizar la fase de liga.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--gold);">Fase Final Directa</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> <strong>Semifinal 1:</strong> 1º vs 4º</li>
+                            <li><span class="arr">▸</span> <strong>Semifinal 2:</strong> 2º vs 3º</li>
+                            <li><span class="arr">▸</span> <strong>Gran Final:</strong> Ganador SF1 vs Ganador SF2</li>
+                        </ul>
+                        <div class="clasi-rows" style="margin-top:12px;">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–4º</span><span>Pasan a Semis</span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">5º–6º</span><span>Eliminados en liga</span></div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 8 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(51,153,255,.12);color:#3399ff;"><i class="fas fa-star"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:#3399ff;">NUEVO FORMATO CHAMPIONS</div>
+                        <div class="fmt-sub">Formato para 8 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(51,153,255,.12);color:#3399ff;">8 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#3399ff;">Fase de Liga Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos en una tabla única. Sin grupos.</li>
+                            <li><span class="arr">▸</span> Cada equipo juega <strong>3 partidos</strong> contra rivales distintos.</li>
+                            <li><span class="arr">▸</span> Sistema Swiss: los primeros se enfrentan a los primeros, los últimos entre sí.</li>
+                            <li><span class="arr">▸</span> Los dos mejores de la liga se <strong>saltan los cuartos</strong> directamente a semis.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#3399ff;">Play-offs y Fase Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–2º</span><span>Clasifican directo a <strong>Semis</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">3º–6º</span><span><strong>Cuartos de Final</strong> (Play-offs)</span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">7º–8º</span><span>Eliminados</span></div>
+                        </div>
+                        <ul class="fph-list" style="margin-top:12px;">
+                            <li><span class="arr">▸</span> Cuartos: 3º vs 6º y 4º vs 5º</li>
+                            <li><span class="arr">▸</span> Semis: 1º vs G.Cuarto · 2º vs G.Cuarto</li>
+                            <li><span class="arr">▸</span> Final</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 10 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(0,255,204,.1);color:var(--primary);"><i class="fas fa-shield-alt"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--primary);">FORMATO CHAMPIONS</div>
+                        <div class="fmt-sub">Formato para 10 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(0,255,204,.1);color:var(--primary);">10 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--primary);">Fase de Liga Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos los equipos en <strong>una tabla general única</strong>.</li>
+                            <li><span class="arr">▸</span> 3 partidos por equipo, emparejados por sistema Swiss.</li>
+                            <li><span class="arr">▸</span> Los rivales cambian cada jornada según tu posición en la tabla.</li>
+                            <li><span class="arr">▸</span> <strong>Premio top 2:</strong> clasifican directo a Semis sin pasar por Cuartos.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--primary);">Clasificación y Fase Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–2º</span><span>Directo a <strong>Semis</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">3º–6º</span><span><strong>Cuartos de Final</strong></span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">7º–10º</span><span>Eliminados</span></div>
+                        </div>
+                        <ul class="fph-list" style="margin-top:12px;">
+                            <li><span class="arr">▸</span> Cuartos: 3º vs 6º y 4º vs 5º</li>
+                            <li><span class="arr">▸</span> Semis → Final</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 12 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(255,77,77,.1);color:#ff6b6b;"><i class="fas fa-crown"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:#ff6b6b;">NUEVO CHAMPIONS — MÁXIMO NIVEL</div>
+                        <div class="fmt-sub">Formato para 12 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(255,77,77,.1);color:#ff6b6b;">12 EQ · 4 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Fase de Liga Única — 4 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Una sola tabla general para <strong>los 12 equipos</strong>.</li>
+                            <li><span class="arr">▸</span> 4 partidos por equipo. No es todos contra todos: los cruces son por nivel (Swiss).</li>
+                            <li><span class="arr">▸</span> Los 2-0 se enfrentan a otros 2-0, los 1-1 entre sí, etc. Liga siempre competitiva.</li>
+                            <li><span class="arr">▸</span> Solo los <strong>4 primeros</strong> clasifican directo a Cuartos. El resto lucha en Play-offs.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Clasificación — 3 niveles</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–4º</span><span>Directo a <strong>Cuartos</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">5º–12º</span><span><strong>Play-offs</strong> (8 luchan por 4 plazas)</span></div>
+                        </div>
+                    </div>
+                    <div class="fmt-phase full">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Fase de Eliminatorias</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> <strong>Play-offs:</strong> 5º vs 12º · 6º vs 11º · 7º vs 10º · 8º vs 9º</li>
+                            <li><span class="arr">▸</span> <strong>Cuartos:</strong> 4 ganadores de Play-offs vs los 4 mejores de liga</li>
+                            <li><span class="arr">▸</span> <strong>Semis → Gran Final</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- CRITERIOS DE DESEMPATE -->
+            <div class="norma-card" style="flex-direction:column;gap:12px;">
+                <div style="display:flex;align-items:center;gap:14px;width:100%;">
+                    <div class="norma-icon ni-yellow"><i class="fas fa-balance-scale"></i></div>
+                    <div class="norma-body">
+                        <div class="norma-name">Criterios de Desempate en Liga</div>
+                        <div class="norma-text">Se aplican en este orden estricto cuando dos o más equipos empatan en puntos:</div>
+                    </div>
+                </div>
+                <ol class="desempate-ol">
+                    <li>Puntos acumulados</li>
+                    <li>Diferencia de goles (GF – GC)</li>
+                    <li>Goles a favor (GF)</li>
+                    <li>Resultado directo entre los empatados</li>
+                    <li>Goles a favor en el partido directo</li>
+                    <li>Sorteo (si todo lo anterior sigue igual)</li>
+                </ol>
+            </div>
+
+        </div><!-- /fmts-grid -->
+    </div><!-- /norma-section formatos -->
+
+    <div class="aviso-final">
+        <i class="fas fa-info-circle" style="color:var(--primary);font-size:1.5rem;margin-bottom:12px;display:block;"></i>
+        <p>
+            Al participar en el <strong>Clutch Draft</strong>, aceptas estas normas en su totalidad.<br>
+            El Staff se reserva el derecho de modificar el reglamento con previo aviso.<br>
+            <strong>Ante cualquier duda, consulta con la administración antes de actuar.</strong>
+        </p>
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>window.__CLUTCH__ = { username: '<%= user.username %>' };</script>
+<script src="/js/main.js"></script>
+
+<script>
+(function(){
+  var burger = document.getElementById('nav-hamburger');
+  var links  = document.getElementById('nav-links');
+  if(!burger) return;
+  burger.addEventListener('click', function(){
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  links.querySelectorAll('.nav-link').forEach(function(l){
+    l.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+})();
+</script>
+</body>
+</html>

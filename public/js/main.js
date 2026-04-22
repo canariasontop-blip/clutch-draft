@@ -1,21 +1,21 @@
 /**
  * public/js/main.js
- * Cliente de sockets — escucha todos los eventos del servidor
- * y actualiza el DOM sin recargar la página.
+ * Cliente de sockets — escucha eventos del servidor y actualiza el DOM.
+ * NO gestiona el timer ni el turno en /draft — eso lo hace draft.ejs directamente.
  */
 
 const socket = io();
+// Exponer el socket para que draft.ejs pueda reutilizarlo sin crear una segunda conexión
+window.__clutchSocket__ = socket;
 
 // ══════════════════════════════════════════════════════
 //  ESTADO LOCAL
 // ══════════════════════════════════════════════════════
 const State = {
-    turnoActual:    '',
-    draftEstado:    'cerrado',
-    timerVal:       0,
-    timerInterval:  null,
-    miNombre:       window.__CLUTCH__?.username || '',
-    esCapitan:      window.__CLUTCH__?.esCapitan || false,
+    turnoActual: '',
+    draftEstado: 'cerrado',
+    miNombre:    window.__CLUTCH__?.username || '',
+    esCapitan:   window.__CLUTCH__?.esCapitan || false,
 };
 
 // ══════════════════════════════════════════════════════
@@ -29,150 +29,17 @@ function setText(sel, txt) {
     if (el) el.textContent = txt;
 }
 
-function setHTML(sel, html) {
-    const el = $(sel);
-    if (el) el.innerHTML = html;
-}
-
-// ══════════════════════════════════════════════════════
-//  TIMER
-// ══════════════════════════════════════════════════════
-function startTimer(val) {
-    clearInterval(State.timerInterval);
-    State.timerVal = val;
-    renderTimer();
-
-    State.timerInterval = setInterval(() => {
-        State.timerVal--;
-        renderTimer();
-        if (State.timerVal <= 0) clearInterval(State.timerInterval);
-    }, 1000);
-}
-
-function renderTimer() {
-    const el = $('#timer');
-    if (!el) return;
-
-    el.textContent = State.timerVal;
-    el.className   = 'timer-display';
-
-    if (State.timerVal <= 10)      el.classList.add('danger');
-    else if (State.timerVal <= 30) el.classList.add('warning');
-}
-
-// ══════════════════════════════════════════════════════
-//  TURN BANNER
-// ══════════════════════════════════════════════════════
-function updateTurnBanner(turno) {
-    State.turnoActual = turno;
-
-    const banner   = $('#turn-banner');
-    const nombreEl = $('#turn-nombre');
-    const badgeEl  = $('#turn-badge');
-
-    if (!banner) return;
-
-    if (nombreEl) nombreEl.textContent = turno;
-
-    const esMio = turno === State.miNombre;
-    banner.className = 'turn-banner' + (esMio ? ' mi-turno' : '');
-
-    if (badgeEl) {
-        badgeEl.textContent = esMio ? '⚡ ES TU TURNO' : '';
-        badgeEl.style.display = esMio ? '' : 'none';
-    }
-
-    // Resaltar en la lista de orden
-    $$('.order-item').forEach(el => {
-        const nombre = el.dataset.capitan;
-        el.className = 'order-item ' + (nombre === turno ? 'activo' : 'otro');
-        const arrow = el.querySelector('.order-arrow');
-        if (arrow) arrow.style.display = nombre === turno ? '' : 'none';
-    });
-}
-
-// ══════════════════════════════════════════════════════
-//  QUITAR JUGADOR DE LA LISTA (sin recargar)
-// ══════════════════════════════════════════════════════
-function removePlayerCard(playerId) {
-    const card = $(`[data-id="${playerId}"]`);
-    if (!card) return;
-
-    // Animación de salida
-    card.style.transition = 'all 0.4s ease';
-    card.style.transform  = 'scale(0.8)';
-    card.style.opacity    = '0';
-
-    setTimeout(() => {
-        card.remove();
-        updatePlayerCount();
-    }, 400);
-}
-
-function updatePlayerCount() {
-    const visible = $$('#players-grid .player-card:not([style*="display: none"])').length;
-    setText('#count', visible);
-}
-
-// ══════════════════════════════════════════════════════
-//  AÑADIR FICHAJE AL PANEL "MI EQUIPO" (sin recargar)
-// ══════════════════════════════════════════════════════
-function addToMyTeam(data) {
-    // Buscar el primer slot vacío de esa posición
-    const slots = $$('.pos-slot');
-    for (const slot of slots) {
-        if (slot.dataset.pos === data.posicion && slot.classList.contains('empty')) {
-            slot.classList.remove('empty');
-            slot.classList.add('filled');
-
-            const nombreEl = slot.querySelector('.slot-nombre');
-            const vacioEl  = slot.querySelector('.slot-vacio');
-
-            if (vacioEl)   vacioEl.style.display   = 'none';
-            if (nombreEl) {
-                nombreEl.textContent    = data.jugador;
-                nombreEl.style.display  = '';
-            }
-
-            // Pequeña animación de entrada
-            slot.style.transition  = 'all 0.3s';
-            slot.style.background  = 'rgba(0,255,204,0.12)';
-            setTimeout(() => { slot.style.background = ''; }, 1000);
-
-            break;
-        }
-    }
-
-    // Actualizar conteo de posición
-    const conteoEl = $(`#conteo-${data.posicion}`);
-    if (conteoEl) {
-        const parts = conteoEl.textContent.split('/');
-        if (parts.length === 2) {
-            const nuevo = parseInt(parts[0]) + 1;
-            conteoEl.textContent = `${nuevo}/${parts[1]}`;
-            if (nuevo >= parseInt(parts[1])) conteoEl.classList.add('limite-full');
-        }
-    }
-}
-
 // ══════════════════════════════════════════════════════
 //  TOAST NOTIFICATIONS
 // ══════════════════════════════════════════════════════
 function toast(msg, type = 'info') {
-    // Crear contenedor si no existe
     let container = $('#toast-container');
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
         container.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: none;
+            position: fixed; top: 80px; right: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
         `;
         document.body.appendChild(container);
     }
@@ -187,32 +54,19 @@ function toast(msg, type = 'info') {
 
     const el = document.createElement('div');
     el.style.cssText = `
-        background: ${c.bg};
-        border: 1px solid ${c.border};
-        border-radius: 12px;
-        padding: 12px 18px;
-        color: #fff;
-        font-size: 0.85rem;
-        font-weight: 600;
-        font-family: 'Segoe UI', sans-serif;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-        transform: translateX(120%);
+        background: ${c.bg}; border: 1px solid ${c.border}; border-radius: 12px;
+        padding: 12px 18px; color: #fff; font-size: 0.85rem; font-weight: 600;
+        font-family: 'Segoe UI', sans-serif; backdrop-filter: blur(20px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4); transform: translateX(120%);
         transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-        max-width: 300px;
-        pointer-events: auto;
+        max-width: 300px; pointer-events: auto;
     `;
     el.textContent = `${c.icon} ${msg}`;
     container.appendChild(el);
 
-    // Animar entrada
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            el.style.transform = 'translateX(0)';
-        });
-    });
-
-    // Animar salida y eliminar
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transform = 'translateX(0)';
+    }));
     setTimeout(() => {
         el.style.transform = 'translateX(120%)';
         setTimeout(() => el.remove(), 300);
@@ -220,29 +74,70 @@ function toast(msg, type = 'info') {
 }
 
 // ══════════════════════════════════════════════════════
+//  TURN BANNER — solo para páginas que NO son /draft
+//  En /draft lo gestiona draft.ejs directamente
+// ══════════════════════════════════════════════════════
+function updateTurnBannerExterno(turno) {
+    State.turnoActual = turno;
+    // Solo actualizar elementos del hub/otras páginas
+    const turnoLive    = $('#turno-live');
+    const turnoSidebar = $('#turno-sidebar');
+    if (turnoLive)    turnoLive.textContent    = turno;
+    if (turnoSidebar) turnoSidebar.textContent = turno;
+}
+
+// ══════════════════════════════════════════════════════
+//  QUITAR JUGADOR DE LA LISTA (sin recargar)
+// ══════════════════════════════════════════════════════
+function removePlayerCard(playerId) {
+    const card = $(`[data-id="${playerId}"]`);
+    if (!card) return;
+    card.style.transition = 'all 0.4s ease';
+    card.style.transform  = 'scale(0.8)';
+    card.style.opacity    = '0';
+    setTimeout(() => {
+        card.remove();
+        const visible = $$('#players-grid .player-card:not([style*="display: none"])').length;
+        setText('#count', visible);
+    }, 400);
+}
+
+// ══════════════════════════════════════════════════════
 //  EVENTOS DEL SERVIDOR
 // ══════════════════════════════════════════════════════
 
-// Estado inicial al conectar
+// Estado inicial al conectar — en /draft lo maneja draft.ejs, aquí solo hub/otras
 socket.on('init', (data) => {
-    if (data.timer !== undefined) startTimer(data.timer);
-    if (data.turno)  updateTurnBanner(data.turno);
+    // Si estamos en /draft, draft.ejs tiene su propio socket y su propio handler
+    // Solo actuamos aquí para otras páginas
+    if (window.location.pathname !== '/draft') {
+        if (data.turno) updateTurnBannerExterno(data.turno);
+    }
 });
 
-// Timer tick
-socket.on('timer-update', (val) => {
-    State.timerVal = val;
-    renderTimer();
-    // Sincronizar el intervalo local cuando sea necesario
-    if (Math.abs(val - State.timerVal) > 2) startTimer(val);
+// Timer tick — SOLO lo maneja draft.ejs via window.__updateTimer__
+// main.js NO toca el #timer para no sobreescribir las clases del turn-pill
+socket.on('timer_tick', (data) => {
+    if (window.__updateTimer__ && data?.segundos !== undefined) {
+        window.__updateTimer__(data.segundos);
+    }
 });
 
 // Nuevo jugador inscrito desde Discord
-socket.on('nuevo-jugador', () => {
+socket.on('nuevo-jugador', (data) => {
     toast('Nuevo jugador inscrito en Discord', 'info');
-    // Recargar solo si estamos en la página de draft
     if (window.location.pathname === '/draft') {
         setTimeout(() => location.reload(), 1200);
+    }
+    if (data && window.location.pathname === '/hub') {
+        const sJ = document.getElementById('stat-jugadores');
+        const sF = document.getElementById('stat-fichados');
+        const sE = document.getElementById('stat-equipos');
+        const sD = document.getElementById('stat-disponibles');
+        if (sJ) sJ.textContent = data.totalJugadores;
+        if (sF) sF.textContent = data.totalFichados;
+        if (sE) sE.textContent = data.totalEquipos;
+        if (sD) sD.textContent = data.totalJugadores - data.totalFichados;
     }
 });
 
@@ -250,19 +145,11 @@ socket.on('nuevo-jugador', () => {
 socket.on('nuevo-fichaje', (data) => {
     if (!data) return;
 
-    // Actualizar turno
-    if (data.turno) {
-        updateTurnBanner(data.turno);
-        startTimer(data.timer || 90);
-    }
+    // Actualizar turno en hub/otras páginas
+    if (data.turno) updateTurnBannerExterno(data.turno);
 
     // Quitar jugador de la lista visual
     if (data.jugadorId) removePlayerCard(data.jugadorId);
-
-    // Si es mi equipo → añadir al panel izquierdo
-    if (data.capitan === State.miNombre && data.jugadorId) {
-        addToMyTeam(data);
-    }
 
     // Toast
     if (data.capitan && data.jugador) {
@@ -274,14 +161,10 @@ socket.on('nuevo-fichaje', (data) => {
             esMio ? 'success' : 'info'
         );
     }
-
-    // Actualizar turno en el hub si estamos ahí
-    const turnoLive = $('#turno-live');
-    if (turnoLive && data.turno) turnoLive.textContent = data.turno;
 });
 
 // Draft abierto
-socket.on('draft-abierto', (data) => {
+socket.on('draft-abierto', () => {
     toast('🚀 ¡El draft ha comenzado!', 'success');
     setTimeout(() => location.reload(), 1500);
 });
@@ -302,7 +185,7 @@ socket.on('torneo-generado', () => {
 
 // Resultado de partido
 socket.on('resultado', (data) => {
-    toast(`${data.equipo1} ${data.goles1} - ${data.goles2} ${data.equipo2}`, 'success');
+    if (data?.equipo1) toast(`${data.equipo1} ${data.goles1} - ${data.goles2} ${data.equipo2}`, 'success');
     if (window.location.pathname === '/clasificacion') {
         setTimeout(() => location.reload(), 1000);
     }
@@ -323,8 +206,6 @@ socket.on('activity', (msg) => {
 //  FUNCIÓN PICK (llamada desde draft.ejs)
 // ══════════════════════════════════════════════════════
 window.fichar = async function(playerId, nombre) {
-    if (!confirm(`¿Fichar a ${nombre}?`)) return;
-
     const btn = $(`[data-id="${playerId}"] .btn-pick`);
     if (btn) { btn.textContent = '...'; btn.disabled = true; }
 
@@ -340,7 +221,6 @@ window.fichar = async function(playerId, nombre) {
             toast(msg, 'danger');
             if (btn) { btn.textContent = '⚡ FICHAR'; btn.disabled = false; }
         }
-        // Si fue OK, el socket 'nuevo-fichaje' actualiza todo
     } catch(e) {
         toast('Error de conexión', 'danger');
         if (btn) { btn.textContent = '⚡ FICHAR'; btn.disabled = false; }
@@ -385,8 +265,25 @@ window.showTab = function(name, btn) {
     $$('.tab-btn').forEach(b  => b.classList.remove('active'));
     const tab = $(`#tab-${name}`);
     if (tab) tab.classList.add('active');
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
+    history.replaceState(null, '', '#tab-' + name);
 };
+
+// Auto-activate tab from URL hash on load
+document.addEventListener('DOMContentLoaded', function() {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#tab-')) {
+        const name = hash.slice(5);
+        const tab  = document.getElementById('tab-' + name);
+        if (tab) {
+            $$('.tab-content').forEach(t => t.classList.remove('active'));
+            $$('.tab-btn').forEach(b  => b.classList.remove('active'));
+            tab.classList.add('active');
+            const btn = Array.from($$('.tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + name + "'"));
+            if (btn) btn.classList.add('active');
+        }
+    }
+});
 
 window.filtrarJugadores = function(val) {
     $$('#tabla-jugadores tbody tr').forEach(r => {

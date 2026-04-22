@@ -40,7 +40,9 @@ db.exec(`
     capitan_username TEXT NOT NULL,
     nombre_equipo    TEXT,
     logo_url         TEXT DEFAULT '',
-    formacion        TEXT DEFAULT '4-3-3'
+    formacion        TEXT DEFAULT '3-1-4-2',
+    capitan2_id      TEXT DEFAULT NULL,
+    capitan2_username TEXT DEFAULT NULL
   );
 
   CREATE TABLE IF NOT EXISTS settings (
@@ -91,6 +93,38 @@ db.exec(`
     clasificacion TEXT NOT NULL  -- JSON snapshot de la tabla completa
   );
 
+  CREATE TABLE IF NOT EXISTS cocapitanes (
+    capitan_id   TEXT NOT NULL,
+    cocapitan_id TEXT NOT NULL,
+    PRIMARY KEY (capitan_id, cocapitan_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS admins (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    discord_id  TEXT UNIQUE NOT NULL,
+    username    TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS twitch_tracked (
+    twitch_login    TEXT PRIMARY KEY,
+    display_name    TEXT NOT NULL,
+    profile_image   TEXT DEFAULT NULL,
+    is_live         INTEGER DEFAULT 0,
+    stream_id       TEXT DEFAULT NULL,
+    stream_title    TEXT DEFAULT NULL,
+    stream_game     TEXT DEFAULT NULL,
+    stream_viewers  INTEGER DEFAULT 0,
+    stream_thumbnail TEXT DEFAULT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS candidatos_capitan (
+    discord_id  TEXT PRIMARY KEY,
+    nombre      TEXT NOT NULL,
+    eafc_id     TEXT,
+    forzado     INTEGER DEFAULT 0,
+    confirmado  INTEGER DEFAULT 0
+  );
+
 `);
 
 // ── VALORES INICIALES ──────────────────────────────────────────
@@ -109,10 +143,48 @@ const initDefaults = db.transaction(() => {
         ['precio_torneo',         ''],
         ['torneo_generado',       ''],
         ['torneo_inicio',         ''],
+        ['twitch_url',            ''],
+        ['twitch_nombre',         ''],
+        ['total_rondas_swiss',    ''],
+        ['canal_cocapitanes',     ''],
+        ['torneo_fin_ts',         ''],
+        ['discord_limpiado',      ''],
+        ['datos_limpiados',       ''],
+        ['fase_actual',               ''],
+        ['fases_torneo',              ''],
+        ['canal_jugadores_inscritos', ''],
+        ['canal_votacion_precio',     ''],
+        ['canal_pagos',               ''],
+        ['admin_panel_status_id',     ''],
+        ['admin_panel_msg_ids',       '[]'],
+        ['horario_torneo',            ''],
+        ['fecha_draft',               ''],
+        ['fecha_limite_inscripciones',''],
+        ['tiempo_ultima_hora',        '30'],
+        ['draft_tipo',               ''],
+        ['num_equipos_manual',        ''],
+        ['formato_manual',            ''],
+        ['caps_por_equipo',           '1'],
+        ['canal_votacion_capitan',    ''],
     ];
     for (const [k, v] of defaults) initSetting.run(k, v);
 });
 initDefaults();
+
+// Migración historial_torneos: añadir columna partidos
+try { db.prepare(`ALTER TABLE historial_torneos ADD COLUMN partidos TEXT DEFAULT '[]'`).run(); } catch { /* ya existe */ }
+
+// Migraciones twitch_tracked (columnas nuevas en instalaciones previas)
+for (const [col, def] of [
+    ['profile_image',    'TEXT DEFAULT NULL'],
+    ['stream_title',     'TEXT DEFAULT NULL'],
+    ['stream_game',      'TEXT DEFAULT NULL'],
+    ['stream_viewers',   'INTEGER DEFAULT 0'],
+    ['stream_thumbnail', 'TEXT DEFAULT NULL'],
+    ['last_live_at',     'TEXT DEFAULT NULL'],
+]) {
+    try { db.prepare(`ALTER TABLE twitch_tracked ADD COLUMN ${col} ${def}`).run(); } catch { /* ya existe */ }
+}
 
 console.log('✅ Base de datos Clutch Draft lista (WAL + better-sqlite3).');
 

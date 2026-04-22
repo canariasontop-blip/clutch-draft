@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLUTCH DRAFT — EN DIRECTO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+    --primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--danger:#ff4d4d;
+    --bg:#03030a;--card:rgba(10,10,22,0.95);--border:rgba(255,255,255,0.07);
+    --font-d:'Bebas Neue',sans-serif;--font-b:'Rajdhani',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:var(--font-b);}
+
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,255,204,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.03) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 20s linear infinite;}
+@keyframes gridMove{to{background-position:60px 60px;}}
+.bg-glow{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(0,255,204,0.06) 0%,transparent 70%);}
+
+.layout{position:relative;z-index:1;display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto 1fr;height:100vh;gap:0;}
+
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:70px;background:rgba(3,3,10,0.98);border-bottom:1px solid rgba(0,255,204,0.15);backdrop-filter:blur(30px);position:relative;}
+.header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:0.5;}
+.logo{font-family:var(--font-d);font-size:2rem;letter-spacing:8px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-center{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.live-badge{display:flex;align-items:center;gap:8px;background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,0.4);border-radius:20px;padding:5px 16px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:livePulse 1s infinite;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.live-txt{font-size:0.75rem;font-weight:700;color:#ff4d4d;letter-spacing:3px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:16px;}
+
+.turn-pill{display:flex;align-items:center;gap:16px;background:rgba(0,255,204,0.06);border:1px solid rgba(0,255,204,0.2);border-radius:16px;padding:10px 20px;transition:all 0.4s;}
+.turn-pill.activo{background:rgba(0,255,204,0.12);border-color:rgba(0,255,204,0.6);box-shadow:0 0 40px rgba(0,255,204,0.2);animation:turnGlow 2s infinite;}
+@keyframes turnGlow{0%,100%{box-shadow:0 0 20px rgba(0,255,204,0.1)}50%{box-shadow:0 0 50px rgba(0,255,204,0.35)}}
+.turn-lbl{font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:2px;}
+.turn-name{font-family:var(--font-d);font-size:1.5rem;letter-spacing:3px;color:var(--primary);line-height:1;}
+.turn-divider{width:1px;height:40px;background:rgba(255,255,255,0.1);}
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.timer-lbl{font-size:0.55rem;color:#555;text-transform:uppercase;letter-spacing:2px;}
+.timer-val{font-family:var(--font-d);font-size:3rem;color:#fff;line-height:1;letter-spacing:4px;min-width:72px;text-align:center;transition:color 0.3s;}
+.timer-val.warn{color:#ffcc00;}
+.timer-val.danger{color:#ff4d4d;animation:blink 0.5s infinite;}
+@keyframes blink{50%{opacity:0.2}}
+
+.teams-zone{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;scrollbar-width:none;}
+.teams-zone::-webkit-scrollbar{display:none;}
+.teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;}
+
+.team-card{background:rgba(10,10,22,0.9);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:16px;transition:all 0.4s;position:relative;overflow:hidden;}
+.team-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transition:0.4s;}
+.team-card.turno-activo{border-color:rgba(0,255,204,0.5);background:rgba(0,30,20,0.95);box-shadow:0 0 40px rgba(0,255,204,0.15),inset 0 0 40px rgba(0,255,204,0.03);}
+.team-card.turno-activo::before{background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:0.8;}
+.team-card.completo{border-color:rgba(0,255,204,0.3);background:rgba(0,20,15,0.9);}
+
+.team-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.team-escudo{width:48px;height:48px;border-radius:10px;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;background:rgba(255,255,255,0.04);}
+.team-info{flex:1;min-width:0;}
+.team-nombre{font-family:var(--font-d);font-size:1.1rem;letter-spacing:2px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.team-capitan{font-size:0.65rem;color:#444;text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
+.team-picks-badge{font-family:var(--font-d);font-size:1.4rem;letter-spacing:2px;color:var(--primary);flex-shrink:0;display:flex;flex-direction:column;align-items:center;}
+.team-picks-sub{font-size:0.5rem;color:#444;text-transform:uppercase;letter-spacing:1px;font-family:var(--font-b);}
+
+.turno-tag{display:none;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;background:var(--primary);padding:3px 10px;border-radius:20px;margin-bottom:10px;width:fit-content;}
+.team-card.turno-activo .turno-tag{display:block;}
+.completo-tag{display:none;font-size:0.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#000;background:#00ffcc;padding:3px 10px;border-radius:20px;margin-bottom:10px;width:fit-content;}
+.team-card.completo .completo-tag{display:block;}
+
+.slots-grid{display:flex;flex-direction:column;gap:4px;}
+.slot{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);transition:all 0.3s;min-height:28px;}
+.slot.filled{background:rgba(0,255,204,0.04);border-color:rgba(0,255,204,0.12);}
+.slot.filled.just-added{animation:slotPop 0.5s ease;}
+@keyframes slotPop{0%{transform:scale(0.95);background:rgba(0,255,204,0.2)}100%{transform:scale(1)}}
+.slot-pos{font-size:0.55rem;font-weight:700;letter-spacing:1px;padding:2px 5px;border-radius:4px;flex-shrink:0;min-width:32px;text-align:center;}
+.pos-DC  {background:rgba(0,255,204,0.15);color:#00ffcc;}
+.pos-MC  {background:rgba(160,102,255,0.15);color:#a066ff;}
+.pos-CARR{background:rgba(255,204,0,0.15);color:#ffcc00;}
+.pos-DFC {background:rgba(255,77,77,0.15);color:#ff4d4d;}
+.pos-POR {background:rgba(51,153,255,0.15);color:#3399ff;}
+.slot-nombre{font-size:0.75rem;font-weight:600;color:#ccc;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.slot-empty{font-size:0.68rem;color:#2a2a3a;font-style:italic;}
+.progress-bar{margin-top:10px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;transition:width 0.5s ease;}
+
+.picks-panel{background:rgba(5,5,15,0.98);border-left:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;overflow:hidden;}
+.picks-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;}
+.picks-title{font-family:var(--font-d);font-size:1.2rem;letter-spacing:4px;color:var(--primary);}
+.picks-sub{font-size:0.65rem;color:#444;text-transform:uppercase;letter-spacing:2px;margin-top:3px;}
+
+.filters{display:flex;gap:6px;padding:12px 16px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.filter-btn{flex:1;padding:6px 4px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#444;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-radius:7px;cursor:pointer;transition:0.2s;font-family:var(--font-b);}
+.filter-btn:hover{color:#888;border-color:rgba(255,255,255,0.15);}
+.filter-btn.active{color:#000;border-color:transparent;}
+.filter-btn.f-TODOS.active{background:#fff;color:#000;}
+.filter-btn.f-DC.active  {background:#00ffcc;color:#000;}
+.filter-btn.f-MC.active  {background:#a066ff;color:#fff;}
+.filter-btn.f-CARR.active{background:#ffcc00;color:#000;}
+.filter-btn.f-DFC.active {background:#ff4d4d;color:#fff;}
+.filter-btn.f-POR.active {background:#3399ff;color:#fff;}
+
+.search-wrap{padding:10px 16px;flex-shrink:0;}
+.search-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 12px;border-radius:9px;font-size:0.82rem;font-family:var(--font-b);outline:none;transition:0.2s;}
+.search-input:focus{border-color:rgba(0,255,204,0.3);}
+.search-input::placeholder{color:#2a2a3a;}
+
+.players-list{flex:1;overflow-y:auto;padding:8px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent;}
+.players-list::-webkit-scrollbar{width:4px;}
+.players-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:2px;}
+
+.player-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.015);margin-bottom:5px;cursor:pointer;transition:all 0.2s;}
+.player-row:hover{background:rgba(0,255,204,0.06);border-color:rgba(0,255,204,0.2);}
+.player-row.picking{opacity:0.5;pointer-events:none;}
+.pr-num{font-size:0.58rem;font-weight:700;color:#333;min-width:20px;text-align:right;flex-shrink:0;}
+.pr-pos{font-size:0.58rem;font-weight:700;padding:3px 6px;border-radius:5px;flex-shrink:0;min-width:34px;text-align:center;}
+.pr-nombre{flex:1;font-size:0.82rem;font-weight:600;color:#ccc;}
+.pr-btn{font-size:0.62rem;font-weight:700;letter-spacing:1px;color:#000;background:var(--primary);border:none;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-b);opacity:0;transition:0.2s;flex-shrink:0;}
+.player-row:hover .pr-btn{opacity:1;}
+
+.draft-cerrado-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;color:#333;}
+.draft-cerrado-msg i{font-size:3rem;}
+.draft-cerrado-msg p{font-size:0.9rem;text-transform:uppercase;letter-spacing:3px;}
+
+.last-pick-bar{padding:10px 16px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0;display:none;align-items:center;gap:10px;background:rgba(0,255,204,0.05);animation:barSlide 0.4s ease;}
+@keyframes barSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.last-pick-bar.show{display:flex;}
+.last-pick-tag{font-size:0.6rem;color:var(--primary);text-transform:uppercase;letter-spacing:2px;font-weight:700;flex-shrink:0;}
+.last-pick-info{font-size:0.82rem;color:#ccc;flex:1;}
+.last-pick-pos{font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(10,10,22,0.98);border:1px solid rgba(0,255,204,0.4);border-radius:12px;padding:10px 20px;color:#fff;font-size:0.85rem;font-weight:600;opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.ronda-badge{display:flex;align-items:center;gap:8px;background:rgba(160,102,255,0.1);border:1px solid rgba(160,102,255,0.25);border-radius:12px;padding:8px 16px;}
+.ronda-lbl{font-size:0.58rem;color:#666;text-transform:uppercase;letter-spacing:2px;}
+.ronda-val{font-family:var(--font-d);font-size:1.3rem;color:var(--accent);letter-spacing:2px;}
+
+/* Draft cerrado overlay */
+.draft-done-overlay{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+.draft-done-overlay.show{display:flex;}
+.draft-done-title{font-family:var(--font-d);font-size:4rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.draft-done-sub{font-size:1rem;color:#888;letter-spacing:3px;text-transform:uppercase;}
+
+/* ── RULETA ── */
+.btn-abrir-ruleta{display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;border:1px solid rgba(0,255,204,0.35);color:var(--primary);background:rgba(0,255,204,0.06);font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:0.2s;font-family:var(--font-b);}
+.btn-abrir-ruleta:hover{background:rgba(0,255,204,0.14);box-shadow:0 0 20px rgba(0,255,204,0.15);}
+.ruleta-overlay{display:none;position:fixed;inset:0;z-index:960;background:rgba(0,0,0,0.93);backdrop-filter:blur(24px);align-items:center;justify-content:center;}
+.ruleta-overlay.show{display:flex;}
+.ruleta-card{background:rgba(5,5,18,0.99);border:1px solid rgba(0,255,204,0.2);border-radius:24px;padding:28px 36px 24px;max-width:920px;width:95vw;box-shadow:0 0 80px rgba(0,255,204,0.08),0 0 160px rgba(160,102,255,0.05);}
+.ruleta-titulo{font-family:var(--font-d);font-size:2.2rem;letter-spacing:8px;text-align:center;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:22px;}
+.ruleta-body{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;}
+.ruleta-canvas-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;}
+.ruleta-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:1.8rem;line-height:1;color:var(--primary);filter:drop-shadow(0 0 10px var(--primary));z-index:2;pointer-events:none;}
+.ruleta-winner-bar{margin-top:10px;min-height:30px;text-align:center;font-size:0.85rem;font-weight:700;color:var(--primary);letter-spacing:1px;opacity:0;transition:opacity 0.5s;}
+.ruleta-winner-bar.show{opacity:1;}
+.ruleta-orden-panel{min-width:220px;}
+.ruleta-orden-tit{font-family:var(--font-d);font-size:1rem;letter-spacing:4px;color:var(--primary);padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid rgba(0,255,204,0.15);}
+.ruleta-orden-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(0,255,204,0.04);border:1px solid rgba(0,255,204,0.1);margin-bottom:7px;animation:slotPop 0.4s ease;}
+.ruleta-orden-num{font-family:var(--font-d);font-size:1.3rem;min-width:28px;}
+.ruleta-orden-nombre{font-size:0.88rem;font-weight:700;color:#fff;letter-spacing:0.5px;}
+.ruleta-orden-cap{font-size:0.58rem;color:#444;text-transform:uppercase;letter-spacing:1px;margin-top:1px;}
+.ruleta-orden-empty{color:#2a2a3a;font-size:0.75rem;font-style:italic;text-align:center;padding:24px 0;}
+.ruleta-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn-ruleta-girar{font-family:var(--font-d);font-size:1.15rem;letter-spacing:4px;color:#000;background:var(--primary);border:none;padding:13px 36px;border-radius:12px;cursor:pointer;transition:all 0.2s;}
+.btn-ruleta-girar:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-ruleta-girar:not(:disabled):hover{transform:scale(1.05);box-shadow:0 0 30px rgba(0,255,204,0.4);}
+.btn-ruleta-confirmar{font-family:var(--font-d);font-size:1.15rem;letter-spacing:4px;color:#000;background:var(--gold);border:none;padding:13px 36px;border-radius:12px;cursor:pointer;transition:all 0.2s;animation:turnGlow 2s infinite;}
+.btn-ruleta-confirmar:hover{transform:scale(1.05);}
+.btn-ruleta-confirmar:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-ruleta-cerrar{font-size:0.72rem;font-weight:700;letter-spacing:2px;color:#444;background:transparent;border:1px solid rgba(255,255,255,0.08);padding:11px 22px;border-radius:12px;cursor:pointer;transition:0.2s;text-transform:uppercase;font-family:var(--font-b);}
+.btn-ruleta-cerrar:hover{color:#888;border-color:rgba(255,255,255,0.2);}
+
+/* ── RULETA CAPITANES ── */
+.ruleta-cap-overlay{display:none;position:fixed;inset:0;z-index:961;background:rgba(0,0,0,0.93);backdrop-filter:blur(24px);align-items:center;justify-content:center;}
+.ruleta-cap-overlay.show{display:flex;}
+.ruleta-cap-card{background:rgba(5,5,18,0.99);border:1px solid rgba(160,102,255,0.25);border-radius:24px;padding:28px 36px 24px;max-width:960px;width:96vw;box-shadow:0 0 80px rgba(160,102,255,0.08);}
+.ruleta-cap-titulo{font-family:var(--font-d);font-size:2.2rem;letter-spacing:8px;text-align:center;background:linear-gradient(135deg,#a066ff,#ff66cc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.ruleta-cap-sub{text-align:center;font-size:0.7rem;color:#555;letter-spacing:2px;text-transform:uppercase;margin-bottom:22px;}
+.ruleta-cap-body{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;}
+.ruleta-cap-panel{min-width:220px;}
+.ruleta-cap-tit{font-family:var(--font-d);font-size:1rem;letter-spacing:4px;color:#a066ff;padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid rgba(160,102,255,0.2);}
+.ruleta-cap-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(160,102,255,0.05);border:1px solid rgba(160,102,255,0.15);margin-bottom:7px;animation:slotPop 0.4s ease;}
+.ruleta-cap-num{font-family:var(--font-d);font-size:1.3rem;min-width:28px;color:#a066ff;}
+.ruleta-cap-nombre{font-size:0.88rem;font-weight:700;color:#fff;letter-spacing:0.5px;}
+.ruleta-cap-empty{color:#2a2a3a;font-size:0.75rem;font-style:italic;text-align:center;padding:24px 0;}
+.ruleta-cap-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
+.btn-ruleta-cap-girar{font-family:var(--font-d);font-size:1.15rem;letter-spacing:4px;color:#000;background:#a066ff;border:none;padding:13px 36px;border-radius:12px;cursor:pointer;transition:all 0.2s;}
+.btn-ruleta-cap-girar:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-ruleta-cap-girar:not(:disabled):hover{transform:scale(1.05);box-shadow:0 0 30px rgba(160,102,255,0.4);}
+.btn-ruleta-cap-confirmar{font-family:var(--font-d);font-size:1.15rem;letter-spacing:4px;color:#000;background:var(--gold);border:none;padding:13px 36px;border-radius:12px;cursor:pointer;transition:all 0.2s;}
+.btn-ruleta-cap-confirmar:hover{transform:scale(1.05);}
+.btn-ruleta-cap-confirmar:disabled{opacity:0.4;cursor:not-allowed;}
+.ruleta-cap-progress{text-align:center;font-size:0.78rem;color:#555;margin-bottom:16px;letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div class="draft-done-overlay" id="draft-done-overlay">
+    <div class="draft-done-title">DRAFT COMPLETADO</div>
+    <div class="draft-done-sub">Todos los equipos están formados</div>
+</div>
+
+<div class="layout">
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <div class="logo">CLUTCH</div>
+        <div class="header-center">
+            <div class="live-badge"><div class="live-dot"></div><span class="live-txt">Draft en directo</span></div>
+            <div class="turn-pill <%= draftEstado === 'abierto' ? 'activo' : '' %>" id="turn-pill">
+                <% if (draftEstado === 'abierto') { %>
+                <div>
+                    <div class="turn-lbl">Turno</div>
+                    <div class="turn-name" id="turn-name"><%= turnoActual %></div>
+                </div>
+                <div class="turn-divider"></div>
+                <div class="timer-wrap">
+                    <div class="timer-lbl">Tiempo</div>
+                    <div class="timer-val" id="timer"><%= tiempoRestante %></div>
+                </div>
+                <% } else { %>
+                <div><div class="turn-lbl">Estado</div><div class="turn-name" style="color:#555;">CERRADO</div></div>
+                <% } %>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-abrir-ruleta" onclick="abrirRuletaCap()" style="border-color:rgba(160,102,255,0.35);color:#a066ff;background:rgba(160,102,255,0.06);" id="btn-abrir-ruleta-cap">👑 CAPITANES</button>
+            <button class="btn-abrir-ruleta" onclick="abrirRuleta()">🎡 RULETA</button>
+            <a href="/hub" style="display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);color:#aaa;text-decoration:none;font-size:0.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;transition:0.2s;" onmouseover="this.style.borderColor='rgba(255,77,77,0.5)';this.style.color='#ff4d4d';" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='#aaa';">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Salir
+            </a>
+            <div class="ronda-badge"><div><div class="ronda-lbl">Ronda</div><div class="ronda-val" id="ronda-val"><%= rondaActual %></div></div></div>
+        </div>
+    </header>
+
+    <!-- ── ZONA EQUIPOS ── -->
+    <main class="teams-zone">
+        <div class="teams-grid" id="teams-grid">
+        <% teams.forEach(team => { %>
+            <%
+                const jugEquipo = jugadoresFichados.filter(j => j.equipo === team.capitan_username);
+                const esTurno   = turnoActual === team.capitan_username;
+                const pct       = Math.round((jugEquipo.length / 11) * 100);
+                const esCompleto= jugEquipo.length >= 11;
+                const POSORDEN  = ['DC','DC','CARR','CARR','MC','MC','MC','DFC','DFC','DFC','POR'];
+            %>
+            <div class="team-card <%= esTurno ? 'turno-activo' : '' %> <%= esCompleto ? 'completo' : '' %>"
+                 id="team-card-<%= team.capitan_username %>">
+                <div class="turno-tag">⚡ ELIGIENDO</div>
+                <div class="completo-tag">✅ COMPLETO</div>
+                <div class="team-header">
+                    <% if (team.logo_url) { %>
+                        <img src="<%= team.logo_url %>" class="team-escudo" alt="">
+                    <% } else { %>
+                        <div class="team-escudo" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem;">⚽</div>
+                    <% } %>
+                    <div class="team-info">
+                        <div class="team-nombre"><%= team.nombre_equipo || team.capitan_username %></div>
+                        <div class="team-capitan">Cap: <%= team.capitan_username %></div>
+                    </div>
+                    <div class="team-picks-badge">
+                        <span id="picks-count-<%= team.capitan_username %>"><%= jugEquipo.length %>/11</span>
+                        <span class="team-picks-sub">jugadores</span>
+                    </div>
+                </div>
+
+                <div class="slots-grid" id="slots-<%= team.capitan_username %>">
+                <% POSORDEN.forEach((pos, idx) => {
+                    const jugPos  = jugEquipo.filter(j => j.posicion === pos);
+                    const yaUsados = POSORDEN.slice(0, idx).filter(p => p === pos).length;
+                    const jugador  = jugPos[yaUsados] || null;
+                %>
+                    <div class="slot <%= jugador ? 'filled' : '' %>" id="slot-<%= team.capitan_username %>-<%= idx %>">
+                        <span class="slot-pos pos-<%= pos %>"><%= pos %></span>
+                        <% if (jugador) { %>
+                            <span class="slot-nombre"><%= jugador.eafc_id || jugador.nombre %></span>
+                        <% } else { %>
+                            <span class="slot-empty">— vacío —</span>
+                        <% } %>
+                    </div>
+                <% }); %>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-<%= team.capitan_username %>" style="width:<%= pct %>%"></div>
+                </div>
+            </div>
+        <% }); %>
+        </div>
+    </main>
+
+    <!-- ── PANEL PICKS ── -->
+    <aside class="picks-panel">
+        <div class="picks-header">
+            <div class="picks-title">JUGADORES LIBRES</div>
+            <div class="picks-sub" id="picks-count-total"><%= jugadoresLibres.length %> disponibles</div>
+        </div>
+        <div class="filters">
+            <button class="filter-btn f-TODOS active" onclick="filtrar('TODOS',this)">Todos</button>
+            <button class="filter-btn f-DC"   onclick="filtrar('DC',this)">DC</button>
+            <button class="filter-btn f-CARR" onclick="filtrar('CARR',this)">CARR</button>
+            <button class="filter-btn f-MC"   onclick="filtrar('MC',this)">MC</button>
+            <button class="filter-btn f-DFC"  onclick="filtrar('DFC',this)">DFC</button>
+            <button class="filter-btn f-POR"  onclick="filtrar('POR',this)">POR</button>
+        </div>
+        <div class="search-wrap">
+            <input class="search-input" type="text" placeholder="Buscar jugador..." oninput="buscar(this.value)">
+        </div>
+
+        <% if (draftEstado === 'abierto') { %>
+        <div class="players-list" id="players-list">
+        <% jugadoresLibres.forEach((j, idx) => { %>
+            <div class="player-row"
+                 data-id="<%= j.discord_id %>"
+                 data-pos="<%= j.posicion %>"
+                 data-nombre="<%= (j.eafc_id||j.nombre).toLowerCase() %>"
+                 data-num="<%= idx + 1 %>"
+                 onclick="pick('<%= j.discord_id %>','<%= j.nombre.replace(/'/g,"\\'") %>','<%= j.posicion %>')">
+                <span class="pr-num">#<%= idx + 1 %></span>
+                <span class="slot-pos pr-pos pos-<%= j.posicion %>"><%= j.posicion %></span>
+                <span class="pr-nombre"><%= j.eafc_id || j.nombre %></span>
+                <button class="pr-btn">⚡ PICK</button>
+            </div>
+        <% }); %>
+        </div>
+        <% } else { %>
+        <div class="draft-cerrado-msg">
+            <i style="font-size:2.5rem;">🔒</i>
+            <p>Draft cerrado</p>
+        </div>
+        <% } %>
+
+        <div class="last-pick-bar" id="last-pick-bar">
+            <span class="last-pick-tag">Último pick</span>
+            <span class="last-pick-info" id="last-pick-info">—</span>
+            <span class="last-pick-pos" id="last-pick-pos"></span>
+        </div>
+    </aside>
+</div>
+
+<!-- ── RULETA DE CAPITANES ── -->
+<div class="ruleta-cap-overlay" id="ruleta-cap-overlay">
+    <div class="ruleta-cap-card">
+        <div class="ruleta-cap-titulo">👑 RULETA DE CAPITANES</div>
+        <div class="ruleta-cap-sub" id="ruleta-cap-sub">Cargando candidatos…</div>
+        <div class="ruleta-cap-body">
+            <div class="ruleta-canvas-wrap">
+                <div class="ruleta-pointer" style="color:#a066ff;">▼</div>
+                <canvas id="ruleta-cap-canvas" width="420" height="420"></canvas>
+                <div class="ruleta-winner-bar" id="ruleta-cap-winner-bar"></div>
+            </div>
+            <div class="ruleta-cap-panel">
+                <div class="ruleta-cap-tit">CAPITANES ELEGIDOS</div>
+                <div id="ruleta-cap-list">
+                    <div class="ruleta-cap-empty">Gira la ruleta para elegir capitanes</div>
+                </div>
+            </div>
+        </div>
+        <div class="ruleta-cap-actions">
+            <button class="btn-ruleta-cap-girar" id="btn-ruleta-cap-girar" onclick="girarRuletaCap()">🎯 GIRAR</button>
+            <button class="btn-ruleta-cap-confirmar" id="btn-ruleta-cap-confirmar" onclick="confirmarCapitanes()" style="display:none">✅ CONFIRMAR CAPITANES</button>
+            <button class="btn-ruleta-cerrar" onclick="cerrarRuletaCap()">✕ Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── RULETA DE ORDEN ── -->
+<div class="ruleta-overlay" id="ruleta-overlay">
+    <div class="ruleta-card">
+        <div class="ruleta-titulo">🎡 RULETA DE ORDEN</div>
+        <div class="ruleta-body">
+            <div class="ruleta-canvas-wrap">
+                <div class="ruleta-pointer">▼</div>
+                <canvas id="ruleta-canvas" width="420" height="420"></canvas>
+                <div class="ruleta-winner-bar" id="ruleta-winner-bar"></div>
+            </div>
+            <div class="ruleta-orden-panel">
+                <div class="ruleta-orden-tit">ORDEN DE PICKS</div>
+                <div id="ruleta-orden-list">
+                    <div class="ruleta-orden-empty">Gira la ruleta para definir el orden</div>
+                </div>
+            </div>
+        </div>
+        <div class="ruleta-actions">
+            <button class="btn-ruleta-girar"    id="btn-ruleta-girar"    onclick="girarRuleta()">🎯 GIRAR</button>
+            <button class="btn-ruleta-confirmar" id="btn-ruleta-confirmar" onclick="confirmarOrden()" style="display:none">✅ CONFIRMAR ORDEN</button>
+            <button class="btn-ruleta-cerrar"   onclick="cerrarRuleta()">✕ Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── ESTADO INICIAL ──
+let DRAFT_ESTADO = '<%= draftEstado %>';
+let _filtro = 'TODOS';
+let _busq   = '';
+
+// ── TIMER — 100% gestionado por servidor vía socket ──
+// NO hay setInterval local — el servidor es la única fuente de verdad
+const timerEl = document.getElementById('timer');
+
+function updateTimer(s) {
+    if (!timerEl) return;
+    const n = Math.max(0, parseInt(s) || 0);
+    timerEl.textContent = String(n).padStart(2, '0');
+    timerEl.className   = 'timer-val' + (n <= 10 ? ' danger' : n <= 30 ? ' warn' : '');
+}
+// Mostrar valor inicial del servidor (solo visual, no arranca ningún intervalo local)
+updateTimer(<%= typeof tiempoRestante !== 'undefined' ? parseInt(tiempoRestante) : 90 %>);
+
+// ── FILTROS ──
+function filtrar(pos, btn) {
+    _filtro = pos;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderizar();
+}
+function buscar(val) {
+    _busq = val.toLowerCase();
+    renderizar();
+}
+function renumerarJugadores() {
+    let n = 0;
+    document.querySelectorAll('.player-row').forEach(r => {
+        n++;
+        r.dataset.num = n;
+        const numEl = r.querySelector('.pr-num');
+        if (numEl) numEl.textContent = '#' + n;
+    });
+}
+function renderizar() {
+    let vis = 0;
+    document.querySelectorAll('.player-row').forEach(r => {
+        const okPos = _filtro === 'TODOS' || r.dataset.pos === _filtro;
+        const okBus = !_busq || r.dataset.nombre.includes(_busq) || r.dataset.num === _busq || r.dataset.num === _busq.replace('#','');
+        r.style.display = (okPos && okBus) ? '' : 'none';
+        if (okPos && okBus) vis++;
+    });
+    const ct = document.getElementById('picks-count-total');
+    if (ct) ct.textContent = vis + ' disponibles';
+}
+
+// ── PICK ──
+async function pick(playerId, nombre, posicion) {
+    if (DRAFT_ESTADO !== 'abierto') return showToast('El draft está cerrado', '❌');
+    const row = document.querySelector(`.player-row[data-id="${playerId}"]`);
+    if (row) row.classList.add('picking');
+    try {
+        const r = await fetch('/admin/forzar-pick', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ player_id: playerId })
+        });
+        const data = await r.json();
+        if (!r.ok) {
+            showToast(data.error || 'Error al fichar', '❌');
+            if (row) row.classList.remove('picking');
+        }
+        // El socket actualiza la UI — no hace falta más lógica aquí
+    } catch(e) {
+        showToast('Error de conexión', '❌');
+        if (row) row.classList.remove('picking');
+    }
+}
+
+// ── TOAST ──
+let _toastTimer = null;
+function showToast(msg, icon = '✅') {
+    const el = document.getElementById('toast');
+    el.textContent = icon + ' ' + msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── ACTUALIZAR TURNO ──
+function setTurno(turno) {
+    const tn = document.getElementById('turn-name');
+    const tp = document.getElementById('turn-pill');
+    if (tn) tn.textContent = turno || '—';
+    if (tp) tp.classList.toggle('activo', !!turno && DRAFT_ESTADO === 'abierto');
+    document.querySelectorAll('.team-card').forEach(c => c.classList.remove('turno-activo'));
+    if (turno) {
+        const card = document.getElementById('team-card-' + turno);
+        if (card) card.classList.add('turno-activo');
+    }
+}
+
+// ── AÑADIR JUGADOR A EQUIPO ──
+function addJugadorAEquipo(equipo, jugador) {
+    // 1. Quitar de la lista de libres (con fade)
+    const row = document.querySelector(`.player-row[data-id="${jugador.discord_id}"]`);
+    if (row) {
+        row.style.transition = 'all 0.3s';
+        row.style.opacity    = '0';
+        setTimeout(() => { row.remove(); renumerarJugadores(); renderizar(); }, 300);
+    }
+
+    // 2. Buscar slot vacío de la posición correcta
+    const slots = document.querySelectorAll(`#slots-${CSS.escape(equipo)} .slot:not(.filled)`);
+    let slotTarget = null;
+    slots.forEach(s => {
+        if (!slotTarget) {
+            const posEl = s.querySelector('.slot-pos');
+            if (posEl && posEl.textContent.trim() === jugador.posicion) slotTarget = s;
+        }
+    });
+    if (!slotTarget && slots.length) slotTarget = slots[0];
+
+    if (slotTarget) {
+        slotTarget.classList.add('filled', 'just-added');
+        const emptyEl = slotTarget.querySelector('.slot-empty');
+        if (emptyEl) {
+            const span      = document.createElement('span');
+            span.className  = 'slot-nombre';
+            span.textContent = jugador.eafc_id || jugador.nombre;
+            emptyEl.replaceWith(span);
+        }
+        setTimeout(() => slotTarget.classList.remove('just-added'), 600);
+    }
+
+    // 3. Actualizar contador y barra
+    const countEl = document.getElementById('picks-count-' + equipo);
+    if (countEl) {
+        const parts = countEl.textContent.split('/');
+        const nuevo = parseInt(parts[0]) + 1;
+        countEl.textContent = nuevo + '/11';
+        const prog = document.getElementById('progress-' + equipo);
+        if (prog) prog.style.width = Math.round((nuevo / 11) * 100) + '%';
+        // Marcar equipo como completo si llega a 11
+        if (nuevo >= 11) {
+            const card = document.getElementById('team-card-' + equipo);
+            if (card) card.classList.add('completo');
+        }
+    }
+
+    // 4. Barra último pick
+    const bar  = document.getElementById('last-pick-bar');
+    const info = document.getElementById('last-pick-info');
+    const pos  = document.getElementById('last-pick-pos');
+    if (bar && info) {
+        info.textContent = equipo + ' fichó a ' + jugador.nombre;
+        pos.textContent  = jugador.posicion;
+        pos.className    = 'last-pick-pos slot-pos pos-' + jugador.posicion;
+        bar.classList.add('show');
+    }
+
+    showToast(equipo + ' → ' + jugador.nombre + ' (' + jugador.posicion + ')');
+}
+
+// ── DESHACER pick (quitar jugador de equipo) ──
+function removeJugadorDeEquipo(equipo, jugador) {
+    // Buscar el slot que tiene este jugador y vaciarlo
+    const slotsEquipo = document.querySelectorAll(`#slots-${CSS.escape(equipo)} .slot.filled`);
+    slotsEquipo.forEach(slot => {
+        const nombreEl = slot.querySelector('.slot-nombre');
+        if (nombreEl && nombreEl.textContent === jugador.nombre) {
+            slot.classList.remove('filled');
+            const posEl = slot.querySelector('.slot-pos');
+            const span  = document.createElement('span');
+            span.className   = 'slot-empty';
+            span.textContent = '— vacío —';
+            nombreEl.replaceWith(span);
+        }
+    });
+
+    // Actualizar contador
+    const countEl = document.getElementById('picks-count-' + equipo);
+    if (countEl) {
+        const parts = countEl.textContent.split('/');
+        const nuevo = Math.max(0, parseInt(parts[0]) - 1);
+        countEl.textContent = nuevo + '/11';
+        const prog = document.getElementById('progress-' + equipo);
+        if (prog) prog.style.width = Math.round((nuevo / 11) * 100) + '%';
+        const card = document.getElementById('team-card-' + equipo);
+        if (card && nuevo < 11) card.classList.remove('completo');
+    }
+
+    // Añadir de vuelta a la lista de libres
+    if (jugador.discord_id && jugador.nombre && jugador.posicion) {
+        const list = document.getElementById('players-list');
+        if (list) {
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            row.dataset.id     = jugador.discord_id;
+            row.dataset.pos    = jugador.posicion;
+            row.dataset.nombre = jugador.nombre.toLowerCase();
+            row.innerHTML = `<span class="pr-num">#?</span><span class="slot-pos pr-pos pos-${jugador.posicion}">${jugador.posicion}</span><span class="pr-nombre">${jugador.eafc_id || jugador.nombre}</span><button class="pr-btn">⚡ PICK</button>`;
+            row.onclick = () => pick(jugador.discord_id, jugador.nombre, jugador.posicion);
+            list.appendChild(row);
+            renumerarJugadores();
+            renderizar();
+        }
+    }
+}
+
+// ── SOCKETS ──
+const socket = io();
+
+// Cada vez que el servidor tick el timer (cada segundo), actualizar display
+socket.on('timer_tick', data => {
+    if (data?.segundos !== undefined) updateTimer(data.segundos);
+});
+
+// Al conectar/reconectar, el servidor envía el estado real
+socket.on('init', data => {
+    if (data?.timer !== undefined) updateTimer(data.timer);
+    if (data?.turno) setTurno(data.turno);
+    if (data?.estado) DRAFT_ESTADO = data.estado;
+});
+
+socket.on('turno_actualizado', data => {
+    if (data?.turno) setTurno(data.turno);
+});
+
+socket.on('nuevo-fichaje', data => {
+    if (data?.turno) setTurno(data.turno);
+    if (data?.timer !== undefined) updateTimer(data.timer);
+    const rv = document.getElementById('ronda-val');
+    if (rv && data?.ronda) rv.textContent = data.ronda;
+});
+
+socket.on('jugador_fichado', data => {
+    if (!data?.equipo || !data?.jugador) return;
+    addJugadorAEquipo(data.equipo, data.jugador);
+    if (data.turno) setTurno(data.turno);
+});
+
+// Pick deshecho por admin
+socket.on('pick_deshecho', data => {
+    if (!data?.equipo || !data?.jugador) return;
+    removeJugadorDeEquipo(data.equipo, data.jugador);
+    showToast(`↩️ Pick deshecho: ${data.jugador.nombre}`, '↩️');
+});
+
+socket.on('draft-abierto', () => {
+    DRAFT_ESTADO = 'abierto';
+    location.reload();
+});
+
+socket.on('draft-cerrado', () => {
+    DRAFT_ESTADO = 'cerrado';
+    // Mostrar overlay de draft completado
+    const overlay = document.getElementById('draft-done-overlay');
+    if (overlay) overlay.classList.add('show');
+    const tp = document.getElementById('turn-pill');
+    if (tp) tp.classList.remove('activo');
+    // Recargar tras 4 segundos
+    setTimeout(() => location.reload(), 4000);
+});
+
+// Jugador añadido manualmente desde el admin — aparece en lista de libres sin recargar
+socket.on('jugador_añadido', data => {
+    if (!data?.discord_id || !data?.nombre || !data?.posicion) return;
+    if (DRAFT_ESTADO !== 'abierto') return;
+    const list = document.getElementById('players-list');
+    if (!list) return;
+    if (list.querySelector(`.player-row[data-id="${data.discord_id}"]`)) return; // ya existe
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.dataset.id     = data.discord_id;
+    row.dataset.pos    = data.posicion;
+    row.dataset.nombre = (data.eafc_id || data.nombre).toLowerCase();
+    row.innerHTML = `<span class="slot-pos pr-pos pos-${data.posicion}">${data.posicion}</span><span class="pr-nombre">${data.eafc_id || data.nombre}</span><button class="pr-btn">⚡ PICK</button>`;
+    row.onclick = () => pick(data.discord_id, data.nombre, data.posicion);
+    list.appendChild(row);
+    renderizar();
+    const countEl = document.getElementById('picks-count-total');
+    if (countEl) countEl.textContent = list.querySelectorAll('.player-row').length + ' disponibles';
+});
+
+socket.on('activity', msg => {
+    const m = msg.match(/ronda[^\d]*(\d+)/i);
+    if (m) {
+        const rv = document.getElementById('ronda-val');
+        if (rv) rv.textContent = m[1];
+    }
+});
+
+// ── RULETA DE ORDEN ────────────────────────────────────────────
+const RL_TEAMS = <%- JSON.stringify(teams.map(t => ({
+    username: t.capitan_username,
+    nombre:   t.nombre_equipo || t.capitan_username
+}))) %>;
+
+const RL_COLORS = [
+    '#00ffcc','#a066ff','#ff4d4d','#ffcc00','#3399ff',
+    '#ff9900','#ff66cc','#00ff80','#ff6633','#cc33ff','#66ccff','#ffff55'
+];
+
+const rl = { capitanes: [], orden: [], spinning: false, angle: 0, raf: null };
+
+function abrirRuleta() {
+    rl.capitanes = [...RL_TEAMS];
+    rl.orden     = [];
+    rl.spinning  = false;
+    rl.angle     = 0;
+    document.getElementById('btn-ruleta-girar').disabled    = false;
+    document.getElementById('btn-ruleta-girar').style.display = '';
+    document.getElementById('btn-ruleta-confirmar').style.display = 'none';
+    const wb = document.getElementById('ruleta-winner-bar');
+    wb.textContent = ''; wb.classList.remove('show');
+    renderRuletaOrden();
+    drawRuletaWheel();
+    document.getElementById('ruleta-overlay').classList.add('show');
+}
+
+function cerrarRuleta() {
+    document.getElementById('ruleta-overlay').classList.remove('show');
+    if (rl.raf) { cancelAnimationFrame(rl.raf); rl.raf = null; }
+}
+
+function renderRuletaOrden() {
+    const list = document.getElementById('ruleta-orden-list');
+    if (!rl.orden.length) {
+        list.innerHTML = '<div class="ruleta-orden-empty">Gira la ruleta para definir el orden</div>';
+        return;
+    }
+    list.innerHTML = rl.orden.map((username, i) => {
+        const team  = RL_TEAMS.find(t => t.username === username);
+        const cidx  = RL_TEAMS.findIndex(t => t.username === username) % RL_COLORS.length;
+        const color = RL_COLORS[cidx];
+        return `<div class="ruleta-orden-item">
+            <span class="ruleta-orden-num" style="color:${color}">${i + 1}</span>
+            <div>
+                <div class="ruleta-orden-nombre">${team?.nombre || username}</div>
+                <div class="ruleta-orden-cap">${username}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function drawRuletaWheel() {
+    const canvas = document.getElementById('ruleta-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+    const R  = Math.min(W, H) / 2 - 20;
+
+    ctx.clearRect(0, 0, W, H);
+
+    const n = rl.capitanes.length;
+
+    // Outer ring decoration
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 10, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(0,255,204,0.12)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    if (n === 0) {
+        // All ordered
+        ctx.font = 'bold 16px Rajdhani, sans-serif';
+        ctx.fillStyle = '#00ffcc';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('¡ORDEN DEFINIDO!', cx, cy);
+        return;
+    }
+
+    const segAngle = (2 * Math.PI) / n;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rl.angle);
+
+    for (let i = 0; i < n; i++) {
+        const team   = rl.capitanes[i];
+        const cidx   = RL_TEAMS.findIndex(t => t.username === team.username) % RL_COLORS.length;
+        const color  = RL_COLORS[cidx];
+        const startA = i * segAngle - Math.PI / 2;
+        const endA   = startA + segAngle;
+        const midA   = startA + segAngle / 2;
+
+        // Segment fill
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, R, startA, endA);
+        ctx.closePath();
+        ctx.fillStyle   = color + '1a';
+        ctx.fill();
+        ctx.strokeStyle = color + '55';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+
+        // Outer arc highlight
+        ctx.beginPath();
+        ctx.arc(0, 0, R - 4, startA + 0.05, endA - 0.05);
+        ctx.strokeStyle = color + '88';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+
+        // Text — reads L-to-R when segment is at the top pointer
+        const textR    = R * 0.62;
+        const fontSize = Math.max(9, Math.min(14, Math.floor(110 / n)));
+        ctx.save();
+        ctx.rotate(midA);
+        ctx.translate(textR, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.fillStyle    = color;
+        ctx.font         = `bold ${fontSize}px Rajdhani, sans-serif`;
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+
+        let label = team.nombre;
+        const maxW = R * 0.52;
+        while (ctx.measureText(label).width > maxW && label.length > 3)
+            label = label.slice(0, -1);
+        if (label.length < team.nombre.length) label += '…';
+
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+    }
+
+    ctx.restore();
+
+    // Center cap
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+    ctx.fillStyle   = 'rgba(5,5,18,0.98)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,255,204,0.45)';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#00ffcc';
+    ctx.fill();
+}
+
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+function girarRuleta() {
+    if (rl.spinning || rl.capitanes.length === 0) return;
+    rl.spinning = true;
+
+    const btnG = document.getElementById('btn-ruleta-girar');
+    btnG.disabled = true;
+
+    const wb = document.getElementById('ruleta-winner-bar');
+    wb.textContent = ''; wb.classList.remove('show');
+
+    const n          = rl.capitanes.length;
+    const segAngle   = (2 * Math.PI) / n;
+    const winnerIdx  = Math.floor(Math.random() * n);
+
+    // Center of segment winnerIdx in canvas coords = (winnerIdx + 0.5) * segAngle - π/2 + rl.angle
+    // Pointer at -π/2. We want the center at the pointer:
+    // (winnerIdx + 0.5) * segAngle - π/2 + targetAngle = -π/2  (mod 2π)
+    // targetAngle = -(winnerIdx + 0.5) * segAngle  (mod 2π)
+    const baseTarget = -(winnerIdx + 0.5) * segAngle;
+    const minTarget  = rl.angle + 10 * Math.PI; // at least 5 full rotations
+    let target = baseTarget;
+    const cycles = Math.ceil((minTarget - target) / (2 * Math.PI));
+    target += cycles * 2 * Math.PI;
+
+    const startAngle = rl.angle;
+    const duration   = 4500;
+    const startTime  = performance.now();
+
+    function animate(now) {
+        const t     = Math.min((now - startTime) / duration, 1);
+        rl.angle    = startAngle + (target - startAngle) * easeOutCubic(t);
+        drawRuletaWheel();
+
+        if (t < 1) {
+            rl.raf = requestAnimationFrame(animate);
+        } else {
+            rl.angle    = target;
+            rl.spinning = false;
+
+            const winner = rl.capitanes[winnerIdx];
+            rl.orden.push(winner.username);
+            rl.capitanes = rl.capitanes.filter((_, i) => i !== winnerIdx);
+
+            renderRuletaOrden();
+            drawRuletaWheel();
+
+            wb.textContent = `🏆 ${winner.nombre}`;
+            wb.classList.add('show');
+
+            if (rl.capitanes.length === 0) {
+                document.getElementById('btn-ruleta-confirmar').style.display = '';
+                btnG.style.display = 'none';
+            } else {
+                btnG.disabled = false;
+            }
+        }
+    }
+
+    rl.raf = requestAnimationFrame(animate);
+}
+
+async function confirmarOrden() {
+    const btnC  = document.getElementById('btn-ruleta-confirmar');
+    btnC.disabled = true;
+    try {
+        const r = await fetch('/admin/confirmar-orden-draft', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ orden: rl.orden })
+        });
+        const data = await r.json();
+        if (r.ok) {
+            showToast('Orden confirmado y publicado en Discord ✅');
+            cerrarRuleta();
+        } else {
+            showToast(data.error || 'Error al confirmar', '❌');
+            btnC.disabled = false;
+        }
+    } catch(e) {
+        showToast('Error de conexión', '❌');
+        btnC.disabled = false;
+    }
+}
+
+// ── RULETA DE CAPITANES ────────────────────────────────────────
+const RL_CAP_COLORS = [
+    '#a066ff','#ff66cc','#ff4d4d','#ffcc00','#3399ff',
+    '#00ffcc','#ff9900','#00ff80','#ff6633','#cc33ff','#66ccff','#ffff55'
+];
+
+const rlCap = {
+    candidatos: [],
+    elegidos: [],
+    spinning: false,
+    angle: 0,
+    raf: null,
+    totalSlots: 0,
+};
+
+async function abrirRuletaCap() {
+    const sub = document.getElementById('ruleta-cap-sub');
+    sub.textContent = 'Cargando candidatos…';
+    document.getElementById('btn-ruleta-cap-girar').disabled = true;
+    document.getElementById('ruleta-cap-overlay').classList.add('show');
+
+    try {
+        const r    = await fetch('/admin/candidatos-capitan');
+        const data = await r.json();
+        rlCap.candidatos      = data.candidatos.map(c => ({ id: c.discord_id, nombre: c.eafc_id || c.nombre }));
+        rlCap.elegidos        = [];
+        rlCap.spinning        = false;
+        rlCap.angle           = 0;
+        rlCap.raf             = null;
+        rlCap.faltan          = data.faltan;
+        rlCap.confirmados     = data.confirmados;
+        rlCap.totalNecesarios = data.totalNecesarios;
+
+        if (rlCap.candidatos.length === 0) {
+            sub.textContent = 'Sin candidatos pendientes';
+            document.getElementById('btn-ruleta-cap-girar').disabled = true;
+        } else if (data.totalNecesarios > 0) {
+            sub.textContent = `${rlCap.confirmados}/${rlCap.totalNecesarios} confirmados · Elige ${rlCap.faltan} capitán(es) más`;
+            document.getElementById('btn-ruleta-cap-girar').disabled = false;
+        } else {
+            sub.textContent = `${rlCap.candidatos.length} candidato(s) · Gira para elegir capitán`;
+            document.getElementById('btn-ruleta-cap-girar').disabled = false;
+        }
+
+        document.getElementById('btn-ruleta-cap-confirmar').style.display = 'none';
+        document.getElementById('btn-ruleta-cap-girar').style.display = '';
+        document.getElementById('ruleta-cap-winner-bar').textContent = '';
+        document.getElementById('ruleta-cap-winner-bar').classList.remove('show');
+        renderRuletaCapList();
+        drawRuletaCapWheel();
+    } catch(e) {
+        sub.textContent = 'Error cargando candidatos';
+        console.error(e);
+    }
+}
+
+function cerrarRuletaCap() {
+    document.getElementById('ruleta-cap-overlay').classList.remove('show');
+    if (rlCap.raf) { cancelAnimationFrame(rlCap.raf); rlCap.raf = null; }
+}
+
+function renderRuletaCapList() {
+    const list = document.getElementById('ruleta-cap-list');
+    if (!rlCap.elegidos.length) {
+        list.innerHTML = '<div class="ruleta-cap-empty">Gira la ruleta para elegir capitanes</div>';
+        return;
+    }
+    list.innerHTML = rlCap.elegidos.map((cap, i) => {
+        const cidx  = i % RL_CAP_COLORS.length;
+        const color = RL_CAP_COLORS[cidx];
+        return `<div class="ruleta-cap-item">
+            <span class="ruleta-cap-num" style="color:${color}">${i + 1}</span>
+            <div><div class="ruleta-cap-nombre">${cap.nombre}</div></div>
+        </div>`;
+    }).join('');
+}
+
+function drawRuletaCapWheel() {
+    const canvas = document.getElementById('ruleta-cap-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+    const R  = Math.min(W, H) / 2 - 20;
+
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 10, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'rgba(160,102,255,0.15)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const n = rlCap.candidatos.length;
+
+    if (n === 0) {
+        ctx.font = 'bold 14px Rajdhani, sans-serif';
+        ctx.fillStyle = '#a066ff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('¡TODOS ELEGIDOS!', cx, cy);
+        return;
+    }
+
+    const segAngle = (2 * Math.PI) / n;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rlCap.angle);
+
+    for (let i = 0; i < n; i++) {
+        const cap    = rlCap.candidatos[i];
+        const cidx   = rlCap.elegidos.length % RL_CAP_COLORS.length;
+        const color  = RL_CAP_COLORS[(i + cidx) % RL_CAP_COLORS.length];
+        const startA = i * segAngle - Math.PI / 2;
+        const endA   = startA + segAngle;
+        const midA   = startA + segAngle / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, R, startA, endA);
+        ctx.closePath();
+        ctx.fillStyle   = color + '1a';
+        ctx.fill();
+        ctx.strokeStyle = color + '55';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, 0, R - 4, startA + 0.05, endA - 0.05);
+        ctx.strokeStyle = color + '88';
+        ctx.lineWidth   = 3;
+        ctx.stroke();
+
+        const textR    = R * 0.62;
+        const fontSize = Math.max(9, Math.min(14, Math.floor(110 / n)));
+        ctx.save();
+        ctx.rotate(midA);
+        ctx.translate(textR, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.fillStyle    = color;
+        ctx.font         = `bold ${fontSize}px Rajdhani, sans-serif`;
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        let label = cap.nombre;
+        const maxW = R * 0.52;
+        while (ctx.measureText(label).width > maxW && label.length > 3) label = label.slice(0, -1);
+        if (label.length < cap.nombre.length) label += '…';
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+    }
+
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+    ctx.fillStyle   = 'rgba(5,5,18,0.98)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(160,102,255,0.5)';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#a066ff';
+    ctx.fill();
+}
+
+function girarRuletaCap() {
+    if (rlCap.spinning || rlCap.candidatos.length === 0) return;
+    rlCap.spinning = true;
+
+    const btnG = document.getElementById('btn-ruleta-cap-girar');
+    btnG.disabled = true;
+
+    const wb = document.getElementById('ruleta-cap-winner-bar');
+    wb.textContent = ''; wb.classList.remove('show');
+
+    const n         = rlCap.candidatos.length;
+    const segAngle  = (2 * Math.PI) / n;
+    const winnerIdx = Math.floor(Math.random() * n);
+
+    const baseTarget = -(winnerIdx + 0.5) * segAngle;
+    const minTarget  = rlCap.angle + 10 * Math.PI;
+    let target = baseTarget;
+    const cycles = Math.ceil((minTarget - target) / (2 * Math.PI));
+    target += cycles * 2 * Math.PI;
+
+    const startAngle = rlCap.angle;
+    const duration   = 4500;
+    const startTime  = performance.now();
+
+    function animate(now) {
+        const t       = Math.min((now - startTime) / duration, 1);
+        rlCap.angle   = startAngle + (target - startAngle) * easeOutCubic(t);
+        drawRuletaCapWheel();
+
+        if (t < 1) {
+            rlCap.raf = requestAnimationFrame(animate);
+        } else {
+            rlCap.angle    = target;
+            rlCap.spinning = false;
+
+            const winner = rlCap.candidatos[winnerIdx];
+            rlCap.elegidos.push(winner);
+            rlCap.candidatos = rlCap.candidatos.filter((_, i) => i !== winnerIdx);
+
+            renderRuletaCapList();
+            drawRuletaCapWheel();
+
+            wb.textContent = `👑 ${winner.nombre}`;
+            wb.classList.add('show');
+
+            const necesariosCubiertos = rlCap.faltan > 0 && rlCap.elegidos.length >= rlCap.faltan;
+            const sinMasCandidatos    = rlCap.candidatos.length === 0;
+
+            document.getElementById('btn-ruleta-cap-confirmar').style.display = '';
+
+            if (necesariosCubiertos || sinMasCandidatos) {
+                btnG.style.display = 'none';
+                if (rlCap.totalNecesarios > 0) {
+                    document.getElementById('ruleta-cap-sub').textContent =
+                        `✅ ${rlCap.confirmados + rlCap.elegidos.length}/${rlCap.totalNecesarios} capitanes elegidos — confirma para registrar`;
+                } else {
+                    document.getElementById('ruleta-cap-sub').textContent = 'Capitanes elegidos — confirma para registrar';
+                }
+            } else {
+                btnG.disabled = false;
+                const quedan = rlCap.faltan > 0 ? rlCap.faltan - rlCap.elegidos.length : rlCap.candidatos.length;
+                document.getElementById('ruleta-cap-sub').textContent =
+                    `${rlCap.elegidos.length} elegido(s) · faltan ${quedan} más — gira o confirma`;
+            }
+        }
+    }
+
+    rlCap.raf = requestAnimationFrame(animate);
+}
+
+async function confirmarCapitanes() {
+    const btnC = document.getElementById('btn-ruleta-cap-confirmar');
+    btnC.disabled = true;
+    if (!rlCap.elegidos.length) {
+        showToast('No hay capitanes elegidos', '❌');
+        btnC.disabled = false;
+        return;
+    }
+    try {
+        const r = await fetch('/admin/confirmar-capitanes-ruleta', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ capitanes: rlCap.elegidos.map(c => c.id) })
+        });
+        const data = await r.json();
+        if (r.ok) {
+            showToast(`✅ ${data.confirmados} capitán(es) registrados`);
+            cerrarRuletaCap();
+        } else {
+            showToast(data.error || 'Error al confirmar', '❌');
+            btnC.disabled = false;
+        }
+    } catch(e) {
+        showToast('Error de conexión', '❌');
+        btnC.disabled = false;
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — En Directo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.22;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
+        /* ── LEGIBILIDAD ── */
+        :root{ --card:rgba(18,18,30,0.88)!important; --border:rgba(255,255,255,0.10)!important; }
+        body{ color:#ddd; }
+        h1,h2,h3,h4,h5,h6{ color:#fff!important; }
+        p,li,td,th,label,span.norma-text{ color:#ddd!important; }
+        .norma-text{ color:#ddd!important; }
+        .norma-text strong{ color:#fff!important; }
+        /* Dark grays → readable */
+        [style*="color:#444"],[style*="color: #444"]{ color:#aaa!important; }
+        [style*="color:#555"],[style*="color: #555"]{ color:#bbb!important; }
+        [style*="color:#333"],[style*="color: #333"]{ color:#999!important; }
+        [style*="color:#666"],[style*="color: #666"]{ color:#bbb!important; }
+        [style*="color:#888"],[style*="color: #888"]{ color:#ccc!important; }
+        /* Cards with semi-transparent bg */
+        .card,.panel,.section,.norma-card,.rule-card,.team-card,
+        .match-card,.stat-card,.stat-block,.quick-card,.bottom-sec,
+        .normas-content,.aviso-final,.altura-cell,.alert-row,
+        .turno-block,.nav-card,.hof-card,.winner-card,.tab-content{
+            background:rgba(15,15,28,0.85)!important;
+            backdrop-filter:blur(4px);
+        }
+        /* Inputs and selects */
+        input,select,textarea{
+            background:rgba(255,255,255,0.06)!important;
+            color:#fff!important;
+        }
+        /* Content above video */
+        body>*:not(#bg-video-wrap){ position:relative; z-index:1; }
+        nav{ z-index:200!important; }
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.55);}
+        /* ── CONTENIDO SOBRE EL VIDEO ── */
+        nav{position:sticky!important;z-index:200!important;}
+        .container,.page-wrap,.normas-hero,.normas-content,.hof-hero,.hof-content,
+        .page-wrap,.turn-banner,.draft-cerrado,.cap-layout,.spec-layout,
+        .page-header,.stats-row,.tabs,.tab-content,.page-body,
+        .section,.controls-grid,.teams-tracker,.live-section,.stream-section,
+        .proximos-section{position:relative;z-index:1;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--live:#ff4d4d;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
+
+        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:58px;background:rgba(3,3,10,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
+        .nav-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .nav-links{display:flex;gap:2px;}
+        .nav-link{color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;padding:6px 13px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+        .nav-link.admin-lnk{color:var(--accent);}
+        .nav-user{display:flex;align-items:center;gap:10px;}
+        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
+        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
+        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;}
+
+        .page-wrap{max-width:1100px;margin:0 auto;padding:50px 24px 80px;}
+
+        /* HEADER */
+        .page-hdr{margin-bottom:40px;}
+        .live-badge{
+            display:inline-flex;align-items:center;gap:8px;
+            background:rgba(255,77,77,0.12);border:1px solid rgba(255,77,77,0.3);
+            color:var(--live);font-size:0.65rem;font-weight:700;letter-spacing:3px;
+            text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px;
+        }
+        .live-dot{width:7px;height:7px;border-radius:50%;background:var(--live);animation:blink 1s infinite;}
+        @keyframes blink{50%{opacity:0.3;}}
+        .page-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,4rem);letter-spacing:2px;}
+
+        /* LAYOUT */
+        .directo-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;}
+
+        /* TWITCH CARD */
+        .twitch-card{
+            background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px;
+        }
+        .twitch-header{
+            display:flex;align-items:center;gap:12px;padding:16px 20px;
+            border-bottom:1px solid var(--border);
+        }
+        .twitch-icon{font-size:1.3rem;color:#9146ff;}
+        .twitch-title{font-weight:700;font-size:0.9rem;}
+        .twitch-sub{font-size:0.68rem;color:#aaa;}
+        .twitch-body{padding:20px;}
+        .streamer-info{
+            display:flex;align-items:center;gap:14px;
+            background:rgba(145,70,255,0.06);border:1px solid rgba(145,70,255,0.15);
+            border-radius:12px;padding:16px;margin-bottom:16px;
+        }
+        .streamer-avatar{width:48px;height:48px;border-radius:50%;background:rgba(145,70,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#9146ff;flex-shrink:0;}
+        .streamer-name{font-weight:700;font-size:1rem;}
+        .streamer-label{font-size:0.68rem;color:#aaa;letter-spacing:1px;text-transform:uppercase;}
+        .btn-twitch{
+            display:flex;align-items:center;justify-content:center;gap:10px;
+            width:100%;padding:13px;border-radius:10px;
+            background:linear-gradient(135deg,#9146ff,#6441a5);
+            color:#fff;font-family:var(--font-body);font-weight:700;font-size:0.88rem;
+            letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;
+            border:none;cursor:pointer;transition:0.25s;
+        }
+        .btn-twitch:hover{filter:brightness(1.15);transform:translateY(-2px);}
+        .no-stream{color:#888;font-size:0.85rem;font-style:italic;text-align:center;padding:20px 0;}
+
+        /* ── MATCH CARDS ── */
+        .matches-section { margin-bottom: 20px; }
+        .section-hdr {
+            display:flex;align-items:center;gap:10px;
+            font-size:0.6rem;color:#aaa;text-transform:uppercase;letter-spacing:3px;font-weight:700;
+            margin-bottom:16px;
+        }
+        .section-hdr i { font-size:0.7rem; }
+        .section-hdr::after { content:'';flex:1;height:1px;background:var(--border); }
+
+        .match-card {
+            background:var(--card);border:1px solid var(--border);border-radius:14px;
+            padding:16px 18px;margin-bottom:10px;position:relative;overflow:hidden;
+            transition:border-color 0.2s;
+        }
+        .match-card:last-child { margin-bottom:0; }
+        .match-card.live {
+            border-color:rgba(255,77,77,0.35);
+            background:linear-gradient(135deg,rgba(255,77,77,0.04) 0%,var(--card) 60%);
+        }
+        .match-card-top {
+            display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:14px;
+        }
+        .match-jornada {
+            font-size:0.55rem;color:#555;text-transform:uppercase;letter-spacing:2px;font-weight:700;
+        }
+        .match-live-badge {
+            display:flex;align-items:center;gap:5px;
+            background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,0.3);
+            color:var(--live);font-size:0.52rem;font-weight:700;letter-spacing:2px;
+            text-transform:uppercase;padding:3px 9px;border-radius:20px;
+        }
+        .match-live-dot { width:5px;height:5px;border-radius:50%;background:var(--live);animation:blink 1s infinite; }
+
+        .match-teams {
+            display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;
+        }
+        .match-team { display:flex;align-items:center;gap:10px; }
+        .match-team.right { flex-direction:row-reverse;text-align:right; }
+        .team-logo {
+            width:38px;height:38px;border-radius:8px;object-fit:cover;
+            background:rgba(255,255,255,0.05);border:1px solid var(--border);flex-shrink:0;
+        }
+        .team-logo-ph {
+            width:38px;height:38px;border-radius:8px;
+            background:rgba(255,255,255,0.05);border:1px solid var(--border);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1rem;flex-shrink:0;color:#444;
+        }
+        .team-name { font-weight:700;font-size:0.88rem;line-height:1.2; }
+        .team-cap  { font-size:0.6rem;color:#555; }
+
+        .match-score {
+            display:flex;align-items:center;gap:6px;
+            font-family:var(--font-display);font-size:1.6rem;letter-spacing:2px;
+            color:#fff;text-align:center;white-space:nowrap;
+        }
+        .match-score.pending { font-size:1rem;color:#444;letter-spacing:1px; }
+        .score-sep { color:#333;font-size:1.2rem; }
+
+        /* Próximos — agrupados por jornada */
+        .jornada-group { margin-bottom:18px; }
+        .jornada-group:last-child { margin-bottom:0; }
+        .jornada-label {
+            font-size:0.55rem;color:#555;text-transform:uppercase;letter-spacing:2.5px;font-weight:700;
+            margin-bottom:8px;padding:0 2px;
+        }
+
+        .no-matches {
+            text-align:center;padding:40px 20px;color:#444;
+        }
+        .no-matches i { font-size:2.5rem;display:block;margin-bottom:12px;opacity:0.3; }
+        .no-matches p { font-size:0.85rem;font-style:italic; }
+
+        /* SIDEBAR INFO */
+        .info-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+        .info-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem;}
+        .info-row:last-child{border-bottom:none;}
+        .info-lbl{color:#aaa;font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;}
+        .info-val{font-weight:700;color:var(--primary);}
+
+        @media(max-width:768px){
+            nav{padding:0 12px;height:52px;}
+            .nav-link{font-size:0.62rem;padding:4px 8px;}
+            .nav-username{display:none;}
+            .page-wrap{padding:30px 14px 60px;}
+            .directo-grid{grid-template-columns:1fr;}
+        }
+    </style>
+</head>
+<body>
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_para_ruta-directo.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+
+
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/directo" class="nav-link active">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="page-wrap">
+
+    <div class="page-hdr">
+        <div class="live-badge"><div class="live-dot"></div> En directo</div>
+        <div class="page-title">SEGUIMIENTO EN VIVO</div>
+    </div>
+
+    <div class="directo-grid">
+
+        <!-- IZQUIERDA: partidos -->
+        <div id="matches-col">
+
+            <!-- Partidos en curso -->
+            <div class="matches-section" id="section-encurso">
+                <div class="section-hdr"><i class="fas fa-circle" style="color:var(--live);"></i> Partidos en curso</div>
+                <% if (enCurso.length > 0) { %>
+                    <% enCurso.forEach(m => { %>
+                    <div class="match-card live">
+                        <div class="match-card-top">
+                            <span class="match-jornada">Jornada <%= m.jornada %></span>
+                            <span class="match-live-badge"><span class="match-live-dot"></span>En juego</span>
+                        </div>
+                        <div class="match-teams">
+                            <div class="match-team">
+                                <% if (m.equipo1_logo) { %>
+                                <img src="<%= m.equipo1_logo %>" class="team-logo" alt="">
+                                <% } else { %><div class="team-logo-ph"><i class="fas fa-shield-alt"></i></div><% } %>
+                                <div>
+                                    <div class="team-name"><%= m.equipo1_nombre %></div>
+                                    <div class="team-cap"><%= m.equipo1 %></div>
+                                </div>
+                            </div>
+                            <div class="match-score">
+                                <span><%= m.goles1 != null ? m.goles1 : '—' %></span>
+                                <span class="score-sep">:</span>
+                                <span><%= m.goles2 != null ? m.goles2 : '—' %></span>
+                            </div>
+                            <div class="match-team right">
+                                <div style="text-align:right;">
+                                    <div class="team-name"><%= m.equipo2_nombre %></div>
+                                    <div class="team-cap"><%= m.equipo2 %></div>
+                                </div>
+                                <% if (m.equipo2_logo) { %>
+                                <img src="<%= m.equipo2_logo %>" class="team-logo" alt="">
+                                <% } else { %><div class="team-logo-ph"><i class="fas fa-shield-alt"></i></div><% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                <% } else { %>
+                <div class="no-matches">
+                    <i class="fas fa-moon"></i>
+                    <p>No hay partidos en curso ahora mismo.</p>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Próximos partidos -->
+            <div class="matches-section" id="section-proximos">
+                <div class="section-hdr"><i class="fas fa-calendar-alt" style="color:var(--primary);"></i> Próximos partidos</div>
+                <% if (proximos.length > 0) { %>
+                    <%
+                    const porJornada = {};
+                    proximos.forEach(m => {
+                        if (!porJornada[m.jornada]) porJornada[m.jornada] = [];
+                        porJornada[m.jornada].push(m);
+                    });
+                    %>
+                    <% Object.entries(porJornada).forEach(([jornada, partidos]) => { %>
+                    <div class="jornada-group">
+                        <div class="jornada-label">Jornada <%= jornada %></div>
+                        <% partidos.forEach(m => { %>
+                        <div class="match-card">
+                            <div class="match-teams">
+                                <div class="match-team">
+                                    <% if (m.equipo1_logo) { %>
+                                    <img src="<%= m.equipo1_logo %>" class="team-logo" alt="">
+                                    <% } else { %><div class="team-logo-ph"><i class="fas fa-shield-alt"></i></div><% } %>
+                                    <div>
+                                        <div class="team-name"><%= m.equipo1_nombre %></div>
+                                        <div class="team-cap"><%= m.equipo1 %></div>
+                                    </div>
+                                </div>
+                                <div class="match-score pending">VS</div>
+                                <div class="match-team right">
+                                    <div style="text-align:right;">
+                                        <div class="team-name"><%= m.equipo2_nombre %></div>
+                                        <div class="team-cap"><%= m.equipo2 %></div>
+                                    </div>
+                                    <% if (m.equipo2_logo) { %>
+                                    <img src="<%= m.equipo2_logo %>" class="team-logo" alt="">
+                                    <% } else { %><div class="team-logo-ph"><i class="fas fa-shield-alt"></i></div><% } %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <% }) %>
+                <% } else { %>
+                <div class="no-matches">
+                    <i class="fas fa-calendar-times"></i>
+                    <p><%= jugados === 0 && pendientesCount === 0 ? 'El torneo aún no ha sido generado.' : 'No quedan partidos pendientes.' %></p>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- DERECHA: Twitch + stats -->
+        <div>
+            <!-- Twitch -->
+            <div class="twitch-card">
+                <div class="twitch-header">
+                    <i class="fab fa-twitch twitch-icon"></i>
+                    <div style="flex:1;">
+                        <div class="twitch-title">Stream Oficial</div>
+                        <div class="twitch-sub">Narración en vivo</div>
+                    </div>
+                    <% if (streamVivo) { %>
+                    <span style="display:flex;align-items:center;gap:5px;background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,0.35);color:#ff4d4d;font-size:0.58rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#ff4d4d;animation:blink 1s infinite;flex-shrink:0;"></span>EN VIVO
+                    </span>
+                    <% } %>
+                </div>
+                <div class="twitch-body">
+                    <% if (streamVivo) { %>
+                    <!-- Embed player -->
+                    <div style="position:relative;width:100%;padding-bottom:56.25%;border-radius:10px;overflow:hidden;margin-bottom:14px;background:#000;">
+                        <iframe
+                            src="https://player.twitch.tv/?channel=<%= streamVivo.twitch_login %>&parent=clutch-draft.duckdns.org&autoplay=true&muted=true"
+                            style="position:absolute;inset:0;width:100%;height:100%;border:none;"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <!-- Info streamer -->
+                    <div class="streamer-info" style="margin-bottom:12px;">
+                        <% if (streamVivo.profile_image) { %>
+                        <img src="<%= streamVivo.profile_image %>" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #9146ff;">
+                        <% } else { %>
+                        <div class="streamer-avatar"><i class="fab fa-twitch"></i></div>
+                        <% } %>
+                        <div style="flex:1;min-width:0;">
+                            <div class="streamer-name"><%= streamVivo.display_name %></div>
+                            <div class="streamer-label" style="margin-bottom:2px;"><%= streamVivo.stream_title || '' %></div>
+                            <div style="display:flex;gap:12px;margin-top:4px;">
+                                <% if (streamVivo.stream_game) { %>
+                                <span style="font-size:0.68rem;color:#9146ff;"><i class="fas fa-gamepad" style="margin-right:3px;"></i><%= streamVivo.stream_game %></span>
+                                <% } %>
+                                <span style="font-size:0.68rem;color:#aaa;"><i class="fas fa-eye" style="margin-right:3px;"></i><%= (streamVivo.stream_viewers||0).toLocaleString() %> espectadores</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://www.twitch.tv/<%= streamVivo.twitch_login %>" target="_blank" class="btn-twitch">
+                        <i class="fab fa-twitch"></i> Ver en Twitch
+                    </a>
+                    <% } else { %>
+                    <!-- Offline: mostrar último directo si hay datos -->
+                    <% const offlineStreamer = ultimoStream || (twitchUrl ? { display_name: twitchNombre, twitch_login: (twitchUrl.split('/').pop()), profile_image: null, stream_title: null, stream_game: null, stream_thumbnail: null, last_live_at: null } : null); %>
+                    <% if (offlineStreamer) { %>
+
+                    <!-- Badge offline -->
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0;"></span>
+                        <span style="font-size:0.62rem;color:#666;font-weight:700;letter-spacing:2px;text-transform:uppercase;">Offline ahora</span>
+                    </div>
+
+                    <!-- Miniatura último stream como banner clicable -->
+                    <% if (offlineStreamer.stream_thumbnail) { %>
+                    <a href="https://www.twitch.tv/<%= offlineStreamer.twitch_login %>" target="_blank"
+                       style="display:block;position:relative;border-radius:10px;overflow:hidden;margin-bottom:14px;cursor:pointer;">
+                        <img src="<%= offlineStreamer.stream_thumbnail %>" alt="Último stream"
+                             style="width:100%;display:block;opacity:0.7;">
+                        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">
+                            <span style="background:rgba(145,70,255,0.85);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;">▶</span>
+                        </div>
+                        <div style="position:absolute;bottom:8px;left:10px;font-size:0.6rem;color:#ccc;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;">Último directo</div>
+                    </a>
+                    <% } %>
+
+                    <!-- Info streamer -->
+                    <div class="streamer-info" style="margin-bottom:12px;">
+                        <% if (offlineStreamer.profile_image) { %>
+                        <img src="<%= offlineStreamer.profile_image %>" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #555;opacity:0.8;">
+                        <% } else { %>
+                        <div class="streamer-avatar" style="opacity:0.6;"><i class="fab fa-twitch"></i></div>
+                        <% } %>
+                        <div style="flex:1;min-width:0;">
+                            <div class="streamer-name"><%= offlineStreamer.display_name %></div>
+                            <% if (offlineStreamer.stream_title) { %>
+                            <div class="streamer-label" style="margin-bottom:2px;color:#777;" title="<%= offlineStreamer.stream_title %>">
+                                <%= offlineStreamer.stream_title.length > 50 ? offlineStreamer.stream_title.substring(0,50)+'…' : offlineStreamer.stream_title %>
+                            </div>
+                            <% } %>
+                            <% if (offlineStreamer.stream_game) { %>
+                            <span style="font-size:0.65rem;color:#666;"><i class="fas fa-gamepad" style="margin-right:3px;"></i><%= offlineStreamer.stream_game %></span>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <a href="https://www.twitch.tv/<%= offlineStreamer.twitch_login %>" target="_blank" class="btn-twitch" style="opacity:0.75;">
+                        <i class="fab fa-twitch"></i> Ir al canal
+                    </a>
+
+                    <% } else { %>
+                    <div class="no-stream">
+                        <i class="fab fa-twitch" style="font-size:2rem;display:block;margin-bottom:8px;color:#aaa;"></i>
+                        Sin stream activo por ahora.
+                    </div>
+                    <% } %>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Info rápida -->
+            <div class="info-card">
+                <div class="card-title" style="margin-bottom:14px;"><i class="fas fa-chart-bar" style="color:var(--primary);"></i> Estado del torneo</div>
+                <div class="info-row">
+                    <span class="info-lbl">Jornada actual</span>
+                    <span class="info-val">J<%= jornadaActual %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Partidos jugados</span>
+                    <span class="info-val"><%= jugados %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Pendientes</span>
+                    <span class="info-val" style="color:#ffcc00;"><%= pendientesCount %></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Equipos</span>
+                    <span class="info-val"><%= totalEquipos %></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+window.__CLUTCH__ = { username: '<%= user.username %>' };
+
+// Recargar sección de partidos cuando hay cambios en tiempo real
+const socket = io();
+let reloadTimer = null;
+function scheduleReload() {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => location.reload(), 800);
+}
+socket.on('resultado',       scheduleReload);
+socket.on('torneo-limpiado', scheduleReload);
+
+// Auto-refresh completo cada 60s por si hay cambios no emitidos
+setTimeout(() => location.reload(), 60000);
+</script>
+<script src="/js/main.js"></script>
+
+<script>
+(function(){
+  var burger = document.getElementById('nav-hamburger');
+  var links  = document.getElementById('nav-links');
+  if(!burger) return;
+  burger.addEventListener('click', function(){
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  links.querySelectorAll('.nav-link').forEach(function(l){
+    l.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+})();
+</script>
+</body>
+</html>

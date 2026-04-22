@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clutch Draft — Torneo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.75);}
+        /* ── CONTENIDO SOBRE EL VIDEO ── */
+        nav{position:sticky!important;z-index:200!important;}
+        .container,.page-wrap,.normas-hero,.normas-content,.hof-hero,.hof-content,
+        .page-header,.stats-row,.tabs,.tab-content,.section,.controls-grid,
+        .teams-tracker,.live-section,.stream-section,.proximos-section,
+        .turn-banner,.draft-cerrado,.cap-layout,.spec-layout{position:relative;z-index:1;}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
+
+        /* NAV */
+        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:58px;background:rgba(3,3,10,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
+        .nav-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .nav-links{display:flex;gap:2px;}
+        .nav-link{color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;padding:6px 13px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+        .nav-link.admin-lnk{color:var(--accent);}
+        .nav-user{display:flex;align-items:center;gap:10px;}
+        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
+        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
+        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;transition:0.2s;}
+
+        /* PAGE HEADER */
+        .page-header{padding:50px 24px 20px;max-width:1200px;margin:0 auto;position:relative;z-index:1;}
+        .page-eyebrow{font-size:0.65rem;color:var(--primary);letter-spacing:5px;text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+        .page-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,4rem);letter-spacing:2px;margin-bottom:30px;}
+
+        /* TABS */
+        .tabs-bar{
+            position:relative;z-index:10;
+            background:rgba(3,3,10,0.96);border-bottom:1px solid var(--border);
+            backdrop-filter:blur(20px);
+        }
+        .tabs-inner{
+            max-width:1200px;margin:0 auto;padding:0 24px;
+            display:flex;gap:0;overflow-x:auto;
+        }
+        .tabs-inner::-webkit-scrollbar{height:0;}
+        .tab-btn{
+            padding:16px 22px;font-family:var(--font-body);font-weight:700;font-size:0.78rem;
+            letter-spacing:2px;text-transform:uppercase;color:#aaa;
+            background:transparent;border:none;border-bottom:2px solid transparent;
+            cursor:pointer;transition:0.2s;white-space:nowrap;
+        }
+        .tab-btn:hover{color:#ccc;}
+        .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+
+        /* CONTENT */
+        .content{max-width:1200px;margin:0 auto;padding:36px 24px 60px;position:relative;z-index:1;}
+        .tab-panel{display:none;position:relative;z-index:1;}
+        .tab-panel.active{display:block;}
+
+        /* PANEL TITLE */
+        .panel-hdr{font-family:var(--font-display);font-size:1.6rem;letter-spacing:2px;margin-bottom:24px;color:#fff;}
+
+        /* EQUIPOS GRID */
+        .equipos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+        .equipo-card{
+            background:var(--card);border:1px solid var(--border);border-radius:14px;
+            padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;
+            transition:0.3s;
+        }
+        .equipo-card:hover{border-color:rgba(0,255,204,0.2);transform:translateY(-3px);}
+        .escudo-wrap{width:60px;height:60px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        .escudo-wrap img{width:100%;height:100%;object-fit:cover;}
+        .escudo-ph{color:#444;font-size:1.4rem;}
+        .equipo-nombre{font-weight:700;font-size:0.95rem;text-align:center;}
+        .equipo-capitan{font-size:0.7rem;color:#aaa;text-transform:uppercase;letter-spacing:1px;}
+
+        /* TABLA */
+        .tabla-wrap{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;}
+        thead th{font-size:0.62rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;padding:10px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+        thead th:not(:first-child){text-align:center;}
+        tbody tr{border-bottom:1px solid var(--border);transition:0.15s;}
+        tbody tr:hover{background:rgba(255,255,255,0.02);}
+        tbody td{padding:13px 14px;font-size:0.88rem;font-weight:600;}
+        tbody td:not(:first-child):not(:nth-child(2)){text-align:center;color:#ccc;}
+        .pos-cell{font-family:var(--font-display);font-size:1.1rem;width:40px;}
+        .pos-cell.top1{color:var(--gold);}
+        .pos-cell.top2{color:#c0c0c0;}
+        .pos-cell.top3{color:#cd7f32;}
+        .pts-cell{color:var(--primary)!important;font-weight:700!important;}
+        .equipo-cell{display:flex;align-items:center;gap:10px;}
+        .mini-escudo{width:22px;height:22px;border-radius:5px;object-fit:cover;border:1px solid var(--border);}
+
+        /* MATCHES */
+        .jornada-group{margin-bottom:36px;}
+        .jornada-title{
+            font-size:0.65rem;color:var(--primary);letter-spacing:4px;text-transform:uppercase;
+            font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px;
+        }
+        .jornada-title::after{content:'';flex:1;height:1px;background:var(--border);}
+        .matches-list{display:flex;flex-direction:column;gap:8px;}
+        .match-row{
+            display:flex;align-items:center;
+            background:var(--card);border:1px solid var(--border);border-radius:12px;
+            padding:14px 20px;gap:16px;transition:0.2s;
+        }
+        .match-row:hover{border-color:rgba(255,255,255,0.1);}
+        .match-row.finalizado{opacity:0.75;}
+        .match-row.en-curso{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.03);}
+        .match-team{flex:1;font-weight:700;font-size:0.9rem;}
+        .match-team.right{text-align:right;}
+        .match-score{
+            font-family:var(--font-display);font-size:1.6rem;letter-spacing:4px;
+            color:var(--primary);min-width:80px;text-align:center;
+        }
+        .match-score.pending{color:#555;font-size:0.9rem;font-family:var(--font-body);font-weight:600;letter-spacing:1px;}
+        .match-badge{font-size:0.55rem;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+        .badge-fin{background:rgba(0,255,204,0.1);color:var(--primary);}
+        .badge-pen{background:rgba(255,255,255,0.04);color:#aaa;}
+        .badge-live{background:rgba(255,77,77,0.15);color:#ff4d4d;animation:pulse 1.5s infinite;}
+        @keyframes pulse{50%{opacity:0.5;}}
+
+        /* RONDAS / BRACKET */
+        .bracket-msg{
+            background:rgba(11,11,20,0.92);border:1px solid var(--border);border-radius:14px;
+            padding:60px;text-align:center;color:#888;
+            backdrop-filter:blur(6px);
+        }
+        .bracket-msg i{font-size:3rem;margin-bottom:16px;display:block;color:#333;}
+        .bracket-msg p{font-size:1rem;}
+
+        /* EMPTY */
+        .empty-note{color:#666;font-style:italic;font-size:0.88rem;padding:30px 0;text-align:center;}
+
+        /* ── FORMATOS DE COMPETICIÓN ── */
+        .fmts-grid{display:flex;flex-direction:column;gap:14px;}
+        .fmt-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.2s;}
+        .fmt-card:hover{border-color:rgba(255,255,255,.1);}
+        .fmt-card summary{list-style:none;}
+        .fmt-card summary::-webkit-details-marker{display:none;}
+        .fmt-hdr{
+            padding:18px 22px;display:flex;align-items:center;gap:14px;
+            cursor:pointer;user-select:none;
+        }
+        details[open] .fmt-hdr{border-bottom:1px solid var(--border);}
+        .fmt-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+        .fmt-meta{flex:1;}
+        .fmt-name{font-family:var(--font-display);font-size:1.05rem;letter-spacing:2px;}
+        .fmt-sub{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+        .fmt-pill{font-size:.58rem;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}
+        .fmt-toggle{color:#555;font-size:.75rem;flex-shrink:0;transition:.2s;}
+        details[open] .fmt-toggle{transform:rotate(180deg);color:var(--primary);}
+        .fmt-body{padding:18px 22px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+        .fmt-phase{background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:14px;}
+        .fmt-phase.full{grid-column:1/-1;}
+        .fph-ttl{font-size:.58rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+        .fph-list{list-style:none;margin:0;padding:0;}
+        .fph-list li{font-size:.8rem;color:#bbb;padding:5px 0;line-height:1.6;border-bottom:1px solid rgba(255,255,255,.03);display:flex;gap:7px;}
+        .fph-list li:last-child{border-bottom:none;padding-bottom:0;}
+        .fph-list li .arr{flex-shrink:0;color:var(--primary);}
+        .clasi-rows{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+        .clasi-item{font-size:.75rem;padding:6px 10px;border-radius:6px;display:flex;align-items:center;gap:8px;}
+        .clasi-item.up{background:rgba(0,255,204,.07);border:1px solid rgba(0,255,204,.15);color:var(--primary);}
+        .clasi-item.mid{background:rgba(255,204,0,.06);border:1px solid rgba(255,204,0,.12);color:#ffcc00;}
+        .clasi-item.out{background:rgba(255,77,77,.05);border:1px solid rgba(255,77,77,.1);color:#ff4d4d;opacity:.8;}
+        .clasi-pos{font-family:var(--font-display);font-size:.95rem;width:56px;flex-shrink:0;}
+        .desempate-ol{counter-reset:dc;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+        .desempate-ol li{counter-increment:dc;display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:7px;font-size:.82rem;color:#ccc;}
+        .desempate-ol li::before{content:counter(dc);font-family:var(--font-display);font-size:1.1rem;color:var(--primary);width:22px;text-align:center;flex-shrink:0;}
+        .fmt-desempate{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;}
+        .fmt-desempate-hdr{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+        .fmt-desempate-ico{width:40px;height:40px;border-radius:10px;background:rgba(240,192,64,.1);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+        .fmt-desempate-ttl{font-family:var(--font-display);font-size:1rem;letter-spacing:2px;}
+        .fmt-desempate-sub{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+
+        @media(max-width:768px){
+            nav{padding:0 12px;height:52px;}
+            .nav-link{font-size:0.62rem;padding:4px 8px;}
+            .nav-username{display:none;}
+            .page-header{padding:30px 14px 0;}
+            .tabs-inner{padding:0 14px;}
+            .tab-btn{padding:14px 14px;font-size:0.7rem;}
+            .content{padding:24px 14px 40px;}
+            .equipos-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+            .match-team{font-size:0.78rem;}
+            .match-score{font-size:1.2rem;min-width:60px;}
+            .fmt-body{grid-template-columns:1fr;}
+            .fmt-phase.full{grid-column:auto;}
+        }
+            /* ── NAV LINKS FIX ── */
+        .nav-link{ color:#bbb!important; }
+        .nav-link:hover,.nav-link.active{ color:var(--primary)!important; background:rgba(0,255,204,0.08)!important; }
+        .nav-link.admin-lnk{ color:var(--accent)!important; }
+        .nav-link.admin-lnk.active{ color:var(--accent)!important; background:rgba(160,102,255,0.1)!important; }
+        </style>
+</head>
+<body>
+
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_para_ruta-torneo.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link active">Torneo</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="page-header">
+    <div class="page-eyebrow">Clutch Draft · Temporada 2025</div>
+    <div class="page-title">TORNEO</div>
+</div>
+
+<!-- TABS BAR -->
+<div class="tabs-bar">
+    <div class="tabs-inner">
+        <button class="tab-btn active" onclick="switchTab('equipos',this)"><i class="fas fa-shield-alt"></i> Equipos</button>
+        <button class="tab-btn" onclick="switchTab('clasificacion',this)"><i class="fas fa-list-ol"></i> Clasificación</button>
+        <button class="tab-btn" onclick="switchTab('resultados',this)"><i class="fas fa-futbol"></i> Resultados</button>
+        <button class="tab-btn" onclick="switchTab('emparejamientos',this)"><i class="fas fa-calendar-alt"></i> Emparejamientos</button>
+        <button class="tab-btn" onclick="switchTab('rondas',this)"><i class="fas fa-sitemap"></i> Rondas Finales</button>
+        <button class="tab-btn" onclick="switchTab('formatos',this)"><i class="fas fa-trophy"></i> Formatos</button>
+    </div>
+</div>
+
+<div class="content">
+
+    <!-- ── EQUIPOS ── -->
+    <div id="tab-equipos" class="tab-panel active">
+        <div class="panel-hdr">EQUIPOS PARTICIPANTES</div>
+        <% if (equipos.length > 0) { %>
+        <div class="equipos-grid">
+            <% equipos.forEach(eq => { %>
+            <div class="equipo-card">
+                <div class="escudo-wrap">
+                    <% if (eq.logo_url) { %>
+                        <img src="<%= eq.logo_url %>" alt="">
+                    <% } else { %>
+                        <i class="fas fa-shield-alt escudo-ph"></i>
+                    <% } %>
+                </div>
+                <div class="equipo-nombre"><%= eq.nombre_equipo || eq.capitan_username %></div>
+                <div class="equipo-capitan">Cap. <%= eq.capitan_username %></div>
+            </div>
+            <% }) %>
+        </div>
+        <% } else { %>
+        <div class="empty-note">No hay equipos registrados aún.</div>
+        <% } %>
+    </div>
+
+    <!-- ── CLASIFICACIÓN ── -->
+    <div id="tab-clasificacion" class="tab-panel">
+        <div class="panel-hdr">TABLA DE CLASIFICACIÓN</div>
+        <% if (tabla.length > 0) { %>
+        <div class="tabla-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Equipo</th>
+                        <th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+                        <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% tabla.forEach((eq, i) => {
+                        const posClass = i===0?'top1':i===1?'top2':i===2?'top3':'';
+                        const eqData = equiposMap[eq.capitan_id];
+                    %>
+                    <tr>
+                        <td class="pos-cell <%= posClass %>">#<%= i+1 %></td>
+                        <td>
+                            <div class="equipo-cell">
+                                <% if (eqData?.logo_url) { %>
+                                    <img src="<%= eqData.logo_url %>" class="mini-escudo" alt="">
+                                <% } %>
+                                <%= eq.display_nombre || eq.equipo_nombre %>
+                            </div>
+                        </td>
+                        <td><%= eq.pj %></td>
+                        <td><%= eq.pg %></td>
+                        <td><%= eq.pe %></td>
+                        <td><%= eq.pp %></td>
+                        <td><%= eq.gf %></td>
+                        <td><%= eq.gc %></td>
+                        <td><%= eq.gf - eq.gc %></td>
+                        <td class="pts-cell"><%= eq.puntos %></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+        <% } else { %>
+        <div class="empty-note">La clasificación estará disponible cuando comiencen los partidos.</div>
+        <% } %>
+    </div>
+
+    <!-- ── RESULTADOS ── -->
+    <div id="tab-resultados" class="tab-panel">
+        <div class="panel-hdr">RESULTADOS</div>
+        <%
+            const fasLabelsRes = { playoffs: '🎯 Play-offs', cuartos: '🏆 Cuartos de Final', semis: '⚔️ Semifinales', final: '🏆 Gran Final' };
+            const finalizados  = matches.filter(m => m.estado === 'finalizado' && m.equipo2 !== 'BYE');
+            const jornadasFin  = [...new Set(finalizados.map(m => m.jornada))].sort((a,b) => b-a);
+            function labelJornadaRes(j) {
+                if (!totalRondasLiga || j <= totalRondasLiga) return 'Jornada ' + j;
+                const offset = j - totalRondasLiga;
+                const fase   = fasesTorneo[offset] || fasesTorneo[fasesTorneo.length - 1] || 'final';
+                return fasLabelsRes[fase] || fase.toUpperCase();
+            }
+        %>
+        <% if (jornadasFin.length > 0) { %>
+            <% jornadasFin.forEach(j => { %>
+            <div class="jornada-group">
+                <div class="jornada-title"><%= labelJornadaRes(j) %></div>
+                <div class="matches-list">
+                    <% finalizados.filter(m=>m.jornada===j).forEach(m => { %>
+                    <div class="match-row finalizado">
+                        <div class="match-team"><%= m.equipo1 %></div>
+                        <div class="match-score"><%= m.goles1 %> - <%= m.goles2 %></div>
+                        <div class="match-team right"><%= m.equipo2 %></div>
+                        <span class="match-badge badge-fin">FIN</span>
+                    </div>
+                    <% }) %>
+                </div>
+            </div>
+            <% }) %>
+        <% } else { %>
+        <div class="empty-note">No hay resultados todavía.</div>
+        <% } %>
+    </div>
+
+    <!-- ── EMPAREJAMIENTOS ── -->
+    <div id="tab-emparejamientos" class="tab-panel">
+        <%
+            const _fasLabelsEmp = { playoffs: '🎯 Play-offs', cuartos: '🏆 Cuartos de Final', semis: '⚔️ Semifinales', final: '🏆 Gran Final' };
+            function labelJornadaEmp(j) {
+                if (!totalRondasLiga || j <= totalRondasLiga) return 'Jornada ' + j;
+                const offset = j - totalRondasLiga - 1;
+                const fase   = fasesTorneo[offset + 1] || fasesTorneo[fasesTorneo.length - 1] || 'final';
+                return _fasLabelsEmp[fase] || fase.charAt(0).toUpperCase() + fase.slice(1);
+            }
+            function esKOEmp(j) { return totalRondasLiga > 0 && j > totalRondasLiga; }
+            const pendientes  = matches.filter(m => m.estado === 'pendiente');
+            const enCurso     = matches.filter(m => m.estado === 'en_curso');
+            const jornadasPen = [...new Set([...pendientes, ...enCurso].map(m => m.jornada))].sort((a,b) => a-b);
+            const hdrLabel    = jornadasPen.length > 0 ? labelJornadaEmp(jornadasPen[0]) : ('J' + jornadaActual);
+        %>
+        <div class="panel-hdr">EMPAREJAMIENTOS — <%= hdrLabel %></div>
+        <% if (enCurso.length > 0) { %>
+        <div class="jornada-group">
+            <div class="jornada-title" style="color:#ff4d4d;">🔴 En curso ahora</div>
+            <div class="matches-list">
+                <% enCurso.forEach(m => { %>
+                <div class="match-row en-curso">
+                    <div class="match-team"><%= m.equipo1 %></div>
+                    <div class="match-score pending">VS</div>
+                    <div class="match-team right"><%= m.equipo2 %></div>
+                    <span class="match-badge badge-live">LIVE</span>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+        <% } %>
+        <% if (jornadasPen.length > 0) { %>
+            <% jornadasPen.forEach(j => {
+                const esKO    = esKOEmp(j);
+                const jLabel  = labelJornadaEmp(j);
+                const jColor  = esKO ? (jLabel.includes('Final') && !jLabel.includes('Cuartos') && !jLabel.includes('Semi') ? 'var(--gold)' : 'var(--primary)') : 'inherit';
+            %>
+            <div class="jornada-group">
+                <div class="jornada-title" style="color:<%= jColor %>"><%= jLabel %></div>
+                <div class="matches-list">
+                    <% pendientes.filter(m=>m.jornada===j).forEach(m => { %>
+                    <div class="match-row">
+                        <div class="match-team"><%= m.equipo1 %></div>
+                        <div class="match-score pending">VS</div>
+                        <div class="match-team right"><%= m.equipo2 %></div>
+                        <span class="match-badge badge-pen">Pendiente</span>
+                    </div>
+                    <% }) %>
+                </div>
+            </div>
+            <% }) %>
+        <% } %>
+        <% if (pendientes.length === 0 && enCurso.length === 0) { %>
+        <div class="empty-note">No hay emparejamientos pendientes.</div>
+        <% } %>
+    </div>
+
+    <!-- ── RONDAS FINALES ── -->
+    <div id="tab-rondas" class="tab-panel">
+        <div class="panel-hdr">RONDAS FINALES</div>
+        <%
+            const fasLabels = { playoffs: '🎯 PLAY-OFFS', cuartos: '🏆 CUARTOS DE FINAL', semis: '⚔️ SEMIFINALES', final: '🏆 GRAN FINAL' };
+            const knockoutMatches = totalRondasLiga > 0
+                ? matches.filter(m => m.jornada > totalRondasLiga)
+                : [];
+            const jornadasKO = [...new Set(knockoutMatches.map(m => m.jornada))].sort((a,b) => a-b);
+            const soloLiga   = fasesTorneo.length === 1 || fasesTorneo[0] === 'liga' && fasesTorneo.length <= 1;
+            const ligaTerminada = totalRondasLiga > 0 && matches.filter(m => m.jornada <= totalRondasLiga).every(m => m.estado === 'finalizado') && matches.filter(m => m.jornada <= totalRondasLiga).length > 0;
+        %>
+        <% if (knockoutMatches.length > 0) { %>
+            <% jornadasKO.forEach(j => {
+                const offset = j - totalRondasLiga;
+                const fase   = fasesTorneo[offset] || 'final';
+                const label  = fasLabels[fase] || fase.toUpperCase();
+            %>
+            <div class="jornada-group">
+                <div class="jornada-title" style="color:<%= fase === 'final' ? 'var(--gold)' : 'var(--primary)' %>;">
+                    <%= label %>
+                </div>
+                <div class="matches-list">
+                    <% knockoutMatches.filter(m => m.jornada === j).forEach(m => { %>
+                    <div class="match-row <%= m.estado === 'finalizado' ? 'finalizado' : m.estado === 'en_curso' ? 'en-curso' : '' %>">
+                        <div class="match-team"><%= m.equipo1 %></div>
+                        <% if (m.estado === 'finalizado') { %>
+                            <div class="match-score"><%= m.goles1 %> - <%= m.goles2 %></div>
+                        <% } else if (m.estado === 'en_curso') { %>
+                            <div class="match-score pending">VS</div>
+                        <% } else { %>
+                            <div class="match-score pending">VS</div>
+                        <% } %>
+                        <div class="match-team right"><%= m.equipo2 %></div>
+                        <span class="match-badge <%= m.estado === 'finalizado' ? 'badge-fin' : m.estado === 'en_curso' ? 'badge-live' : 'badge-pen' %>">
+                            <%= m.estado === 'finalizado' ? 'FIN' : m.estado === 'en_curso' ? 'LIVE' : 'Pendiente' %>
+                        </span>
+                    </div>
+                    <% }) %>
+                </div>
+            </div>
+            <% }) %>
+        <% } else if (soloLiga && ligaTerminada && tabla.length > 0) { %>
+        <div class="bracket-msg" style="border-color:rgba(0,255,204,0.2);">
+            <i class="fas fa-trophy" style="color:var(--gold);"></i>
+            <p style="color:#ccc; font-size:1.05rem; margin-bottom:12px;">Liga finalizada — sin rondas eliminatorias.</p>
+            <p><strong style="color:var(--gold);font-size:1.1rem;">🥇 Campeón: <%= tabla[0]?.equipo_nombre || '—' %></strong></p>
+            <% if (tabla[1]) { %><p style="margin-top:6px;color:#aaa;">🥈 Subcampeón: <%= tabla[1].equipo_nombre %></p><% } %>
+        </div>
+        <% } else if (!soloLiga && ligaTerminada) { %>
+        <div class="bracket-msg" style="border-color:rgba(160,102,255,0.25);">
+            <i class="fas fa-hourglass-half" style="color:var(--accent);"></i>
+            <p style="color:#ccc;">La fase de liga ha terminado.</p>
+            <p style="margin-top:8px;font-size:0.85rem;color:#888;">
+                Próxima fase: <strong style="color:var(--accent);">
+                <%= fasLabels[fasesTorneo[1]] || fasesTorneo[1]?.toUpperCase() || '—' %>
+                </strong> — generándose automáticamente...
+            </p>
+        </div>
+        <% } else { %>
+        <div class="bracket-msg">
+            <i class="fas fa-sitemap"></i>
+            <p>Las rondas finales aparecerán aquí cuando concluya la fase de liga.</p>
+            <% if (tabla.length > 0) { %>
+            <p style="margin-top:8px;font-size:0.8rem;color:#555;">
+                Jornada actual: <%= jornadaActual %>
+                <% if (!soloLiga) { %> · Fases pendientes: <%= fasesTorneo.slice(1).map(f => fasLabels[f] || f).join(' → ') %><% } %>
+            </p>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+
+    <!-- ── FORMATOS ── -->
+    <div id="tab-formatos" class="tab-panel">
+        <div class="panel-hdr">FORMATOS DE COMPETICIÓN</div>
+        <p style="color:#888;font-size:.82rem;margin-bottom:20px;line-height:1.7;">El formato se determina automáticamente según el número de equipos participantes. Pulsa cada tarjeta para ver todos los detalles.</p>
+
+        <div class="fmts-grid">
+
+            <!-- 4 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(160,102,255,.12);color:var(--accent);"><i class="fas fa-users"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--accent);">LIGUILLA</div>
+                        <div class="fmt-sub">Formato para 4 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(160,102,255,.12);color:var(--accent);">4 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Fase Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos los equipos en una tabla única.</li>
+                            <li><span class="arr">▸</span> Cada equipo juega <strong>3 partidos</strong> (uno contra cada rival).</li>
+                            <li><span class="arr">▸</span> Sin fases eliminatorias: gana quien más puntos acumule.</li>
+                            <li><span class="arr">▸</span> Emparejamientos decididos por sistema Swiss (orden por puntos).</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Clasificación Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º</span> <span>Campeón</span></div>
+                            <div class="clasi-item up" style="border-color:rgba(0,255,204,.08);opacity:.75"><span class="clasi-pos">2º</span> <span>Subcampeón</span></div>
+                            <div class="clasi-item out" style="opacity:.5"><span class="clasi-pos">3º–4º</span> <span>Clasificados</span></div>
+                        </div>
+                        <p style="font-size:.72rem;color:#666;margin-top:10px;">En caso de empate en puntos se aplican criterios de desempate.</p>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 6 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(240,192,64,.1);color:var(--gold);"><i class="fas fa-cut"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--gold);">CHAMPIONS — CORTE DIRECTO</div>
+                        <div class="fmt-sub">Formato para 6 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(240,192,64,.1);color:var(--gold);">6 EQ · 3–4 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--gold);">Fase de Liga Única — 3 o 4 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos en <strong>una sola tabla</strong>. No hay grupos separados.</li>
+                            <li><span class="arr">▸</span> Emparejamientos Swiss: rivales de nivel similar cada jornada.</li>
+                            <li><span class="arr">▸</span> <strong>El Corte:</strong> Al terminar la liga, solo los <em>4 primeros</em> siguen compitiendo.</li>
+                            <li><span class="arr">▸</span> 5º y 6º quedan eliminados al finalizar la fase de liga.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--gold);">Fase Final Directa</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> <strong>Semifinal 1:</strong> 1º vs 4º</li>
+                            <li><span class="arr">▸</span> <strong>Semifinal 2:</strong> 2º vs 3º</li>
+                            <li><span class="arr">▸</span> <strong>Gran Final:</strong> Ganador SF1 vs Ganador SF2</li>
+                        </ul>
+                        <div class="clasi-rows" style="margin-top:12px;">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–4º</span><span>Pasan a Semis</span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">5º–6º</span><span>Eliminados en liga</span></div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 8 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(51,153,255,.12);color:#3399ff;"><i class="fas fa-star"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:#3399ff;">NUEVO FORMATO CHAMPIONS</div>
+                        <div class="fmt-sub">Formato para 8 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(51,153,255,.12);color:#3399ff;">8 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#3399ff;">Fase de Liga Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos en una tabla única. Sin grupos.</li>
+                            <li><span class="arr">▸</span> Cada equipo juega <strong>3 partidos</strong> contra rivales distintos.</li>
+                            <li><span class="arr">▸</span> Sistema Swiss: los primeros se enfrentan a los primeros, los últimos entre sí.</li>
+                            <li><span class="arr">▸</span> Los dos mejores de la liga se <strong>saltan los cuartos</strong> directamente a semis.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#3399ff;">Play-offs y Fase Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–2º</span><span>Clasifican directo a <strong>Semis</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">3º–6º</span><span><strong>Cuartos de Final</strong> (Play-offs)</span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">7º–8º</span><span>Eliminados</span></div>
+                        </div>
+                        <ul class="fph-list" style="margin-top:12px;">
+                            <li><span class="arr">▸</span> Cuartos: 3º vs 6º y 4º vs 5º</li>
+                            <li><span class="arr">▸</span> Semis: 1º vs G.Cuarto · 2º vs G.Cuarto</li>
+                            <li><span class="arr">▸</span> Final</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 10 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(0,255,204,.1);color:var(--primary);"><i class="fas fa-shield-alt"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:var(--primary);">FORMATO CHAMPIONS</div>
+                        <div class="fmt-sub">Formato para 10 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(0,255,204,.1);color:var(--primary);">10 EQ · 3 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--primary);">Fase de Liga Única — 3 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Todos los equipos en <strong>una tabla general única</strong>.</li>
+                            <li><span class="arr">▸</span> 3 partidos por equipo, emparejados por sistema Swiss.</li>
+                            <li><span class="arr">▸</span> Los rivales cambian cada jornada según tu posición en la tabla.</li>
+                            <li><span class="arr">▸</span> <strong>Premio top 2:</strong> clasifican directo a Semis sin pasar por Cuartos.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--primary);">Clasificación y Fase Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–2º</span><span>Directo a <strong>Semis</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">3º–6º</span><span><strong>Cuartos de Final</strong></span></div>
+                            <div class="clasi-item out"><span class="clasi-pos">7º–10º</span><span>Eliminados</span></div>
+                        </div>
+                        <ul class="fph-list" style="margin-top:12px;">
+                            <li><span class="arr">▸</span> Cuartos: 3º vs 6º y 4º vs 5º</li>
+                            <li><span class="arr">▸</span> Semis → Final</li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- 12 EQUIPOS -->
+            <details class="fmt-card">
+                <summary class="fmt-hdr">
+                    <div class="fmt-ico" style="background:rgba(255,77,77,.1);color:#ff6b6b;"><i class="fas fa-crown"></i></div>
+                    <div class="fmt-meta">
+                        <div class="fmt-name" style="color:#ff6b6b;">NUEVO CHAMPIONS — MÁXIMO NIVEL</div>
+                        <div class="fmt-sub">Formato para 12 Equipos</div>
+                    </div>
+                    <span class="fmt-pill" style="background:rgba(255,77,77,.1);color:#ff6b6b;">12 EQ · 4 JORNADAS</span>
+                    <i class="fas fa-chevron-down fmt-toggle"></i>
+                </summary>
+                <div class="fmt-body">
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Fase de Liga Única — 4 Jornadas</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> Una sola tabla general para <strong>los 12 equipos</strong>.</li>
+                            <li><span class="arr">▸</span> 4 partidos por equipo. No es todos contra todos: los cruces son por nivel (Swiss).</li>
+                            <li><span class="arr">▸</span> Los 2-0 se enfrentan a otros 2-0, los 1-1 entre sí, etc. Liga siempre competitiva.</li>
+                            <li><span class="arr">▸</span> Solo los <strong>4 primeros</strong> clasifican directo a Cuartos. El resto lucha en Play-offs.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Clasificación — 3 niveles</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">1º–4º</span><span>Directo a <strong>Cuartos</strong></span></div>
+                            <div class="clasi-item mid"><span class="clasi-pos">5º–12º</span><span><strong>Play-offs</strong> (8 luchan por 4 plazas)</span></div>
+                        </div>
+                    </div>
+                    <div class="fmt-phase full">
+                        <div class="fph-ttl" style="color:#ff6b6b;">Fase de Eliminatorias</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> <strong>Play-offs:</strong> 5º vs 12º · 6º vs 11º · 7º vs 10º · 8º vs 9º</li>
+                            <li><span class="arr">▸</span> <strong>Cuartos:</strong> 4 ganadores de Play-offs vs los 4 mejores de liga</li>
+                            <li><span class="arr">▸</span> <strong>Semis → Gran Final</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </details>
+
+            <!-- CRITERIOS DE DESEMPATE -->
+            <div class="fmt-desempate">
+                <div class="fmt-desempate-hdr">
+                    <div class="fmt-desempate-ico"><i class="fas fa-balance-scale"></i></div>
+                    <div>
+                        <div class="fmt-desempate-ttl">CRITERIOS DE DESEMPATE</div>
+                        <div class="fmt-desempate-sub">Se aplican en este orden estricto cuando hay empate en puntos</div>
+                    </div>
+                </div>
+                <ol class="desempate-ol">
+                    <li>Puntos acumulados</li>
+                    <li>Diferencia de goles (GF – GC)</li>
+                    <li>Goles a favor (GF)</li>
+                    <li>Resultado directo entre los empatados</li>
+                    <li>Goles a favor en el partido directo</li>
+                    <li>Sorteo (si todo lo anterior sigue igual)</li>
+                </ol>
+            </div>
+
+        </div><!-- /fmts-grid -->
+    </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+window.__CLUTCH__ = { username: '<%= user.username %>' };
+
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    btn.classList.add('active');
+    history.replaceState(null,'','/torneo?tab='+name);
+}
+
+// Activar tab desde URL
+(function(){
+    const tab = new URLSearchParams(location.search).get('tab');
+    if(tab){
+        const btn = document.querySelector(`.tab-btn[onclick*="'${tab}'"]`);
+        if(btn) btn.click();
+    }
+})();
+
+// ── SOCKET: actualizaciones en vivo ──────────────────────────
+(function(){
+    const socket = io();
+
+    socket.on('init', function() {});
+
+    // Cuando llega un resultado nuevo → recargar la página
+    socket.on('resultado', function() {
+        setTimeout(() => location.reload(), 400);
+    });
+
+    // Cuando se actualiza la clasificación (viene del bot o del admin) → recargar
+    socket.on('clasificacion-update', function() {
+        setTimeout(() => location.reload(), 400);
+    });
+
+    // Torneo generado → recargar para ver partidos
+    socket.on('torneo-generado', function() {
+        setTimeout(() => location.reload(), 400);
+    });
+
+    // Torneo limpiado → recargar
+    socket.on('torneo-limpiado', function() {
+        setTimeout(() => location.reload(), 400);
+    });
+})();
+</script>
+<script src="/js/main.js"></script>
+
+<script>
+(function(){
+  var burger = document.getElementById('nav-hamburger');
+  var links  = document.getElementById('nav-links');
+  if(!burger) return;
+  burger.addEventListener('click', function(){
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  links.querySelectorAll('.nav-link').forEach(function(l){
+    l.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+})();
+</script>
+</body>
+</html>

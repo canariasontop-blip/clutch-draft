@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clutch Draft — Inscripciones</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+    --primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--danger:#ff4d4d;
+    --bg:#03030a;--card:rgba(10,10,22,0.95);--border:rgba(255,255,255,0.07);
+    --font-d:'Bebas Neue',sans-serif;--font-b:'Rajdhani',sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#fff;}
+
+.bg-grid{position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,255,204,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.03) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 20s linear infinite;pointer-events:none;}
+@keyframes gridMove{to{background-position:60px 60px;}}
+.bg-glow{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(0,255,204,0.05) 0%,transparent 70%);pointer-events:none;}
+
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;padding:32px 20px 40px;}
+
+/* Header */
+.header{text-align:center;margin-bottom:32px;}
+.logo{font-family:var(--font-d);font-size:2.4rem;letter-spacing:10px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-sub{font-size:0.72rem;color:#444;text-transform:uppercase;letter-spacing:4px;margin-top:4px;}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:420px 1fr;gap:24px;max-width:1100px;width:100%;margin:0 auto;align-items:start;}
+@media(max-width:800px){.layout{grid-template-columns:1fr;}}
+
+/* Card compartida */
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 26px;box-shadow:0 0 40px rgba(0,0,0,0.4);}
+.card-title{font-family:var(--font-d);font-size:1.4rem;letter-spacing:5px;color:#fff;margin-bottom:6px;}
+.card-sub{font-size:0.76rem;color:#555;letter-spacing:1px;margin-bottom:22px;line-height:1.6;}
+
+/* Usuario */
+.user-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(0,255,204,0.04);border:1px solid rgba(0,255,204,0.1);border-radius:10px;margin-bottom:20px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(0,255,204,0.2);flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-size:0.85rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-id{font-size:0.62rem;color:#333;}
+.user-logout{font-size:0.62rem;color:#333;text-decoration:none;padding:3px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;transition:0.2s;white-space:nowrap;}
+.user-logout:hover{color:#777;border-color:rgba(255,255,255,0.12);}
+
+/* Posiciones */
+.pos-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px;}
+.pos-btn{padding:9px 4px;border-radius:9px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#555;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-align:center;cursor:pointer;transition:all 0.2s;font-family:var(--font-b);text-transform:uppercase;}
+.pos-btn:hover{border-color:rgba(255,255,255,0.18);color:#aaa;}
+.pos-btn.selected-DC   {background:rgba(0,255,204,0.12);border-color:#00ffcc;color:#00ffcc;}
+.pos-btn.selected-CARR {background:rgba(255,204,0,0.12);border-color:#ffcc00;color:#ffcc00;}
+.pos-btn.selected-MC   {background:rgba(160,102,255,0.12);border-color:#a066ff;color:#a066ff;}
+.pos-btn.selected-DFC  {background:rgba(255,77,77,0.12);border-color:#ff4d4d;color:#ff4d4d;}
+.pos-btn.selected-POR  {background:rgba(51,153,255,0.12);border-color:#3399ff;color:#3399ff;}
+.pos-desc{font-size:0.66rem;color:#333;margin-bottom:16px;min-height:14px;}
+
+/* Input */
+.field{margin-bottom:16px;}
+.field-label{font-size:0.68rem;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.req{color:var(--danger);}
+.field-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:11px 13px;color:#fff;font-size:0.88rem;font-family:var(--font-b);outline:none;transition:0.2s;}
+.field-input:focus{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.03);}
+.field-input::placeholder{color:#2a2a3a;}
+
+/* Alert */
+.alert{padding:11px 14px;border-radius:9px;font-size:0.8rem;line-height:1.5;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;}
+.alert-success{background:rgba(0,255,204,0.07);border:1px solid rgba(0,255,204,0.18);color:#00ffcc;}
+.alert-error{background:rgba(255,77,77,0.07);border:1px solid rgba(255,77,77,0.18);color:#ff4d4d;}
+
+/* Ya inscrito */
+.inscrito-box{background:rgba(0,255,204,0.03);border:1px solid rgba(0,255,204,0.1);border-radius:10px;padding:12px 14px;margin-bottom:18px;}
+.inscrito-tit{font-size:0.62rem;color:var(--primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.inscrito-row{display:flex;justify-content:space-between;font-size:0.8rem;color:#ccc;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.inscrito-row:last-child{border:none;}
+.inscrito-key{color:#333;font-size:0.68rem;text-transform:uppercase;letter-spacing:1px;}
+
+/* Submit */
+.btn-submit{width:100%;padding:14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--primary),var(--accent));color:#000;font-family:var(--font-d);font-size:1.15rem;letter-spacing:4px;cursor:pointer;transition:all 0.2s;margin-top:4px;}
+.btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 28px rgba(0,255,204,0.2);}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* Cerrado */
+.closed-box{text-align:center;padding:28px 0;}
+.closed-icon{font-size:2.6rem;color:#222;margin-bottom:12px;}
+.closed-title{font-family:var(--font-d);font-size:1.7rem;letter-spacing:6px;color:#333;margin-bottom:8px;}
+.closed-sub{font-size:0.78rem;color:#333;line-height:1.6;}
+
+/* ── LISTA DE INSCRITOS ── */
+.lista-header{display:flex;align-items:baseline;gap:10px;margin-bottom:20px;}
+.lista-titulo{font-family:var(--font-d);font-size:1.4rem;letter-spacing:5px;color:#fff;}
+.lista-total{font-size:0.7rem;color:#444;text-transform:uppercase;letter-spacing:2px;}
+.lista-total span{color:var(--primary);font-weight:700;}
+
+.pos-section{margin-bottom:18px;}
+.pos-section-header{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;margin-bottom:8px;}
+.pos-section-header.POR  {background:rgba(51,153,255,0.07); border-left:3px solid #3399ff;}
+.pos-section-header.DFC  {background:rgba(255,77,77,0.07);  border-left:3px solid #ff4d4d;}
+.pos-section-header.CARR {background:rgba(255,204,0,0.07);  border-left:3px solid #ffcc00;}
+.pos-section-header.MC   {background:rgba(160,102,255,0.07);border-left:3px solid #a066ff;}
+.pos-section-header.DC   {background:rgba(0,255,204,0.07);  border-left:3px solid #00ffcc;}
+.pos-icon{font-size:1rem;}
+.pos-label{font-family:var(--font-d);font-size:1rem;letter-spacing:3px;flex:1;}
+.pos-label.POR  {color:#3399ff;} .pos-label.DFC{color:#ff4d4d;}
+.pos-label.CARR {color:#ffcc00;} .pos-label.MC {color:#a066ff;}
+.pos-label.DC   {color:#00ffcc;}
+.pos-count{font-size:0.68rem;color:#333;letter-spacing:1px;}
+.pos-count span{font-weight:700;}
+
+.jugador-item{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);margin-bottom:5px;transition:background 0.2s;}
+.jugador-item.nuevo{animation:nuevoJugador 0.6s ease;}
+@keyframes nuevoJugador{0%{background:rgba(0,255,204,0.15);border-color:rgba(0,255,204,0.4);}100%{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.04);}}
+.jugador-num{font-size:0.6rem;color:#333;min-width:20px;text-align:right;}
+.jugador-nombre{font-size:0.82rem;font-weight:600;color:#ccc;flex:1;}
+.jugador-yo{font-size:0.6rem;color:var(--primary);background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.2);padding:2px 7px;border-radius:10px;white-space:nowrap;}
+
+.pos-vacia{font-size:0.75rem;color:#222;font-style:italic;padding:6px 12px;}
+
+/* Live dot */
+.live-row{display:flex;align-items:center;gap:6px;margin-bottom:16px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:livePulse 1.2s infinite;}
+@keyframes livePulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.live-txt{font-size:0.65rem;color:#444;text-transform:uppercase;letter-spacing:2px;}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;padding:0 20px;height:52px;background:rgba(3,3,10,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05);}
+.nav-logo{font-family:var(--font-d);font-size:1.1rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:8px;white-space:nowrap;}
+.nav-links{display:flex;gap:2px;align-items:center;flex:1;flex-wrap:wrap;}
+.nav-link{font-size:0.72rem;color:#444;text-decoration:none;text-transform:uppercase;letter-spacing:1px;padding:6px 10px;border-radius:7px;transition:0.2s;font-family:var(--font-b);font-weight:600;}
+.nav-link:hover{color:#ccc;background:rgba(255,255,255,0.05);}
+.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+.nav-link.admin-lnk{color:var(--accent);}
+.nav-link.admin-lnk:hover{background:rgba(160,102,255,0.1);}
+.nav-user{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.nav-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(0,255,204,0.3);object-fit:cover;}
+.nav-username{font-size:0.78rem;font-weight:700;color:#ccc;}
+.nav-logout{font-size:0.65rem;color:#333;text-decoration:none;padding:4px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;transition:0.2s;}
+.nav-logout:hover{color:#777;}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <div class="nav-links">
+        <a href="/hub"           class="nav-link">Hub</a>
+        <a href="/draft"         class="nav-link">Draft</a>
+        <a href="/torneo"        class="nav-link">Torneo</a>
+        <a href="/directo"       class="nav-link"><i class="fas fa-circle" style="color:#ff4d4d;font-size:0.45rem;"></i> Directo</a>
+        <a href="/normas"        class="nav-link">Normas</a>
+        <a href="/ganadores"     class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link active">Inscripciones</a>
+        <% if (user.esAdmin) { %>
+        <a href="/admin"         class="nav-link admin-lnk">Admin</a>
+        <% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="nav-logout"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="header">
+        <div class="logo">CLUTCH DRAFT</div>
+        <div class="header-sub">Portal de inscripciones</div>
+    </div>
+
+    <div class="layout">
+
+        <!-- ── COLUMNA IZQUIERDA: Formulario ── -->
+        <div class="card">
+            <div class="user-bar">
+                <img src="<%= user.avatar %>" class="user-avatar" alt="">
+                <div class="user-info">
+                    <div class="user-name"><%= user.username %></div>
+                    <div class="user-id">ID: <%= user.id %></div>
+                </div>
+                <a href="/logout" class="user-logout">Cerrar sesión</a>
+            </div>
+
+            <% if (draftAbierto) { %>
+            <div class="closed-box">
+                <div class="closed-icon"><i class="fas fa-lock"></i></div>
+                <div class="closed-title">PICKS EN CURSO</div>
+                <div class="closed-sub">El draft ha comenzado.<br>Las inscripciones están cerradas.</div>
+            </div>
+            <% } else { %>
+
+            <div class="card-title">INSCRÍBETE</div>
+            <div class="card-sub">Rellena tus datos. Puedes actualizarlos hasta que empiecen los picks.</div>
+
+            <% if (mensaje) { %>
+            <div class="alert alert-<%= tipoMensaje %>">
+                <i class="fas fa-<%= tipoMensaje === 'success' ? 'check-circle' : 'times-circle' %>"></i>
+                <span><%= mensaje %></span>
+            </div>
+            <% } %>
+
+            <% if (jugadorExistente) { %>
+            <div class="inscrito-box">
+                <div class="inscrito-tit">✅ Ya estás inscrito — edita tus datos abajo</div>
+                <div class="inscrito-row"><span class="inscrito-key">EA FC ID</span><span><%= jugadorExistente.eafc_id || '—' %></span></div>
+                <div class="inscrito-row"><span class="inscrito-key">Posición</span><span><%= jugadorExistente.posicion %></span></div>
+                <div class="inscrito-row"><span class="inscrito-key">Teléfono</span><span><%= jugadorExistente.telefono || '—' %></span></div>
+            </div>
+            <% } %>
+
+            <form method="POST" action="/inscripciones" id="form-insc">
+                <div class="field">
+                    <div class="field-label">EA FC ID <span class="req">*</span></div>
+                    <input type="text" name="eafc_id" class="field-input"
+                           placeholder="Tu nombre en EA Sports FC"
+                           value="<%= jugadorExistente?.eafc_id || '' %>"
+                           required maxlength="50" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <div class="field-label">Posición <span class="req">*</span></div>
+                    <div class="pos-grid">
+                        <% ['DC','CARR','MC','DFC','POR'].forEach(p => { %>
+                        <button type="button"
+                                class="pos-btn <%= jugadorExistente?.posicion === p ? 'selected-'+p : '' %>"
+                                data-pos="<%= p %>"
+                                onclick="selPos('<%= p %>')"><%= p %></button>
+                        <% }) %>
+                    </div>
+                    <input type="hidden" name="posicion" id="posicion-hidden"
+                           value="<%= jugadorExistente?.posicion || '' %>">
+                    <div class="pos-desc" id="pos-desc"><%
+                        const descs = { DC:'Delantero — finaliza jugadas', CARR:'Carrilero — ataca y defiende', MC:'Mediocentro — distribuye el juego', DFC:'Defensa central — corta y despeja', POR:'Portero — último recurso' };
+                        if (jugadorExistente?.posicion) { %><%= descs[jugadorExistente.posicion] || '' %><% } %></div>
+                </div>
+
+                <div class="field">
+                    <div class="field-label">Teléfono <span class="req">*</span></div>
+                    <input type="tel" name="telefono" class="field-input"
+                           placeholder="Ej: 600 000 000"
+                           value="<%= jugadorExistente?.telefono || '' %>"
+                           required maxlength="20">
+                </div>
+
+                <button type="submit" class="btn-submit" id="btn-submit">
+                    <%= jugadorExistente ? 'ACTUALIZAR DATOS' : 'INSCRIBIRME' %>
+                </button>
+            </form>
+            <% } %>
+        </div>
+
+        <!-- ── COLUMNA DERECHA: Lista de inscritos ── -->
+        <div class="card">
+            <div class="lista-header">
+                <div class="lista-titulo">INSCRITOS</div>
+                <div class="lista-total"><span id="total-count"><%= totalJugadores %></span> jugadores</div>
+            </div>
+            <div class="live-row">
+                <div class="live-dot"></div>
+                <span class="live-txt">Se actualiza en tiempo real</span>
+            </div>
+
+            <%
+            const posConfig = [
+                { key:'POR',  label:'🧤 PORTEROS',           icon:'🧤', lim:10 },
+                { key:'DFC',  label:'🛡️ DEFENSAS CENTRALES', icon:'🛡️', lim:30 },
+                { key:'CARR', label:'🏃 CARRILEROS',          icon:'🏃', lim:20 },
+                { key:'MC',   label:'⚙️ MEDIOCENTROS',        icon:'⚙️', lim:30 },
+                { key:'DC',   label:'⚡ DELANTEROS',          icon:'⚡', lim:20 },
+            ];
+            %>
+            <div id="lista-inscritos">
+            <% posConfig.forEach(pc => {
+                const lista = jugadoresPorPosicion[pc.key] || [];
+            %>
+            <div class="pos-section" id="sec-<%= pc.key %>">
+                <div class="pos-section-header <%= pc.key %>">
+                    <span class="pos-label <%= pc.key %>"><%= pc.icon %> <%= pc.key %></span>
+                    <span class="pos-count"><span id="cnt-<%= pc.key %>"><%= lista.length %></span> jugadores</span>
+                </div>
+                <div id="list-<%= pc.key %>">
+                <% if (lista.length === 0) { %>
+                    <div class="pos-vacia" id="vacia-<%= pc.key %>">Sin inscritos aún</div>
+                <% } else { %>
+                    <% lista.forEach((j, i) => { %>
+                    <div class="jugador-item" data-id="<%= j.discord_id %>">
+                        <span class="jugador-num">#<%= i+1 %></span>
+                        <span class="jugador-nombre"><%= j.eafc_id || j.nombre %></span>
+                        <% if (j.discord_id === user.id) { %><span class="jugador-yo">TÚ</span><% } %>
+                    </div>
+                    <% }) %>
+                <% } %>
+                </div>
+            </div>
+            <% }) %>
+            </div>
+        </div>
+
+    </div>
+
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const MI_ID = '<%= user.id %>';
+
+const POS_LABELS = {
+    DC:'Delantero — finaliza jugadas', CARR:'Carrilero — ataca y defiende',
+    MC:'Mediocentro — distribuye el juego', DFC:'Defensa central — corta y despeja',
+    POR:'Portero — último recurso'
+};
+
+function selPos(pos) {
+    document.querySelectorAll('.pos-btn').forEach(b => {
+        b.className = 'pos-btn';
+        if (b.dataset.pos === pos) b.classList.add('selected-' + pos);
+    });
+    document.getElementById('posicion-hidden').value = pos;
+    const desc = document.getElementById('pos-desc');
+    if (desc) { desc.textContent = POS_LABELS[pos] || ''; desc.style.color = 'var(--primary)'; }
+}
+
+document.getElementById('form-insc')?.addEventListener('submit', function(e) {
+    if (!document.getElementById('posicion-hidden').value) {
+        e.preventDefault();
+        const desc = document.getElementById('pos-desc');
+        if (desc) { desc.textContent = '⚠️ Selecciona una posición'; desc.style.color = 'var(--danger)'; }
+        return;
+    }
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'ENVIANDO…';
+});
+
+// ── Socket: actualización en tiempo real ──────────────────────
+const socket = io();
+const POSICIONES = ['POR','DFC','CARR','MC','DC'];
+
+function recontarPos(pos) {
+    const list = document.getElementById('list-' + pos);
+    if (!list) return;
+    const items = list.querySelectorAll('.jugador-item');
+    items.forEach((el, i) => {
+        const num = el.querySelector('.jugador-num');
+        if (num) num.textContent = '#' + (i + 1);
+    });
+    const cnt = document.getElementById('cnt-' + pos);
+    if (cnt) cnt.textContent = items.length;
+    // Mostrar/ocultar placeholder vacío
+    let vacia = document.getElementById('vacia-' + pos);
+    if (items.length === 0) {
+        if (!vacia) {
+            vacia = document.createElement('div');
+            vacia.className = 'pos-vacia';
+            vacia.id = 'vacia-' + pos;
+            vacia.textContent = 'Sin inscritos aún';
+            list.appendChild(vacia);
+        }
+    } else if (vacia) {
+        vacia.remove();
+    }
+}
+
+function upsertJugador(data) {
+    if (!data?.discord_id || !data?.nombre || !data?.posicion) return;
+    const nombre = data.eafc_id || data.nombre;
+    const pos    = data.posicion;
+
+    // Eliminar de cualquier sección donde esté actualmente
+    POSICIONES.forEach(p => {
+        const old = document.querySelector(`#list-${p} [data-id="${data.discord_id}"]`);
+        if (old) { old.remove(); recontarPos(p); }
+    });
+
+    const list = document.getElementById('list-' + pos);
+    if (!list) return;
+
+    const vacia = document.getElementById('vacia-' + pos);
+    if (vacia) vacia.remove();
+
+    const item = document.createElement('div');
+    item.className = 'jugador-item nuevo';
+    item.dataset.id = data.discord_id;
+    item.innerHTML = `
+        <span class="jugador-num">#${list.querySelectorAll('.jugador-item').length + 1}</span>
+        <span class="jugador-nombre">${nombre}</span>
+        ${data.discord_id === MI_ID ? '<span class="jugador-yo">TÚ</span>' : ''}
+    `;
+    list.appendChild(item);
+    recontarPos(pos);
+}
+
+socket.on('jugador_añadido', upsertJugador);
+
+socket.on('jugador_eliminado', function(data) {
+    if (!data?.discord_id) return;
+    POSICIONES.forEach(p => {
+        const el = document.querySelector(`#list-${p} [data-id="${data.discord_id}"]`);
+        if (el) { el.remove(); recontarPos(p); }
+    });
+});
+
+socket.on('jugadores_limpiados', function() {
+    POSICIONES.forEach(p => {
+        const list = document.getElementById('list-' + p);
+        if (list) list.innerHTML = `<div class="pos-vacia" id="vacia-${p}">Sin inscritos aún</div>`;
+        const cnt = document.getElementById('cnt-' + p);
+        if (cnt) cnt.textContent = '0';
+    });
+    const tot = document.getElementById('total-count');
+    if (tot) tot.textContent = '0';
+});
+
+socket.on('nuevo-jugador', function(data) {
+    if (data?.totalJugadores !== undefined) {
+        const tot = document.getElementById('total-count');
+        if (tot) tot.textContent = data.totalJugadores;
+    }
+});
+</script>
+</body>
+</html>

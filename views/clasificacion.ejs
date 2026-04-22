@@ -6,6 +6,39 @@
     <title>Clutch Draft — Clasificación</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.22;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
+        /* ── LEGIBILIDAD ── */
+        :root{ --card:rgba(18,18,30,0.88)!important; --border:rgba(255,255,255,0.10)!important; }
+        body{ color:#ddd; }
+        h1,h2,h3,h4,h5,h6{ color:#fff!important; }
+        p,li,td,th,label,span.norma-text{ color:#ddd!important; }
+        .norma-text{ color:#ddd!important; }
+        .norma-text strong{ color:#fff!important; }
+        /* Dark grays → readable */
+        [style*="color:#444"],[style*="color: #444"]{ color:#aaa!important; }
+        [style*="color:#555"],[style*="color: #555"]{ color:#bbb!important; }
+        [style*="color:#333"],[style*="color: #333"]{ color:#999!important; }
+        [style*="color:#666"],[style*="color: #666"]{ color:#bbb!important; }
+        [style*="color:#888"],[style*="color: #888"]{ color:#ccc!important; }
+        /* Cards with semi-transparent bg */
+        .card,.panel,.section,.norma-card,.rule-card,.team-card,
+        .match-card,.stat-card,.stat-block,.quick-card,.bottom-sec,
+        .normas-content,.aviso-final,.altura-cell,.alert-row,
+        .turno-block,.nav-card,.hof-card,.winner-card,.tab-content{
+            background:rgba(15,15,28,0.85)!important;
+            backdrop-filter:blur(4px);
+        }
+        /* Inputs and selects */
+        input,select,textarea{
+            background:rgba(255,255,255,0.06)!important;
+            color:#fff!important;
+        }
+        /* Content above video */
+        body>*:not(#bg-video-wrap){ position:relative; z-index:1; }
+        nav{ z-index:200!important; }
         * { margin:0; padding:0; box-sizing:border-box; }
         :root { --primary:#00ffcc; --accent:#a066ff; --bg:#050507; --card:#0f0f14; --border:rgba(255,255,255,0.06); --gold:#ffd700; --silver:#c0c0c0; --bronze:#cd7f32; }
         body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
@@ -14,7 +47,7 @@
         nav { display:flex; align-items:center; justify-content:space-between; padding:16px 36px; background:rgba(15,15,20,0.95); border-bottom:1px solid var(--border); backdrop-filter:blur(20px); position:sticky; top:0; z-index:200; }
         .nav-logo { font-size:1.2rem; font-weight:900; letter-spacing:4px; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
         .nav-links { display:flex; gap:6px; }
-        .nav-link { color:#555; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
+        .nav-link { color:#bbb; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
         .nav-link:hover, .nav-link.active { color:var(--primary); background:rgba(0,255,204,0.08); }
         .nav-link.admin { color:var(--accent); }
         .nav-user { display:flex; align-items:center; gap:10px; }
@@ -25,17 +58,17 @@
 
         .page-title { text-align:center; margin-bottom:40px; }
         .page-title h1 { font-size:2.5rem; font-weight:900; letter-spacing:6px; text-transform:uppercase; background:linear-gradient(135deg,#fff,var(--primary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; }
-        .page-title p { color:#444; font-size:0.85rem; letter-spacing:2px; }
+        .page-title p { color:#aaa; font-size:0.85rem; letter-spacing:2px; }
 
         .main-grid { display:grid; grid-template-columns:1fr 380px; gap:24px; align-items:start; }
 
         /* Tabla clasificación */
         .tabla-card { background:var(--card); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
         .tabla-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-        .tabla-header h2 { font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:3px; color:#555; }
+        .tabla-header h2 { font-size:0.85rem; font-weight:700; text-transform:uppercase; letter-spacing:3px; color:#bbb; }
 
         table { width:100%; border-collapse:collapse; }
-        thead th { padding:12px 16px; text-align:left; font-size:0.65rem; color:#444; text-transform:uppercase; letter-spacing:2px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.01); }
+        thead th { padding:12px 16px; text-align:left; font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:2px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.01); }
         thead th.center { text-align:center; }
         tbody tr { transition:0.15s; }
         tbody tr:hover { background:rgba(255,255,255,0.02); }
@@ -43,14 +76,14 @@
         tbody tr.top2 { background:rgba(192,192,192,0.02); }
         tbody tr.top3 { background:rgba(205,127,50,0.02); }
         td { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.025); font-size:0.88rem; vertical-align:middle; }
-        td.center { text-align:center; color:#555; }
+        td.center { text-align:center; color:#bbb; }
         tbody tr:last-child td { border-bottom:none; }
 
         .pos-cell { font-size:1.1rem; font-weight:900; width:40px; text-align:center; }
         .pos-gold   { color:var(--gold); }
         .pos-silver { color:var(--silver); }
         .pos-bronze { color:var(--bronze); }
-        .pos-other  { color:#333; }
+        .pos-other  { color:#999; }
 
         .equipo-cell { font-weight:700; }
         .pts-cell { font-weight:900; font-size:1rem; color:var(--primary); text-align:center; }
@@ -58,11 +91,11 @@
         .dif-cell { font-size:0.8rem; font-weight:600; text-align:center; }
         .dif-pos { color:#2ecc71; }
         .dif-neg { color:#ff4d4d; }
-        .dif-neu { color:#555; }
+        .dif-neu { color:#bbb; }
 
         /* Jornadas */
         .jornadas-card { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:24px; }
-        .card-title { font-size:0.7rem; font-weight:700; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+        .card-title { font-size:0.7rem; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:3px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
         .card-title::after { content:''; flex:1; height:1px; background:var(--border); }
 
         .jornada-group { margin-bottom:20px; }
@@ -82,7 +115,7 @@
         }
         .match-score.live { color:var(--primary); }
         .match-score.done { color:#ccc; }
-        .match-score.pending { color:#333; }
+        .match-score.pending { color:#999; }
 
         .estado-dot {
             width:6px; height:6px; border-radius:50%;
@@ -93,24 +126,41 @@
         .estado-dot.en_juego    { background:var(--primary); animation:blink 1s infinite; }
         @keyframes blink { 50% { opacity:0; } }
 
-        .no-data { text-align:center; color:#333; font-size:0.9rem; padding:30px; }
+        .no-data { text-align:center; color:#999; font-size:0.9rem; padding:30px; }
 
         @media (max-width:900px) { .main-grid { grid-template-columns:1fr; } }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
 </head>
 <body>
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_para_ruta-torneo.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
 
 <nav>
     <div class="nav-logo">CLUTCH</div>
-    <div class="nav-links">
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
         <a href="/hub" class="nav-link">Hub</a>
         <a href="/draft" class="nav-link">Draft</a>
         <a href="/clasificacion" class="nav-link active">Clasificación</a>
-        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin">Admin</a><% } %>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/directo" class="nav-link"><i class="fas fa-circle" style="color:#ff4d4d;font-size:0.5rem;"></i> Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
     </div>
     <div class="nav-user">
-        <img src="<%= user.avatar %>" class="nav-avatar">
-        <span style="font-size:0.85rem;font-weight:600;"><%= user.username %></span>
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
         <a href="/logout" class="logout"><i class="fas fa-sign-out-alt"></i></a>
     </div>
 </nav>
@@ -242,6 +292,24 @@
 <script>
     const socket = io();
     socket.on('resultado', () => setTimeout(() => location.reload(), 500));
+</script>
+
+<script>
+(function(){
+  var burger = document.getElementById('nav-hamburger');
+  var links  = document.getElementById('nav-links');
+  if(!burger) return;
+  burger.addEventListener('click', function(){
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  links.querySelectorAll('.nav-link').forEach(function(l){
+    l.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+})();
 </script>
 </body>
 </html>

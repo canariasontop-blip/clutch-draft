@@ -6,6 +6,39 @@
     <title>Clutch Draft — Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.22;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
+        /* ── LEGIBILIDAD ── */
+        :root{ --card:rgba(18,18,30,0.88)!important; --border:rgba(255,255,255,0.10)!important; }
+        body{ color:#ddd; }
+        h1,h2,h3,h4,h5,h6{ color:#fff!important; }
+        p,li,td,th,label,span.norma-text{ color:#ddd!important; }
+        .norma-text{ color:#ddd!important; }
+        .norma-text strong{ color:#fff!important; }
+        /* Dark grays → readable */
+        [style*="color:#444"],[style*="color: #444"]{ color:#aaa!important; }
+        [style*="color:#555"],[style*="color: #555"]{ color:#bbb!important; }
+        [style*="color:#333"],[style*="color: #333"]{ color:#999!important; }
+        [style*="color:#666"],[style*="color: #666"]{ color:#bbb!important; }
+        [style*="color:#888"],[style*="color: #888"]{ color:#ccc!important; }
+        /* Cards with semi-transparent bg */
+        .card,.panel,.section,.norma-card,.rule-card,.team-card,
+        .match-card,.stat-card,.stat-block,.quick-card,.bottom-sec,
+        .normas-content,.aviso-final,.altura-cell,.alert-row,
+        .turno-block,.nav-card,.hof-card,.winner-card,.tab-content{
+            background:rgba(15,15,28,0.85)!important;
+            backdrop-filter:blur(4px);
+        }
+        /* Inputs and selects */
+        input,select,textarea{
+            background:rgba(255,255,255,0.06)!important;
+            color:#fff!important;
+        }
+        /* Content above video */
+        body>*:not(#bg-video-wrap){ position:relative; z-index:1; }
+        nav{ z-index:200!important; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --primary: #00ffcc;
@@ -62,7 +95,7 @@
             margin-bottom: 8px;
         }
         .subtitle {
-            color: #555;
+            color:#bbb;
             font-size: 0.85rem;
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -97,7 +130,7 @@
         .btn-discord i { font-size: 1.3rem; }
         .info-text {
             margin-top: 25px;
-            color: #333;
+            color:#999;
             font-size: 0.8rem;
             line-height: 1.6;
         }
@@ -115,6 +148,12 @@
     </style>
 </head>
 <body>
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/bg.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
     <div class="grid-bg"></div>
     <div class="login-card">
         <div class="logo">CLUTCH</div>

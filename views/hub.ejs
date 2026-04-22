@@ -3,320 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clutch Draft — Hub</title>
+    <title>Clutch Draft</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00ffcc;
-            --accent:  #a066ff;
-            --bg:      #050507;
-            --card:    #0f0f14;
-            --border:  rgba(255,255,255,0.06);
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.22;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
+        /* ── LEGIBILIDAD ── */
+        :root{ --card:rgba(18,18,30,0.88)!important; --border:rgba(255,255,255,0.10)!important; }
+        body{ color:#ddd; }
+        h1,h2,h3,h4,h5,h6{ color:#fff!important; }
+        p,li,td,th,label,span.norma-text{ color:#ddd!important; }
+        .norma-text{ color:#ddd!important; }
+        .norma-text strong{ color:#fff!important; }
+        /* Dark grays → readable */
+        [style*="color:#444"],[style*="color: #444"]{ color:#aaa!important; }
+        [style*="color:#555"],[style*="color: #555"]{ color:#bbb!important; }
+        [style*="color:#333"],[style*="color: #333"]{ color:#999!important; }
+        [style*="color:#666"],[style*="color: #666"]{ color:#bbb!important; }
+        [style*="color:#888"],[style*="color: #888"]{ color:#ccc!important; }
+        /* Cards with semi-transparent bg */
+        .card,.panel,.section,.norma-card,.rule-card,.team-card,
+        .match-card,.stat-card,.stat-block,.quick-card,.bottom-sec,
+        .normas-content,.aviso-final,.altura-cell,.alert-row,
+        .turno-block,.nav-card,.hof-card,.winner-card,.tab-content{
+            background:rgba(15,15,28,0.85)!important;
+            backdrop-filter:blur(4px);
         }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: #fff;
-            min-height: 100vh;
+        /* Inputs and selects */
+        input,select,textarea{
+            background:rgba(255,255,255,0.06)!important;
+            color:#fff!important;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse at 10% 20%, rgba(0,255,204,0.05) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(160,102,255,0.05) 0%, transparent 50%);
-            pointer-events: none;
+        /* Content above video */
+        body>*:not(#bg-video-wrap){ position:relative; z-index:1; }
+        nav{ z-index:200!important; }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+            --primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;
+            --bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);
+            --font-display:'Bebas Neue',sans-serif;
+            --font-body:'Rajdhani',sans-serif;
         }
+        html{scroll-behavior:smooth;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;overflow-x:hidden;}
+
+        /* ── VIDEO FONDO ── */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.55);}
 
         /* ── NAV ── */
-        nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 18px 40px;
-            background: rgba(15,15,20,0.9);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(20px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        nav{
+            position:fixed;top:0;left:0;right:0;z-index:100;
+            display:flex;align-items:center;justify-content:space-between;
+            padding:0 36px;height:58px;
+            background:rgba(3,3,10,0.85);
+            border-bottom:1px solid var(--border);
+            backdrop-filter:blur(24px);
         }
-        .nav-logo {
-            font-size: 1.3rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .nav-logo{
+            font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;
+            background:linear-gradient(135deg,var(--primary),var(--accent));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
         }
-        .nav-links { display: flex; gap: 8px; align-items: center; }
-        .nav-link {
-            color: #666;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: 0.2s;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+        .nav-links{display:flex;gap:2px;align-items:center;}
+        .nav-link{
+            color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;
+            padding:6px 13px;border-radius:6px;transition:0.2s;
+            text-transform:uppercase;letter-spacing:1.5px;
         }
-        .nav-link:hover, .nav-link.active { color: var(--primary); background: rgba(0,255,204,0.08); }
-        .nav-link.admin-link { color: var(--accent); }
-        .nav-link.admin-link:hover { background: rgba(160,102,255,0.1); }
-        .nav-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .nav-avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border: 2px solid var(--primary);
-            object-fit: cover;
-        }
-        .nav-username { font-size: 0.9rem; font-weight: 600; }
-        .logout-btn {
-            color: #ff4d4d;
-            text-decoration: none;
-            font-size: 0.8rem;
-            padding: 6px 12px;
-            border-radius: 6px;
-            transition: 0.2s;
-        }
-        .logout-btn:hover { background: rgba(255,77,77,0.1); }
+        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+        .nav-link.admin-lnk{color:var(--accent);}
+        .nav-link.admin-lnk:hover{background:rgba(160,102,255,0.1);}
+        .nav-user{display:flex;align-items:center;gap:10px;}
+        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
+        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
+        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;transition:0.2s;}
+        .logout-btn:hover{background:rgba(255,77,77,0.1);}
 
-        /* ── LAYOUT ── */
-        .container { max-width: 1300px; margin: 0 auto; padding: 40px 30px; }
+        /* ── HERO ── */
+        .hero{
+            position:relative;z-index:1;
+            min-height:100vh;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            text-align:center;padding:80px 20px 60px;
+        }
+        .hero-eyebrow{
+            font-size:0.7rem;font-weight:700;letter-spacing:5px;text-transform:uppercase;
+            color:var(--primary);margin-bottom:18px;
+            display:flex;align-items:center;gap:10px;
+            animation:fadeUp 0.8s ease both;
+        }
+        .hero-eyebrow::before,.hero-eyebrow::after{content:'';width:40px;height:1px;background:var(--primary);opacity:0.5;}
+        .hero-title{
+            font-family:var(--font-display);
+            font-size:clamp(4rem,12vw,10rem);
+            line-height:0.9;letter-spacing:4px;
+            margin-bottom:10px;
+            animation:fadeUp 0.8s 0.15s ease both;
+        }
+        .hero-title .line1{
+            display:block;color:#fff;
+            text-shadow:0 0 80px rgba(0,255,204,0.15);
+        }
+        .hero-title .line2{
+            display:block;
+            background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            filter:drop-shadow(0 0 30px rgba(0,255,204,0.4));
+        }
+        .hero-title .line3{
+            display:block;color:var(--gold);
+            text-shadow:0 0 60px rgba(240,192,64,0.4);
+        }
+        .hero-sub{
+            font-size:0.88rem;color:#bbb;letter-spacing:3px;text-transform:uppercase;
+            margin:16px 0 40px;
+            animation:fadeUp 0.8s 0.3s ease both;
+        }
+        .hero-desc{
+            max-width:460px;font-size:1rem;color:#bbb;line-height:1.8;
+            margin-bottom:48px;
+            animation:fadeUp 0.8s 0.45s ease both;
+        }
+        .hero-ctas{
+            display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+            animation:fadeUp 0.8s 0.6s ease both;
+        }
+        .btn-primary{
+            padding:13px 32px;border-radius:8px;
+            background:var(--primary);color:#000;
+            font-family:var(--font-body);font-weight:700;font-size:0.85rem;letter-spacing:2px;
+            text-transform:uppercase;text-decoration:none;
+            border:none;cursor:pointer;transition:0.25s;
+            box-shadow:0 0 30px rgba(0,255,204,0.3);
+        }
+        .btn-primary:hover{background:#fff;box-shadow:0 0 50px rgba(0,255,204,0.5);transform:translateY(-2px);}
+        .btn-ghost{
+            padding:13px 32px;border-radius:8px;
+            background:transparent;color:#fff;
+            font-family:var(--font-body);font-weight:700;font-size:0.85rem;letter-spacing:2px;
+            text-transform:uppercase;text-decoration:none;
+            border:1px solid rgba(255,255,255,0.18);cursor:pointer;transition:0.25s;
+        }
+        .btn-ghost:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-2px);}
+        .scroll-hint{
+            position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+            display:flex;flex-direction:column;align-items:center;gap:6px;
+            color:#999;font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;
+            animation:fadeUp 1s 1.2s ease both;
+        }
+        .scroll-hint i{animation:scrollBounce 2s infinite;}
+        @keyframes scrollBounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
 
-        .hero {
-            text-align: center;
-            margin-bottom: 50px;
+        /* ── DRAFT STATUS BANNER ── */
+        .status-banner{
+            position:relative;z-index:1;
+            max-width:900px;margin:0 auto 0;padding:0 20px;
+            animation:fadeUp 0.8s 0.75s ease both;
         }
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: 900;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+        .status-pill{
+            display:inline-flex;align-items:center;gap:10px;
+            padding:10px 22px;border-radius:30px;
+            font-size:0.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
         }
-        .hero p { color: #444; font-size: 0.95rem; letter-spacing: 2px; }
+        .status-pill.abierto{background:rgba(0,255,204,0.1);border:1px solid rgba(0,255,204,0.3);color:var(--primary);}
+        .status-pill.cerrado{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:#aaa;}
+        .pulse-dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
+        .pulse-dot.live{animation:pulse 1.5s infinite;}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
 
-        /* Draft status banner */
-        .draft-banner {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            padding: 16px 30px;
-            border-radius: 12px;
-            margin-bottom: 50px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
+        /* ── SECTION BASE ── */
+        section{position:relative;z-index:1;padding:80px 0;}
+        .section-inner{max-width:1200px;margin:0 auto;padding:0 24px;}
+        .section-label{
+            font-size:0.65rem;color:var(--primary);letter-spacing:5px;text-transform:uppercase;
+            margin-bottom:8px;font-weight:700;
         }
-        .draft-banner.abierto {
-            background: rgba(0,255,204,0.08);
-            border: 1px solid rgba(0,255,204,0.3);
-            color: var(--primary);
+        .section-title{
+            font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);
+            letter-spacing:2px;margin-bottom:40px;
         }
-        .draft-banner.cerrado {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            color: #444;
-        }
-        .dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-        .dot.pulse { animation: pulse 1.5s infinite; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.5; transform: scale(1.3); }
-        }
+        .divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:0 0 60px;}
 
-        /* Stats row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 40px;
+        /* ── STATS GRID ── */
+        .stats-grid{
+            display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+            background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+            margin-bottom:60px;
         }
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            text-align: center;
-            transition: 0.3s;
+        .stat-block{
+            background:var(--card);padding:32px 24px;text-align:center;transition:0.3s;
         }
-        .stat-card:hover { border-color: rgba(0,255,204,0.2); transform: translateY(-3px); }
-        .stat-card .num {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: var(--primary);
-            line-height: 1;
-            margin-bottom: 6px;
-        }
-        .stat-card .label {
-            font-size: 0.75rem;
-            color: #444;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+        .stat-block:hover{background:rgba(0,255,204,0.03);}
+        .stat-num{font-family:var(--font-display);font-size:3rem;color:var(--primary);line-height:1;}
+        .stat-lbl{font-size:0.68rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;margin-top:6px;}
 
-        /* Main grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 24px;
-        }
+        /* ── CONTENT GRID ── */
+        .content-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;}
 
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 28px;
-            margin-bottom: 24px;
+        /* ── CARDS ── */
+        .card{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:16px;padding:26px;margin-bottom:18px;
         }
-        .card:last-child { margin-bottom: 0; }
-        .card-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #444;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .card:last-child{margin-bottom:0;}
+        .card-title{
+            font-size:0.62rem;color:#aaa;text-transform:uppercase;letter-spacing:3px;
+            margin-bottom:18px;display:flex;align-items:center;gap:8px;font-weight:700;
         }
-        .card-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
+        .card-title i{color:var(--primary);}
+        .card-title::after{content:'';flex:1;height:1px;background:var(--border);}
 
-        /* Clasificación top 5 */
-        .rank-list { list-style: none; }
-        .rank-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border);
+        /* Ranking */
+        .rank-list{list-style:none;}
+        .rank-item{
+            display:flex;align-items:center;gap:14px;
+            padding:12px 0;border-bottom:1px solid var(--border);
         }
-        .rank-item:last-child { border-bottom: none; }
-        .rank-pos {
-            font-size: 1.2rem;
-            font-weight: 900;
-            width: 30px;
-            text-align: center;
+        .rank-item:last-child{border-bottom:none;}
+        .rank-num{
+            font-family:var(--font-display);font-size:1.4rem;width:28px;text-align:center;
         }
-        .rank-pos.gold   { color: #ffd700; }
-        .rank-pos.silver { color: #c0c0c0; }
-        .rank-pos.bronze { color: #cd7f32; }
-        .rank-pos.other  { color: #333; }
-        .rank-name { flex: 1; font-weight: 600; }
-        .rank-pts {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .rank-record { font-size: 0.75rem; color: #444; }
+        .rank-num.gold{color:var(--gold);}
+        .rank-num.silver{color:#c0c0c0;}
+        .rank-num.bronze{color:#cd7f32;}
+        .rank-num.other{color:#888;}
+        .rank-name{flex:1;font-weight:700;font-size:0.92rem;}
+        .rank-record{font-size:0.7rem;color:#aaa;}
+        .rank-pts{font-size:0.9rem;font-weight:700;color:var(--primary);}
 
-        /* Últimos fichajes */
-        .fichaje-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
+        /* Fichajes */
+        .fichaje-row{
+            display:flex;align-items:center;gap:12px;
+            padding:11px 0;border-bottom:1px solid var(--border);
         }
-        .fichaje-item:last-child { border-bottom: none; }
-        .pos-badge {
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 5px;
-            min-width: 38px;
-            text-align: center;
+        .fichaje-row:last-child{border-bottom:none;}
+        .pos-pip{
+            width:38px;font-size:0.62rem;font-weight:700;padding:3px 6px;
+            border-radius:5px;text-align:center;flex-shrink:0;
         }
-        .pos-DC   { background: rgba(0,255,204,0.15);  color: #00ffcc; }
-        .pos-MC   { background: rgba(160,102,255,0.15); color: #a066ff; }
-        .pos-CARR { background: rgba(255,204,0,0.15);  color: #ffcc00; }
-        .pos-DFC  { background: rgba(255,77,77,0.15);  color: #ff4d4d; }
-        .pos-POR  { background: rgba(51,153,255,0.15); color: #3399ff; }
-        .fichaje-info { flex: 1; }
-        .fichaje-nombre { font-size: 0.9rem; font-weight: 600; }
-        .fichaje-equipo { font-size: 0.75rem; color: #444; }
+        .pos-DC{background:rgba(0,255,204,0.15);color:#00ffcc;}
+        .pos-MC{background:rgba(160,102,255,0.15);color:#a066ff;}
+        .pos-CARR{background:rgba(255,204,0,0.15);color:#ffcc00;}
+        .pos-DFC{background:rgba(255,77,77,0.15);color:#ff4d4d;}
+        .pos-POR{background:rgba(51,153,255,0.15);color:#3399ff;}
+        .fich-nombre{flex:1;font-weight:700;font-size:0.88rem;}
+        .fich-equipo{font-size:0.7rem;color:#aaa;}
 
-        /* Accesos rápidos */
-        .quick-links { display: flex; flex-direction: column; gap: 10px; }
-        .quick-link {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            text-decoration: none;
-            color: #ccc;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: 0.25s;
+        /* Sidebar */
+        .turno-block{
+            background:rgba(0,255,204,0.05);
+            border:1px solid rgba(0,255,204,0.2);
+            border-radius:14px;padding:24px;text-align:center;margin-bottom:16px;
         }
-        .quick-link:hover {
-            background: rgba(0,255,204,0.06);
-            border-color: rgba(0,255,204,0.25);
-            color: var(--primary);
-            transform: translateX(4px);
-        }
-        .quick-link i { width: 20px; text-align: center; font-size: 1rem; }
-        .quick-link.accent-link:hover {
-            background: rgba(160,102,255,0.06);
-            border-color: rgba(160,102,255,0.25);
-            color: var(--accent);
-        }
+        .turno-lbl{font-size:0.62rem;color:#bbb;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+        .turno-nombre{font-family:var(--font-display);font-size:2rem;color:var(--primary);letter-spacing:2px;}
 
-        /* Turno actual */
-        .turno-card {
-            background: rgba(0,255,204,0.05);
-            border: 1px solid rgba(0,255,204,0.2);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 10px;
+        /* Nav cards */
+        .nav-cards{display:flex;flex-direction:column;gap:8px;}
+        .nav-card{
+            display:flex;align-items:center;gap:14px;
+            background:rgba(255,255,255,0.02);border:1px solid var(--border);
+            border-radius:12px;padding:15px 18px;
+            text-decoration:none;color:#bbb;font-weight:700;font-size:0.88rem;
+            transition:0.25s;
         }
-        .turno-label { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-        .turno-nombre { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+        .nav-card:hover{
+            background:rgba(0,255,204,0.05);border-color:rgba(0,255,204,0.2);
+            color:var(--primary);transform:translateX(5px);
+        }
+        .nav-card.accent:hover{
+            background:rgba(160,102,255,0.05);border-color:rgba(160,102,255,0.2);color:var(--accent);
+        }
+        .nav-card i{width:18px;text-align:center;font-size:0.9rem;}
+        .nav-card-arrow{margin-left:auto;font-size:0.7rem;opacity:0.4;}
 
-        @media (max-width: 900px) {
-            .main-grid { grid-template-columns: 1fr; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-            nav { padding: 14px 20px; }
-            .hero h1 { font-size: 2rem; }
+        /* Vacio */
+        .empty-note{color:#888;font-size:0.85rem;font-style:italic;padding:12px 0;}
+
+        /* ── QUICK LINKS SECTION ── */
+        .quick-section{
+            display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+        }
+        .quick-card{
+            background:var(--card);border:1px solid var(--border);
+            border-radius:14px;padding:28px 20px;text-align:center;
+            text-decoration:none;color:#fff;transition:0.3s;
+            display:flex;flex-direction:column;align-items:center;gap:12px;
+        }
+        .quick-card:hover{border-color:rgba(0,255,204,0.3);transform:translateY(-4px);background:rgba(0,255,204,0.03);}
+        .quick-card.accent-card:hover{border-color:rgba(160,102,255,0.3);background:rgba(160,102,255,0.03);}
+        .quick-card.gold-card:hover{border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.03);}
+        .quick-icon{
+            width:52px;height:52px;border-radius:14px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.3rem;
+        }
+        .qc-green .quick-icon{background:rgba(0,255,204,0.1);color:var(--primary);}
+        .qc-purple .quick-icon{background:rgba(160,102,255,0.1);color:var(--accent);}
+        .qc-gold .quick-icon{background:rgba(240,192,64,0.1);color:var(--gold);}
+        .qc-red .quick-icon{background:rgba(255,77,77,0.1);color:#ff4d4d;}
+        .qc-blue .quick-icon{background:rgba(51,153,255,0.1);color:#3399ff;}
+        .qc-teal .quick-icon{background:rgba(0,200,200,0.1);color:#00cccc;}
+        .quick-label{font-weight:700;font-size:0.88rem;letter-spacing:1px;}
+        .quick-desc{font-size:0.72rem;color:#aaa;line-height:1.5;}
+
+        /* ── FOOTER ── */
+        footer{
+            position:relative;z-index:1;
+            border-top:1px solid var(--border);
+            padding:28px 24px;text-align:center;
+            color:#888;font-size:0.72rem;letter-spacing:2px;
+        }
+        footer span{color:var(--primary);}
+
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+        /* ── MOBILE ── */
+        @media(max-width:768px){
+            nav{padding:0 14px;height:52px;}
+            .nav-link{font-size:0.62rem;padding:5px 7px;letter-spacing:0.5px;}
+            .nav-username{display:none;}
+            .hero-title{font-size:clamp(3rem,16vw,6rem);}
+            .stats-grid{grid-template-columns:repeat(2,1fr);}
+            .content-grid{grid-template-columns:1fr;}
+            .quick-section{grid-template-columns:repeat(2,1fr);}
+            section{padding:50px 0;}
+        }
+        @media(max-width:480px){
+            .hero-ctas{flex-direction:column;align-items:center;}
+            .quick-section{grid-template-columns:1fr;}
         }
     </style>
 </head>
 <body>
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/bg.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
 
+
+
+<!-- NAV -->
 <nav>
     <div class="nav-logo">CLUTCH</div>
-    <div class="nav-links">
-        <a href="/hub"           class="nav-link active">Hub</a>
-        <a href="/draft"         class="nav-link">Draft</a>
-        <a href="/clasificacion" class="nav-link">Clasificación</a>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link active">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/directo" class="nav-link"><i class="fas fa-circle" style="color:#ff4d4d;font-size:0.5rem;"></i> Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
         <% if (user.esAdmin) { %>
-            <a href="/admin" class="nav-link admin-link"><i class="fas fa-shield-alt"></i> Admin</a>
+        <a href="/admin" class="nav-link admin-lnk">Admin</a>
+        <a href="/draft-stream" class="nav-link" style="color:#f0c040;" target="_blank">Stream</a>
         <% } %>
     </div>
     <div class="nav-user">
@@ -326,146 +378,257 @@
     </div>
 </nav>
 
-<div class="container">
-
-    <div class="hero">
-        <h1>CLUTCH DRAFT</h1>
-        <p>Centro de operaciones</p>
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-eyebrow">Temporada 2026 · EA Sports FC</div>
+    <h1 class="hero-title">
+        <span class="line1">CLUTCH</span>
+        <span class="line2">DRAFT</span>
+    </h1>
+    <p class="hero-desc">
+        Solo los más hambrientos llegan al final.
+        Cada pick es una declaración de guerra, cada jornada un campo de batalla.
+        No hay excusas. No hay empates morales. Solo el mejor capitán alzará el título.
+    </p>
+    <div class="hero-ctas">
+        <a href="/draft" class="btn-primary"><i class="fas fa-bolt"></i> Ir al Draft</a>
+        <a href="/torneo" class="btn-ghost"><i class="fas fa-trophy"></i> Ver Torneo</a>
     </div>
 
-    <!-- Estado del draft -->
-    <div class="draft-banner <%= draftEstado %>">
-        <div class="dot <%= draftEstado === 'abierto' ? 'pulse' : '' %>"></div>
+    <!-- Draft status -->
+    <div class="status-banner" style="margin-top:40px;">
         <% if (draftEstado === 'abierto') { %>
-            DRAFT EN CURSO — Turno de <strong>&nbsp;<%= turnoActual %></strong>
+        <div class="status-pill abierto">
+            <div class="pulse-dot live"></div>
+            DRAFT EN CURSO — Turno de <strong style="margin-left:4px;" id="turno-live"><%= turnoActual %></strong>
+        </div>
         <% } else { %>
+        <div class="status-pill cerrado">
+            <div class="pulse-dot"></div>
             DRAFT CERRADO — En espera de inicio
+        </div>
         <% } %>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="num"><%= totalJugadores %></div>
-            <div class="label">Jugadores inscritos</div>
-        </div>
-        <div class="stat-card">
-            <div class="num"><%= totalFichados %></div>
-            <div class="label">Fichados</div>
-        </div>
-        <div class="stat-card">
-            <div class="num"><%= totalEquipos %></div>
-            <div class="label">Equipos</div>
-        </div>
-        <div class="stat-card">
-            <div class="num"><%= totalJugadores - totalFichados %></div>
-            <div class="label">Disponibles</div>
+    <div class="scroll-hint">
+        <span>Scroll</span>
+        <i class="fas fa-chevron-down"></i>
+    </div>
+</section>
+
+<!-- STATS -->
+<section style="padding:0 0 60px;">
+    <div class="section-inner">
+        <div class="stats-grid">
+            <div class="stat-block">
+                <div class="stat-num" id="stat-jugadores"><%= totalJugadores %></div>
+                <div class="stat-lbl">Jugadores inscritos</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-num" id="stat-fichados"><%= totalFichados %></div>
+                <div class="stat-lbl">Fichados</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-num" id="stat-equipos"><%= totalEquipos %></div>
+                <div class="stat-lbl">Equipos</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-num" id="stat-disponibles"><%= totalJugadores - totalFichados %></div>
+                <div class="stat-lbl">Disponibles</div>
+            </div>
         </div>
     </div>
+</section>
 
-    <div class="main-grid">
-        <!-- IZQUIERDA -->
-        <div>
-            <!-- Clasificación TOP 5 -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-trophy"></i> Clasificación — Top 5</div>
-                <% if (top5.length > 0) { %>
+<!-- MAIN CONTENT -->
+<section style="padding:0 0 80px;">
+    <div class="section-inner">
+        <div class="content-grid">
+
+            <!-- LEFT -->
+            <div>
+                <!-- Clasificación top 5 -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-trophy"></i> Clasificación — Top 5</div>
+                    <% if (top5.length > 0) { %>
                     <ul class="rank-list">
                         <% top5.forEach((eq, i) => { %>
-                            <li class="rank-item">
-                                <span class="rank-pos <%= i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'other' %>">
-                                    #<%= i + 1 %>
-                                </span>
-                                <span class="rank-name"><%= eq.equipo_nombre %></span>
-                                <span class="rank-record"><%= eq.pg %>V <%= eq.pe %>E <%= eq.pp %>D</span>
-                                <span class="rank-pts"><%= eq.puntos %> pts</span>
-                            </li>
+                        <li class="rank-item">
+                            <span class="rank-num <%= i===0?'gold':i===1?'silver':i===2?'bronze':'other' %>">#<%= i+1 %></span>
+                            <span class="rank-name"><%= eq.equipo_nombre %></span>
+                            <span class="rank-record"><%= eq.pg %>V <%= eq.pe %>E <%= eq.pp %>D</span>
+                            <span class="rank-pts"><%= eq.puntos %> pts</span>
+                        </li>
                         <% }) %>
                     </ul>
-                    <a href="/clasificacion" style="display:block; margin-top:16px; font-size:0.8rem; color:var(--primary); text-decoration:none;">
+                    <a href="/torneo" style="display:block;margin-top:14px;font-size:0.78rem;color:var(--primary);text-decoration:none;font-weight:700;">
                         Ver tabla completa →
                     </a>
-                <% } else { %>
-                    <p style="color:#333; font-size:0.9rem;">La clasificación estará disponible cuando comiencen los partidos.</p>
-                <% } %>
-            </div>
+                    <% } else { %>
+                    <div class="empty-note">La clasificación estará disponible cuando comiencen los partidos.</div>
+                    <% } %>
+                </div>
 
-            <!-- Últimos fichajes -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-bolt"></i> Últimos fichajes</div>
-                <% if (ultimosFichajes.length > 0) { %>
-                    <% ultimosFichajes.forEach(f => { %>
-                        <div class="fichaje-item">
-                            <span class="pos-badge pos-<%= f.posicion %>"><%= f.posicion %></span>
-                            <div class="fichaje-info">
-                                <div class="fichaje-nombre"><%= f.nombre %></div>
-                                <div class="fichaje-equipo">→ <%= f.equipo %></div>
+                <!-- Últimos fichajes -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-bolt"></i> Últimos fichajes</div>
+                    <% if (ultimosFichajes.length > 0) { %>
+                        <% ultimosFichajes.forEach(f => { %>
+                        <div class="fichaje-row">
+                            <span class="pos-pip pos-<%= f.posicion %>"><%= f.posicion %></span>
+                            <div>
+                                <div class="fich-nombre"><%= f.nombre %></div>
+                                <div class="fich-equipo">→ <%= f.equipo %></div>
                             </div>
                         </div>
-                    <% }) %>
-                <% } else { %>
-                    <p style="color:#333; font-size:0.9rem;">Los fichajes aparecerán aquí en tiempo real.</p>
-                <% } %>
-            </div>
-        </div>
-
-        <!-- DERECHA -->
-        <div>
-            <!-- Turno actual (si el draft está abierto) -->
-            <% if (draftEstado === 'abierto') { %>
-                <div class="turno-card" style="margin-bottom: 16px;">
-                    <div class="turno-label">Turno actual</div>
-                    <div class="turno-nombre" id="turno-live"><%= turnoActual %></div>
-                </div>
-            <% } %>
-
-            <!-- Accesos rápidos -->
-            <div class="card">
-                <div class="card-title"><i class="fas fa-th"></i> Navegación</div>
-                <div class="quick-links">
-                    <a href="/draft" class="quick-link">
-                        <i class="fas fa-users"></i> Ir al Draft
-                    </a>
-                    <a href="/clasificacion" class="quick-link">
-                        <i class="fas fa-table"></i> Clasificación
-                    </a>
-                    <% if (!user.esCapitan) { %>
-                        <a href="#" class="quick-link" style="opacity:0.4; cursor:not-allowed;">
-                            <i class="fas fa-crown"></i> Mi Equipo (regístrate en Discord)
-                        </a>
+                        <% }) %>
                     <% } else { %>
-                        <a href="/draft" class="quick-link">
-                            <i class="fas fa-crown"></i> Mi Equipo
-                        </a>
-                    <% } %>
-                    <% if (user.esAdmin) { %>
-                        <a href="/admin" class="quick-link accent-link">
-                            <i class="fas fa-shield-alt"></i> Panel de Admin
-                        </a>
+                    <div class="empty-note">Los fichajes aparecerán aquí en tiempo real.</div>
                     <% } %>
                 </div>
             </div>
 
-            <!-- Info del sistema -->
-            <div class="card" style="margin-top: 16px;">
-                <div class="card-title"><i class="fas fa-info-circle"></i> Sistema</div>
-                <p style="font-size:0.82rem; color:#444; line-height:1.7;">
-                    Inscríbete en el draft desde el servidor de Discord.<br>
-                    Los capitanes fichan jugadores por turnos (snake draft).<br>
-                    Sigue los partidos en la sección de Clasificación.
-                </p>
+            <!-- RIGHT SIDEBAR -->
+            <div>
+                <% if (draftEstado === 'abierto') { %>
+                <div class="turno-block">
+                    <div class="turno-lbl">Turno actual</div>
+                    <div class="turno-nombre" id="turno-sidebar"><%= turnoActual %></div>
+                </div>
+                <% } %>
+
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-th"></i> Navegación</div>
+                    <div class="nav-cards">
+                        <a href="/draft" class="nav-card">
+                            <i class="fas fa-users"></i> Draft
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <a href="/torneo" class="nav-card">
+                            <i class="fas fa-table"></i> Torneo & Clasificación
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <a href="/directo" class="nav-card">
+                            <i class="fas fa-broadcast-tower"></i> Seguimiento en Directo
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <a href="/normas" class="nav-card">
+                            <i class="fas fa-book"></i> Reglamento
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <a href="/ganadores" class="nav-card">
+                            <i class="fas fa-crown"></i> Hall of Fame
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <% if (user.esAdmin) { %>
+                        <a href="/admin" class="nav-card accent">
+                            <i class="fas fa-shield-alt"></i> Panel Admin
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <a href="/draft-stream" class="nav-card" style="border-color:rgba(240,192,64,0.25);color:#f0c040;" target="_blank">
+                            <i class="fas fa-tv"></i> Vista Stream
+                            <span class="nav-card-arrow">→</span>
+                        </a>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:16px;">
+                    <div class="card-title"><i class="fas fa-info-circle"></i> Cómo funciona</div>
+                    <p style="font-size:0.82rem;color:#aaa;line-height:1.8;">
+                        Inscríbete desde el servidor de Discord.<br>
+                        Los capitanes fichan jugadores por turnos en sistema <strong style="color:#ccc;">snake draft</strong>.<br>
+                        Sigue los partidos en la sección de Torneo.
+                    </p>
+                </div>
             </div>
+
         </div>
     </div>
-</div>
+</section>
+
+<!-- ACCESOS RÁPIDOS -->
+<section style="padding:0 0 80px;">
+    <div class="section-inner">
+        <div class="divider"></div>
+        <div class="section-label">Acceso rápido</div>
+        <div class="section-title">TODO LO QUE NECESITAS</div>
+        <div class="quick-section">
+            <a href="/draft" class="quick-card qc-green">
+                <div class="quick-icon"><i class="fas fa-users"></i></div>
+                <div class="quick-label">Draft</div>
+                <div class="quick-desc">Elige tu equipo, gestiona tu plantilla y sigue el draft en vivo.</div>
+            </a>
+            <a href="/torneo" class="quick-card qc-purple">
+                <div class="quick-icon"><i class="fas fa-trophy"></i></div>
+                <div class="quick-label">Torneo</div>
+                <div class="quick-desc">Equipos, emparejamientos, resultados, clasificación y rondas finales.</div>
+            </a>
+            <a href="/directo" class="quick-card qc-red">
+                <div class="quick-icon"><i class="fas fa-broadcast-tower"></i></div>
+                <div class="quick-label">En Directo</div>
+                <div class="quick-desc">Partidos en juego ahora y enlace al stream en vivo.</div>
+            </a>
+            <a href="/normas" class="quick-card qc-gold">
+                <div class="quick-icon"><i class="fas fa-book-open"></i></div>
+                <div class="quick-label">Reglamento</div>
+                <div class="quick-desc">Normas, restricciones, protocolo de conexión y autoridad admin.</div>
+            </a>
+            <a href="/ganadores" class="quick-card qc-teal">
+                <div class="quick-icon"><i class="fas fa-crown"></i></div>
+                <div class="quick-label">Hall of Fame</div>
+                <div class="quick-desc">Campeones y finalistas de cada edición del draft.</div>
+            </a>
+            <a href="/torneo?tab=rondas" class="quick-card qc-blue">
+                <div class="quick-icon"><i class="fas fa-sitemap"></i></div>
+                <div class="quick-label">Rondas Finales</div>
+                <div class="quick-desc">El camino hacia el título. Brackets y eliminatorias.</div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<footer style="position:relative; z-index:999; background: #000; padding: 40px 20px; text-align: center; border-top: 2px solid var(--primary); margin-top: 40px;">
+    <p style="font-family: var(--font-display); letter-spacing: 2px; color: #fff; margin-bottom: 10px;">
+        CLUTCH DRAFT · EA SPORTS FC · <span style="color: var(--primary);">Temporada 2026</span>
+    </p>
+    
+    <div style="margin: 15px 0; height: 1px; background: rgba(255,255,255,0.1); width: 200px; display: inline-block;"></div>
+
+    <p style="color: #fff; font-size: 1rem; letter-spacing: 1px;">
+        &copy; <%= new Date().getFullYear() %> | Diseñado y desarrollado por <span style="color: var(--primary); font-weight: bold; text-shadow: 0 0 10px var(--primary);">Mizraim</span>
+    </p>
+    
+    <p style="font-size: 0.65rem; color: #666; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px;">
+        Protección de Propiedad Intelectual &bull; Todos los derechos reservados
+    </p>
+</footer>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    window.__CLUTCH__ = {
-        username:  '<%= user.username %>',
-        esCapitan: <%= user.esCapitan ? "true" : "false" %>,
-    };
+window.__CLUTCH__ = {
+    username:  '<%= user.username %>',
+    esCapitan: <%= user.esCapitan ? "true" : "false" %>,
+};
 </script>
 <script src="/js/main.js"></script>
+
+<script>
+(function(){
+  var burger = document.getElementById('nav-hamburger');
+  var links  = document.getElementById('nav-links');
+  if(!burger) return;
+  burger.addEventListener('click', function(){
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  });
+  links.querySelectorAll('.nav-link').forEach(function(l){
+    l.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+})();
+</script>
 </body>
 </html>

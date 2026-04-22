@@ -5,938 +5,1662 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clutch Draft — Draft</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/mobile.css?v=6">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00ffcc;
-            --accent:  #a066ff;
-            --bg:      #050507;
-            --card:    #0f0f14;
-            --border:  rgba(255,255,255,0.06);
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+            --primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--danger:#ff4d4d;
+            --bg:#03030a;--card:rgba(12,12,22,0.93);--border:rgba(255,255,255,0.07);
+            --font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;
+            --subnav-h:44px;--nav-h:52px;
         }
-        body { font-family:'Segoe UI',sans-serif; background:var(--bg); color:#fff; min-height:100vh; }
-        body::before {
-            content:'';
-            position:fixed; inset:0;
-            background:
-                radial-gradient(ellipse at 5% 50%, rgba(0,255,204,0.04) 0%, transparent 50%),
-                radial-gradient(ellipse at 95% 20%, rgba(160,102,255,0.04) 0%, transparent 50%);
-            pointer-events:none;
-        }
+        html,body{height:100%;overflow:hidden;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;}
 
-        /* ── NAV ── */
-        nav {
-            display:flex; align-items:center; justify-content:space-between;
-            padding:16px 36px;
-            background:rgba(15,15,20,0.95);
-            border-bottom:1px solid var(--border);
-            backdrop-filter:blur(20px);
-            position:sticky; top:0; z-index:200;
-        }
-        .nav-logo { font-size:1.2rem; font-weight:900; letter-spacing:4px; background:linear-gradient(135deg,var(--primary),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .nav-links { display:flex; gap:6px; }
-        .nav-link { color:#555; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 14px; border-radius:8px; transition:0.2s; text-transform:uppercase; letter-spacing:1px; }
-        .nav-link:hover,.nav-link.active { color:var(--primary); background:rgba(0,255,204,0.08); }
-        .nav-link.admin { color:var(--accent); }
-        .nav-link.admin:hover { background:rgba(160,102,255,0.08); }
-        .nav-user { display:flex; align-items:center; gap:10px; }
-        .nav-avatar { width:34px; height:34px; border-radius:50%; border:2px solid var(--primary); }
-        .logout { color:#ff4d4d; text-decoration:none; font-size:0.75rem; padding:6px 10px; border-radius:6px; }
-        .logout:hover { background:rgba(255,77,77,0.1); }
+        /* VIDEO FONDO */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.22;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
 
-        /* ── TIMER BANNER ── */
-        .turn-banner {
-            max-width:1400px; margin:24px auto;
-            padding:20px 36px;
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:16px;
-            display:flex; align-items:center; justify-content:space-between;
-            transition:0.4s;
-        }
-        .turn-banner.mi-turno {
-            border-color:rgba(0,255,204,0.4);
-            background:rgba(0,255,204,0.06);
-            box-shadow:0 0 30px rgba(0,255,204,0.08);
-            animation:glow 2s infinite;
-        }
-        @keyframes glow {
-            0%,100% { box-shadow:0 0 20px rgba(0,255,204,0.05); }
-            50%      { box-shadow:0 0 40px rgba(0,255,204,0.15); }
-        }
-        .turn-info h2 { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:4px; }
-        .turn-nombre { font-size:1.4rem; font-weight:900; color:var(--primary); }
-        .turn-badge {
-            background:rgba(0,255,204,0.15); color:var(--primary);
-            padding:6px 14px; border-radius:8px;
-            font-size:0.8rem; font-weight:700; letter-spacing:1px;
-        }
-        .timer-display {
-            font-size:2.5rem; font-weight:900;
-            font-family:'Courier New',monospace;
-            color:var(--primary);
-            min-width:80px; text-align:right;
-        }
-        .timer-display.warning { color:#ffcc00 !important; }
-        .timer-display.danger  { color:#ff4d4d !important; animation:blink 0.5s infinite; }
-        @keyframes blink { 50% { opacity:0.5; } }
+        /* ───────── NAV PRINCIPAL ───────── */
+        nav{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:var(--nav-h);background:rgba(3,3,10,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
+        .nav-logo{font-family:var(--font-display);font-size:1.4rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .nav-links{display:flex;gap:2px;align-items:center;}
+        .nav-link{color:#666;text-decoration:none;font-size:0.75rem;font-weight:700;padding:5px 11px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
+        .nav-link.admin-lnk{color:var(--accent);}
+        .nav-link.admin-lnk:hover{background:rgba(160,102,255,0.1);}
+        .nav-user{display:flex;align-items:center;gap:10px;}
+        .nav-avatar{width:28px;height:28px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
+        .nav-username{font-size:0.8rem;font-weight:700;color:#ccc;}
+        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.72rem;padding:4px 8px;border-radius:6px;transition:0.2s;}
+        .logout-btn:hover{background:rgba(255,77,77,0.1);}
 
-        /* Draft cerrado */
-        .draft-cerrado {
-            max-width:1400px; margin:24px auto;
-            padding:20px 36px;
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:16px;
-            text-align:center;
-            color:#444; font-size:0.9rem;
+        /* ───────── DRAFT SUB-NAV ───────── */
+        .draft-subnav{
+            position:fixed;top:var(--nav-h);left:0;right:0;z-index:290;
+            height:var(--subnav-h);
+            background:rgba(4,4,13,0.97);
+            border-bottom:1px solid rgba(255,255,255,0.09);
+            backdrop-filter:blur(28px);
+            display:flex;align-items:stretch;
+            padding:0 24px;gap:0;
         }
+        .draft-tab{
+            display:flex;align-items:center;gap:8px;
+            padding:0 20px;
+            font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.8px;
+            color:#3a3a55;cursor:pointer;border:none;background:none;
+            font-family:var(--font-body);
+            transition:color 0.2s;
+            border-bottom:2px solid transparent;
+            position:relative;white-space:nowrap;
+            margin-bottom:-1px;
+        }
+        .draft-tab i{font-size:0.72rem;}
+        .draft-tab:hover{color:#777;}
+        .draft-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+        .draft-tab.tab-rivales.active{color:var(--accent);border-bottom-color:var(--accent);}
+        .draft-tab.tab-libres.active{color:var(--gold);border-bottom-color:var(--gold);}
+        .tab-notif{width:7px;height:7px;border-radius:50%;background:#ff4d4d;position:absolute;top:10px;right:10px;display:none;}
+        .tab-notif.show{display:block;animation:notifPulse 1s ease 0s 3;}
+        @keyframes notifPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.7)}}
+        .subnav-live{display:flex;align-items:center;gap:6px;margin-left:auto;padding:0 4px;font-size:0.52rem;color:#ff4d4d;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;}
+        .live-dot{width:5px;height:5px;border-radius:50%;background:#ff4d4d;flex-shrink:0;animation:blink2 1s infinite;}
+        @keyframes blink2{50%{opacity:0.15}}
 
-        /* ── MAIN LAYOUT ── */
-        .container { max-width:1400px; margin:0 auto; padding:0 24px 40px; }
-        .draft-grid {
-            display:grid;
-            grid-template-columns:320px 1fr;
-            gap:20px;
-            align-items:start;
+        /* ───────── TURN BANNER ───────── */
+        .turn-pill{
+            position:fixed;top:calc(var(--nav-h) + var(--subnav-h) + 10px);
+            left:50%;transform:translateX(-50%);z-index:250;
+            background:rgba(5,5,18,0.97);border:2px solid rgba(255,255,255,0.12);border-radius:22px;
+            padding:12px 30px;display:flex;align-items:center;gap:22px;
+            backdrop-filter:blur(28px);transition:0.4s;white-space:nowrap;
+            box-shadow:0 10px 50px rgba(0,0,0,0.85);
         }
+        .turn-pill.mi-turno{border-color:rgba(0,255,204,0.7);background:rgba(0,30,20,0.98);animation:pillGlow 2s infinite;box-shadow:0 0 60px rgba(0,255,204,0.25),0 10px 50px rgba(0,0,0,0.85);}
+        @keyframes pillGlow{0%,100%{box-shadow:0 0 30px rgba(0,255,204,0.15),0 10px 50px rgba(0,0,0,0.85)}50%{box-shadow:0 0 70px rgba(0,255,204,0.45),0 10px 50px rgba(0,0,0,0.85)}}
+        .turn-pill-info{display:flex;flex-direction:column;gap:3px;}
+        .turn-pill-label{font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:2.5px;line-height:1;}
+        .turn-pill-name{color:var(--primary);font-size:1.15rem;font-weight:800;line-height:1;margin-top:3px;letter-spacing:0.5px;}
+        .turn-pill-badge{background:rgba(0,255,204,0.2);color:var(--primary);padding:7px 18px;border-radius:999px;font-size:0.95rem;font-weight:800;letter-spacing:1px;border:2px solid rgba(0,255,204,0.45);animation:pillGlow 1.5s infinite;}
+        .timer-divider{width:2px;height:56px;background:rgba(255,255,255,0.1);border-radius:2px;flex-shrink:0;}
+        .timer-block{display:flex;flex-direction:column;align-items:center;gap:2px;}
+        .timer-block-lbl{font-size:0.6rem;color:#555;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+        .turn-pill-timer{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;font-weight:900;color:#fff;min-width:90px;text-align:center;line-height:1;letter-spacing:4px;text-shadow:0 0 30px rgba(255,255,255,0.25);}
+        .turn-pill-timer.warning{color:#ffcc00;text-shadow:0 0 36px rgba(255,204,0,0.6);}
+        .turn-pill-timer.danger{color:#ff4d4d;text-shadow:0 0 36px rgba(255,77,77,0.7);animation:blink 0.5s infinite;}
+        @keyframes blink{50%{opacity:0.2}}
+        .draft-cerrado-pill{position:fixed;top:calc(var(--nav-h) + var(--subnav-h) + 10px);left:50%;transform:translateX(-50%);z-index:250;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:7px 22px;font-size:0.8rem;color:#555;backdrop-filter:blur(20px);white-space:nowrap;}
 
-        /* ── MI EQUIPO (left panel) ── */
-        .team-panel {
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:20px;
-            padding:24px;
-            position:sticky; top:90px;
-        }
-        .panel-title { font-size:0.7rem; color:#444; text-transform:uppercase; letter-spacing:3px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
-        .panel-title::after { content:''; flex:1; height:1px; background:var(--border); }
-
-        .pos-slot {
-            display:flex; align-items:center; gap:10px;
-            padding:10px 12px; border-radius:10px;
-            background:rgba(255,255,255,0.02);
-            border:1px solid var(--border);
-            margin-bottom:8px;
-            transition:0.2s;
-        }
-        .pos-slot.filled { background:rgba(0,255,204,0.04); border-color:rgba(0,255,204,0.15); }
-        .pos-badge-sm {
-            font-size:0.65rem; font-weight:700; padding:3px 7px;
-            border-radius:5px; min-width:36px; text-align:center;
-        }
-        .pos-DC   { background:rgba(0,255,204,0.15);  color:#00ffcc; }
-        .pos-MC   { background:rgba(160,102,255,0.15); color:#a066ff; }
-        .pos-CARR { background:rgba(255,204,0,0.15);  color:#ffcc00; }
-        .pos-DFC  { background:rgba(255,77,77,0.15);  color:#ff4d4d; }
-        .pos-POR  { background:rgba(51,153,255,0.15); color:#3399ff; }
-        .slot-nombre { flex:1; font-size:0.85rem; font-weight:600; }
-        .slot-vacio  { color:#333; font-size:0.8rem; font-style:italic; }
-
-        .limites-grid {
-            display:grid; grid-template-columns:repeat(5,1fr); gap:6px;
-            margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
-        }
-        .limite-box { text-align:center; }
-        .limite-num { font-size:1rem; font-weight:900; }
-        .limite-label { font-size:0.6rem; color:#444; text-transform:uppercase; margin-top:2px; }
-        .limite-full { color:#ff4d4d !important; }
-
-        .no-capitan-msg {
-            text-align:center; padding:20px 0;
-            color:#333; font-size:0.85rem; line-height:1.6;
-        }
-
-        /* ── LISTA DE JUGADORES (right) ── */
-        .players-panel {
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:20px;
-            padding:24px;
-        }
-
-        .filters {
-            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
-        }
-        .filter-btn {
-            padding:7px 16px; border-radius:8px;
-            border:1px solid var(--border);
-            background:transparent; color:#555;
-            font-size:0.8rem; font-weight:600; cursor:pointer;
-            transition:0.2s; text-transform:uppercase;
-        }
-        .filter-btn.active, .filter-btn:hover { color:#fff; border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); }
-        .filter-btn.active.dc   { border-color:#00ffcc; color:#00ffcc; background:rgba(0,255,204,0.08); }
-        .filter-btn.active.mc   { border-color:#a066ff; color:#a066ff; background:rgba(160,102,255,0.08); }
-        .filter-btn.active.carr { border-color:#ffcc00; color:#ffcc00; background:rgba(255,204,0,0.08); }
-        .filter-btn.active.dfc  { border-color:#ff4d4d; color:#ff4d4d; background:rgba(255,77,77,0.08); }
-        .filter-btn.active.por  { border-color:#3399ff; color:#3399ff; background:rgba(51,153,255,0.08); }
-
-        .search-box {
-            width:100%; background:rgba(255,255,255,0.03);
-            border:1px solid var(--border); border-radius:10px;
-            padding:10px 16px; color:#fff; font-size:0.9rem;
-            margin-bottom:20px; outline:none; transition:0.2s;
-        }
-        .search-box:focus { border-color:rgba(0,255,204,0.3); }
-        .search-box::placeholder { color:#333; }
-
-        .players-grid {
-            display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;
-        }
-
-        .player-card {
-            background:rgba(255,255,255,0.02);
-            border:1px solid var(--border);
-            border-radius:14px;
-            padding:16px;
-            transition:0.25s;
-            position:relative;
-            overflow:hidden;
-        }
-        .player-card:hover { border-color:rgba(255,255,255,0.15); transform:translateY(-3px); }
-        .player-card.mi-turno-pick:hover {
-            border-color:rgba(0,255,204,0.4);
-            background:rgba(0,255,204,0.04);
-            cursor:pointer;
-        }
-
-        .player-foto {
-            width:52px; height:52px; border-radius:50%;
-            object-fit:cover; margin-bottom:10px;
-            border:2px solid var(--border);
-        }
-        .player-nombre { font-size:0.9rem; font-weight:700; margin-bottom:4px; }
-        .player-pos { display:inline-block; }
-        .player-tel { font-size:0.7rem; color:#444; margin-top:6px; }
-        .player-tel i { margin-right:4px; }
-
-        .btn-pick {
+        /* ───────── VIEWS CONTAINER ───────── */
+        .draft-view{
             display:none;
-            width:100%; margin-top:12px;
-            padding:9px; border-radius:8px;
-            border:none; background:var(--primary); color:#000;
-            font-weight:700; font-size:0.8rem; cursor:pointer;
-            transition:0.2s;
+            position:fixed;
+            top:calc(var(--nav-h) + var(--subnav-h));
+            left:0;right:0;bottom:0;
+            z-index:1;
         }
-        .btn-pick:hover { background:#fff; }
-        .mi-turno-pick .btn-pick { display:block; }
+        .draft-view.active{display:block;}
 
-        .no-players { text-align:center; color:#333; padding:40px; grid-column:1/-1; }
-
-        /* Orden de draft */
-        .snake-order {
-            margin-top:16px; padding-top:16px; border-top:1px solid var(--border);
+        /* ═══════════════════════════════════════
+           VISTA MI EQUIPO
+        ═══════════════════════════════════════ */
+        #view-miequipo .field-wrap{position:absolute;inset:0;overflow:hidden;}
+        #view-miequipo .field-inner{
+            position:absolute;inset:0;
+            background-image:url('/img/campo_de_futbol_libre.png');
+            background-size:100% 100%;background-position:center;background-repeat:no-repeat;
         }
-        .order-title { font-size:0.65rem; color:#444; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px; }
-        .order-list { display:flex; flex-direction:column; gap:6px; }
-        .order-item {
-            display:flex; align-items:center; gap:10px;
-            padding:8px 10px; border-radius:8px;
-            font-size:0.8rem; font-weight:600;
-            transition:0.2s;
-        }
-        .order-item.activo { background:rgba(0,255,204,0.08); color:var(--primary); border:1px solid rgba(0,255,204,0.2); }
-        .order-item.otro   { color:#444; }
-        .order-num { font-size:0.65rem; color:#333; width:16px; }
+        #view-miequipo .field-positions{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
 
-        @media (max-width:900px) {
-            .draft-grid { grid-template-columns:1fr; }
-            .team-panel { position:static; }
+        /* Panel izquierdo Mi Equipo — más ancho y escudo grande */
+        .overlay-left{
+            position:absolute;top:12px;left:14px;z-index:200;
+            display:flex;flex-direction:column;align-items:center;gap:8px;
+            width:170px;
         }
 
-        /* ── MODAL DE SELECCIÓN DE POSICIÓN ── */
-        .pos-modal-overlay {
-            display:none;
-            position:fixed; inset:0;
-            background:rgba(0,0,0,0.85);
-            backdrop-filter:blur(6px);
-            z-index:500;
-            align-items:center; justify-content:center;
+        /* Tarjeta escudo — grande y llamativa */
+        .team-hero{
+            width:100%;background:rgba(8,8,20,0.92);
+            border:1px solid rgba(0,255,204,0.2);border-radius:18px;
+            padding:18px 14px 14px;
+            backdrop-filter:blur(24px);
+            box-shadow:0 0 40px rgba(0,255,204,0.08),0 12px 40px rgba(0,0,0,0.7);
+            display:flex;flex-direction:column;align-items:center;gap:10px;
         }
-        .pos-modal-overlay.visible { display:flex; }
+        .team-escudo{
+            width:110px;height:110px;border-radius:16px;object-fit:cover;
+            border:3px solid var(--primary);
+            box-shadow:0 0 32px rgba(0,255,204,0.35),0 6px 24px rgba(0,0,0,0.8);
+        }
+        .team-escudo-ph{
+            width:110px;height:110px;border-radius:16px;
+            background:rgba(0,255,204,0.04);border:2px dashed rgba(0,255,204,0.2);
+            display:flex;align-items:center;justify-content:center;
+            color:rgba(0,255,204,0.3);font-size:2.6rem;
+        }
+        .team-hero-name{
+            font-family:var(--font-display);font-size:1.25rem;letter-spacing:2px;
+            text-align:center;color:#fff;line-height:1.1;word-break:break-word;
+            text-shadow:0 0 20px rgba(0,255,204,0.2);
+        }
+        .team-hero-sub{font-size:0.5rem;color:#444;text-transform:uppercase;letter-spacing:2px;}
 
-        .pos-modal {
-            background:var(--card);
-            border:1px solid rgba(0,255,204,0.2);
-            border-radius:20px;
-            padding:28px;
-            width:min(96vw, 680px);
-            max-height:92vh;
-            overflow-y:auto;
-            box-shadow:0 0 60px rgba(0,255,204,0.08);
-            position:relative;
-        }
-
-        .pos-modal-header {
-            display:flex; align-items:center; justify-content:space-between;
-            margin-bottom:20px;
-        }
-        .pos-modal-title {
-            font-size:0.7rem; color:var(--primary);
-            text-transform:uppercase; letter-spacing:3px; font-weight:700;
-        }
-        .pos-modal-close {
-            background:rgba(255,255,255,0.05);
-            border:1px solid var(--border);
-            border-radius:8px;
-            color:#555; cursor:pointer;
-            padding:6px 10px; font-size:0.85rem;
-            transition:0.2s;
-        }
-        .pos-modal-close:hover { color:#fff; border-color:rgba(255,255,255,0.2); }
-
-        /* Formaciones */
-        .formation-tabs {
-            display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px;
-        }
-        .formation-tab {
-            padding:6px 14px; border-radius:8px;
-            border:1px solid var(--border);
-            background:transparent; color:#555;
-            font-size:0.75rem; font-weight:700; cursor:pointer;
-            transition:0.2s; letter-spacing:1px;
-        }
-        .formation-tab:hover { color:#fff; border-color:rgba(255,255,255,0.2); }
-        .formation-tab.active {
-            color:var(--primary);
-            border-color:rgba(0,255,204,0.4);
-            background:rgba(0,255,204,0.08);
-        }
-
-        /* Campo de fútbol */
-        .field-layout {
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:16px;
-            align-items:start;
-        }
-
-        .field-wrap {
-            position:relative;
-            background: linear-gradient(180deg,
-                #2d6a2d 0%, #2a622a 12.5%, #2d6a2d 12.5%, #2d6a2d 25%,
-                #2a622a 25%, #2a622a 37.5%, #2d6a2d 37.5%, #2d6a2d 50%,
-                #2a622a 50%, #2a622a 62.5%, #2d6a2d 62.5%, #2d6a2d 75%,
-                #2a622a 75%, #2a622a 87.5%, #2d6a2d 87.5%, #2d6a2d 100%);
-            border-radius:10px;
-            border:2px solid rgba(255,255,255,0.1);
-            overflow:hidden;
-            aspect-ratio:0.65;
-        }
-
-        /* Líneas del campo SVG */
-        .field-lines {
-            position:absolute; inset:0; width:100%; height:100%;
-            pointer-events:none;
-        }
-
-        /* Posiciones en el campo */
-        .field-positions {
-            position:absolute; inset:0;
-            width:100%; height:100%;
-        }
-
-        .field-dot {
-            position:absolute;
-            width:44px; height:44px;
-            border-radius:50%;
-            border:2.5px solid currentColor;
-            display:flex; align-items:center; justify-content:center;
-            font-size:0.6rem; font-weight:800; letter-spacing:0.5px;
-            cursor:pointer;
-            transform:translate(-50%, -50%);
-            transition:0.2s;
-            background:rgba(5,5,7,0.7);
-            backdrop-filter:blur(4px);
-            z-index:10;
-        }
-        .field-dot:hover {
-            transform:translate(-50%, -50%) scale(1.15);
-            box-shadow:0 0 20px currentColor;
-        }
-        .field-dot.available { animation:pulsePos 2s infinite; }
-        .field-dot.filled { opacity:0.4; cursor:default; pointer-events:none; }
-        .field-dot.selected { transform:translate(-50%, -50%) scale(1.2); box-shadow:0 0 25px currentColor; }
-        @keyframes pulsePos {
-            0%,100% { box-shadow:0 0 0 0 rgba(currentColor,0.3); }
-            50% { box-shadow:0 0 0 8px rgba(currentColor,0); }
-        }
-
-        .fd-dc   { color:#00ffcc; }
-        .fd-mc   { color:#a066ff; }
-        .fd-carr { color:#ffcc00; }
-        .fd-dfc  { color:#ff4d4d; }
-        .fd-por  { color:#3399ff; }
-        .fd-mcd  { color:#ff9900; }
-        .fd-cam  { color:#a066ff; }
-        .fd-ext  { color:#ffcc00; }
-
-        /* Panel info del campo */
-        .field-info-panel {
-            background:rgba(0,0,0,0.3);
-            border:1px solid var(--border);
-            border-radius:12px;
-            padding:16px;
-            min-height:200px;
-            display:flex; flex-direction:column; justify-content:center; align-items:center;
-        }
-        .field-info-placeholder { color:#333; font-size:0.8rem; text-align:center; }
-
-        .field-pos-detail { width:100%; }
-        .fpd-pos-name {
-            font-size:1.1rem; font-weight:900;
-            margin-bottom:4px;
-        }
-        .fpd-pos-label {
-            font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:2px;
-            margin-bottom:16px;
-        }
-        .fpd-jugador-sel {
-            background:rgba(255,255,255,0.03);
-            border:1px solid var(--border);
-            border-radius:10px;
-            padding:12px;
-            display:flex; align-items:center; gap:10px;
-            margin-bottom:12px;
-        }
-        .fpd-jugador-sel img {
-            width:36px; height:36px; border-radius:50%;
-            object-fit:cover; border:2px solid var(--border);
-        }
-        .fpd-jugador-nombre { font-size:0.85rem; font-weight:700; }
-        .fpd-jugador-pos { font-size:0.65rem; color:#555; }
-
-        .btn-confirmar-pick {
+        /* Contador picks — muy visible */
+        .picks-counter{
             width:100%;
-            padding:10px;
-            border-radius:10px;
-            border:none;
-            background:var(--primary); color:#000;
-            font-weight:800; font-size:0.85rem;
-            cursor:pointer; transition:0.2s;
-            letter-spacing:1px;
+            background:linear-gradient(135deg,rgba(0,255,204,0.15),rgba(160,102,255,0.10));
+            border:1px solid rgba(0,255,204,0.35);border-radius:14px;
+            padding:14px 16px;backdrop-filter:blur(20px);
+            box-shadow:0 4px 24px rgba(0,0,0,0.5),0 0 24px rgba(0,255,204,0.08);
         }
-        .btn-confirmar-pick:hover { background:#fff; transform:translateY(-1px); }
-        .btn-confirmar-pick:disabled { background:#222; color:#444; cursor:not-allowed; transform:none; }
+        .picks-counter-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .picks-counter-lbl{font-size:0.65rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+        .picks-counter-val{
+            font-family:var(--font-display);font-size:2rem;letter-spacing:2px;
+            background:linear-gradient(135deg,var(--primary),var(--accent));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            line-height:1;
+        }
+        .picks-progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+        .picks-progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;transition:width 0.5s ease;}
+        .picks-slots{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;}
+        .picks-slot{
+            width:14px;height:14px;border-radius:4px;
+            border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.05);
+            transition:0.3s;
+        }
+        .picks-slot.filled{background:var(--primary);border-color:var(--primary);box-shadow:0 0 8px rgba(0,255,204,0.6);}
 
-        /* Jugador seleccionado pendiente de posición */
-        .jugador-a-fichar-banner {
-            display:none;
-            background:rgba(0,255,204,0.06);
-            border:1px solid rgba(0,255,204,0.25);
-            border-radius:12px;
-            padding:14px 16px;
-            margin-bottom:16px;
-            align-items:center; gap:12px;
+        /* Acciones equipo */
+        .team-actions{display:flex;flex-direction:column;gap:7px;width:100%;}
+        .team-action-row{display:flex;gap:5px;}
+        .team-input-sm{flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 10px;border-radius:9px;font-size:0.82rem;font-family:var(--font-body);outline:none;min-width:0;}
+        .team-input-sm:focus{border-color:rgba(0,255,204,0.4);}
+        .team-btn-sm{background:var(--primary);color:#000;border:none;padding:8px 12px;border-radius:9px;font-weight:800;font-size:0.78rem;cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;letter-spacing:0.5px;}
+        .team-btn-sm:hover{background:#fff;}
+        .team-upload-sm{display:block;width:100%;text-align:center;background:rgba(255,255,255,0.05);border:1px dashed rgba(255,255,255,0.15);border-radius:9px;padding:9px 0;font-size:0.8rem;color:#777;cursor:pointer;transition:0.2s;letter-spacing:0.3px;}
+        .team-upload-sm:hover{border-color:rgba(0,255,204,0.3);color:#ccc;}
+        .team-msg-sm{font-size:0.72rem;color:var(--primary);display:none;text-align:center;font-weight:700;}
+
+        /* Formación */
+        .form-badge{background:rgba(8,8,20,0.9);border:1px solid var(--border);border-radius:14px;padding:12px 14px;width:100%;backdrop-filter:blur(20px);display:flex;flex-direction:column;align-items:center;gap:7px;position:relative;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+        .form-badge-label{font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+        .form-badge-val{font-family:var(--font-display);font-size:2rem;color:var(--primary);letter-spacing:3px;line-height:1;}
+        .form-badge-btn{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#ccc;font-size:0.78rem;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer;font-family:var(--font-body);transition:0.2s;width:100%;text-align:center;letter-spacing:0.5px;}
+        .form-badge-btn:hover{background:rgba(255,255,255,0.14);color:#fff;}
+        .form-picker-drop{position:absolute;left:148px;top:0;background:rgba(8,8,20,0.99);border:1px solid var(--border);border-radius:12px;padding:8px;display:none;flex-direction:column;gap:4px;min-width:130px;backdrop-filter:blur(28px);z-index:400;}
+        .form-picker-drop.open{display:flex;}
+        .fpick{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:#666;font-size:0.72rem;font-weight:700;cursor:pointer;transition:0.2s;font-family:var(--font-body);text-align:left;}
+        .fpick:hover{color:#fff;border-color:rgba(255,255,255,0.2);}
+        .fpick.active{color:var(--primary);border-color:rgba(0,255,204,0.4);background:rgba(0,255,204,0.08);}
+        .locked-badge{font-size:0.52rem;color:#ff4d4d;}
+
+        /* Contactos WhatsApp */
+        .contacts-badge{background:rgba(8,8,20,0.9);border:1px solid rgba(37,211,102,0.25);border-radius:14px;padding:12px 14px;width:100%;backdrop-filter:blur(20px);box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+        .contacts-badge-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;cursor:pointer;user-select:none;}
+        .contacts-badge-label{font-size:0.65rem;color:#25d366;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+        .contacts-badge-toggle{font-size:0.7rem;color:#444;transition:transform 0.2s;}
+        .contacts-badge-toggle.open{transform:rotate(180deg);}
+        .contacts-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;}
+        .contacts-list::-webkit-scrollbar{width:3px;}
+        .contacts-list::-webkit-scrollbar-thumb{background:rgba(37,211,102,0.3);border-radius:3px;}
+        .contact-row{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:rgba(37,211,102,0.04);border:1px solid rgba(37,211,102,0.08);}
+        .contact-pos{font-size:0.52rem;font-weight:800;padding:2px 5px;border-radius:4px;flex-shrink:0;}
+        .contact-name{flex:1;font-size:0.75rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ddd;}
+        .contact-wa{display:flex;align-items:center;gap:4px;background:rgba(37,211,102,0.15);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:7px;padding:4px 9px;font-size:0.65rem;font-weight:800;text-decoration:none;flex-shrink:0;transition:0.15s;}
+        .contact-wa:hover{background:rgba(37,211,102,0.28);color:#fff;}
+        .contact-no-phone{font-size:0.6rem;color:#333;flex-shrink:0;}
+        .contacts-empty{font-size:0.72rem;color:#333;text-align:center;padding:10px;font-style:italic;}
+
+        /* Disponibles */
+        .avail-badge{
+            background:rgba(8,8,20,0.9);border:1px solid rgba(255,255,255,0.1);
+            border-radius:12px;padding:10px 14px;width:100%;backdrop-filter:blur(20px);
+            text-align:center;
         }
-        .jugador-a-fichar-banner.visible { display:flex; }
-        .jab-foto { width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid rgba(0,255,204,0.4); }
-        .jab-nombre { font-size:0.9rem; font-weight:700; color:var(--primary); }
-        .jab-sub { font-size:0.7rem; color:#555; }
-        .jab-cancel { margin-left:auto; background:none; border:none; color:#555; cursor:pointer; font-size:0.9rem; padding:4px; }
-        .jab-cancel:hover { color:#ff4d4d; }
+        .avail-badge-num{
+            font-size:2rem;font-weight:900;font-family:var(--font-display);
+            letter-spacing:2px;color:#fff;
+            text-shadow:0 0 20px rgba(255,255,255,0.5);
+        }
+        .avail-badge-lbl{font-size:0.65rem;color:#777;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;}
+
+        /* ─── CARTAS TOTY ─── */
+        .field-dot{position:absolute;transform:translate(-50%,-50%);transition:transform 0.18s,filter 0.18s;z-index:10;cursor:pointer;}
+        .field-dot.active-filter{animation:cardPulse 1.5s infinite;}
+        @keyframes cardPulse{0%,100%{filter:drop-shadow(0 0 7px currentColor);}50%{filter:drop-shadow(0 0 22px currentColor) drop-shadow(0 0 40px currentColor);}}
+        .field-dot.occupied{cursor:default;}
+        .dot-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 18px rgba(0,0,0,1));}
+        /* La clase TOTY se aplica desde JS */
+        .dot-photo{position:absolute;top:9%;left:50%;transform:translateX(-50%);width:56%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.6);}
+        .dot-photo img{width:100%;height:100%;object-fit:cover;}
+        .dot-ph-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);font-size:1em;}
+        .dot-poslbl{position:absolute;bottom:15%;left:50%;transform:translateX(-50%);font-size:0.85em;font-weight:900;letter-spacing:1px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,1);white-space:nowrap;background:rgba(0,0,0,0.72);padding:2px 8px;border-radius:5px;}
+        .dot-name{position:absolute;bottom:2%;left:50%;transform:translateX(-50%);font-size:0.55em;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;max-width:180%;text-overflow:ellipsis;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,1);background:rgba(0,0,0,0.68);padding:2px 6px;border-radius:4px;}
+        .fd-dc{color:#00ffcc}.fd-mc{color:#a066ff}.fd-carr{color:#ffcc00}.fd-dfc{color:#ff4d4d}.fd-por{color:#3399ff}.fd-mcd{color:#ff9900}
+
+        /* ═══════════════════════════════════════
+           VISTA RIVALES EN VIVO
+        ═══════════════════════════════════════ */
+        #view-rivales{overflow:hidden;}
+        .rivals-page{display:flex;height:100%;overflow:hidden;}
+
+        /* Grid de equipos */
+        .rivals-grid-wrap{flex:1;overflow-y:auto;padding:16px 20px 20px;}
+        .rivals-grid-wrap::-webkit-scrollbar{width:4px;}
+        .rivals-grid-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+        .rivals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+
+        /* Tarjeta rival en grid */
+        .rival-card{
+            background:rgba(10,10,22,0.9);border:1px solid rgba(255,255,255,0.07);
+            border-radius:14px;overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;
+            backdrop-filter:blur(16px);cursor:pointer;
+        }
+        .rival-card:hover{border-color:rgba(160,102,255,0.4);box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:translateY(-2px);}
+        .rival-card.turno-activo{border-color:rgba(0,255,204,0.5);box-shadow:0 0 24px rgba(0,255,204,0.1);}
+        .rival-card-head{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
+        .rival-logo{width:32px;height:32px;border-radius:7px;object-fit:cover;border:1.5px solid rgba(255,255,255,0.12);flex-shrink:0;}
+        .rival-logo-ph{width:32px;height:32px;border-radius:7px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.76rem;color:#333;flex-shrink:0;}
+        .rival-head-info{flex:1;min-width:0;}
+        .rival-name{font-size:0.8rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;}
+        .rival-capitan{font-size:0.54rem;color:#444;margin-top:1px;}
+        .rival-turno-badge{font-size:0.48rem;background:rgba(0,255,204,0.15);color:var(--primary);padding:2px 6px;border-radius:5px;font-weight:700;flex-shrink:0;white-space:nowrap;}
+        .rival-picks-count{font-size:0.6rem;color:#555;font-weight:700;flex-shrink:0;}
+
+        /* mini campo dentro de tarjeta grid */
+        .rival-field{padding:7px 5px 9px;background:rgba(0,0,0,0.15);}
+        .rival-field-inner{position:relative;width:100%;padding-bottom:62%;background-image:url('/img/campo_de_futbol_libre.png');background-size:100% 100%;background-position:left top;background-color:#2a5c1e;border-radius:7px;overflow:hidden;}
+        .rival-pos-grid{position:absolute;inset:0;}
+        .rival-dot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;}
+        .rival-dot-avatar{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.5);overflow:hidden;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:0.4rem;color:rgba(255,255,255,0.3);}
+        .rival-dot-avatar img{width:100%;height:100%;object-fit:cover;}
+        .rival-dot-pos{font-size:0.3rem;font-weight:900;color:#fff;background:rgba(0,0,0,0.75);padding:0 3px;border-radius:2px;line-height:1.5;white-space:nowrap;}
+        .rival-empty-dot{width:15px;height:15px;border-radius:50%;border:1px dashed rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);}
+        .rival-card-hint{font-size:0.48rem;color:#333;text-align:center;padding:5px 0 2px;font-style:italic;}
+
+        /* Panel detalle rival — lateral deslizante */
+        .rival-detail-panel{
+            width:0;flex-shrink:0;overflow:hidden;
+            transition:width 0.3s cubic-bezier(0.4,0,0.2,1);
+            background:rgba(6,6,18,0.98);border-left:1px solid var(--border);
+        }
+        .rival-detail-panel.open{width:320px;}
+        .rdp-inner{width:320px;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+        .rdp-header{
+            display:flex;align-items:center;gap:10px;
+            padding:16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;
+        }
+        .rdp-logo{width:40px;height:40px;border-radius:9px;object-fit:cover;border:2px solid rgba(160,102,255,0.4);}
+        .rdp-logo-ph{width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;color:#333;}
+        .rdp-header-info{flex:1;min-width:0;}
+        .rdp-team-name{font-size:0.9rem;font-weight:800;color:#fff;}
+        .rdp-capitan{font-size:0.55rem;color:#444;}
+        .rdp-close{background:none;border:1px solid var(--border);border-radius:7px;color:#555;cursor:pointer;padding:4px 9px;font-size:0.85rem;transition:0.2s;flex-shrink:0;}
+        .rdp-close:hover{color:#fff;}
+        .rdp-turno-bar{display:flex;align-items:center;gap:7px;padding:8px 18px;background:rgba(0,255,204,0.06);border-bottom:1px solid rgba(0,255,204,0.1);display:none;}
+        .rdp-turno-bar.visible{display:flex;}
+        .rdp-turno-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);animation:blink2 1s infinite;}
+        .rdp-turno-txt{font-size:0.58rem;color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+        /* campo grande en detalle */
+        .rdp-field-wrap{padding:12px 14px;flex-shrink:0;}
+        .rdp-field-inner{position:relative;width:100%;padding-bottom:66%;background-image:url('/img/campo_de_futbol_libre.png');background-size:100% 100%;background-position:left top;background-color:#2a5c1e;border-radius:10px;overflow:hidden;}
+        .rdp-pos-grid{position:absolute;inset:0;}
+        .rdp-dot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;}
+        .rdp-dot-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.5);overflow:hidden;background:rgba(255,255,255,0.08);}
+        .rdp-dot-avatar img{width:100%;height:100%;object-fit:cover;}
+        .rdp-empty-dot{width:22px;height:22px;border-radius:50%;border:1px dashed rgba(255,255,255,0.12);background:rgba(255,255,255,0.02);}
+        .rdp-dot-pos{font-size:0.38rem;font-weight:900;color:#fff;background:rgba(0,0,0,0.8);padding:0 4px;border-radius:3px;line-height:1.6;white-space:nowrap;}
+        /* lista jugadores en detalle */
+        .rdp-players{flex:1;overflow-y:auto;padding:8px 14px 16px;display:flex;flex-direction:column;gap:5px;}
+        .rdp-players::-webkit-scrollbar{width:3px;}
+        .rdp-players::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+        .rdp-player-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);}
+        .rdp-pfoto{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;}
+        .rdp-pname{flex:1;font-size:0.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .rdp-ppos{font-size:0.56rem;font-weight:800;padding:2px 6px;border-radius:4px;flex-shrink:0;}
+        .rdp-empty-msg{color:#333;font-size:0.75rem;text-align:center;padding:20px;font-style:italic;}
+        .rdp-picks-header{display:flex;justify-content:space-between;align-items:center;padding:0 14px 6px;}
+        .rdp-picks-title{font-size:0.52rem;color:#444;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+        .rdp-picks-count{font-size:0.52rem;color:#555;font-weight:700;}
+
+        /* ═══════════════════════════════════════
+           VISTA JUGADORES LIBRES
+        ═══════════════════════════════════════ */
+        #view-libres{overflow:hidden;}
+        .libres-layout{display:flex;flex-direction:column;height:100%;}
+        .libres-toolbar{
+            display:flex;align-items:center;gap:10px;
+            padding:14px 20px 10px;flex-shrink:0;flex-wrap:wrap;
+            border-bottom:1px solid var(--border);
+            background:rgba(4,4,13,0.7);backdrop-filter:blur(12px);
+        }
+        .libres-search-wrap{position:relative;flex:1;min-width:180px;}
+        .libres-search-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#444;font-size:0.72rem;pointer-events:none;}
+        .libres-search{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 14px 8px 36px;border-radius:10px;font-size:0.78rem;font-family:var(--font-body);outline:none;transition:0.2s;}
+        .libres-search:focus{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.03);}
+        .pos-filter-pills{display:flex;gap:5px;flex-wrap:wrap;}
+        .pos-pill{padding:5px 13px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#3a3a55;font-size:0.64rem;font-weight:700;cursor:pointer;transition:0.2s;text-transform:uppercase;font-family:var(--font-body);}
+        .pos-pill:hover{color:#888;border-color:rgba(255,255,255,0.15);}
+        .pos-pill.active{color:#fff;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);}
+        .pos-pill.active.pill-dc{border-color:#00ffcc;color:#00ffcc;background:rgba(0,255,204,0.08);}
+        .pos-pill.active.pill-mc{border-color:#a066ff;color:#a066ff;background:rgba(160,102,255,0.08);}
+        .pos-pill.active.pill-carr{border-color:#ffcc00;color:#ffcc00;background:rgba(255,204,0,0.08);}
+        .pos-pill.active.pill-dfc{border-color:#ff4d4d;color:#ff4d4d;background:rgba(255,77,77,0.08);}
+        .pos-pill.active.pill-por{border-color:#3399ff;color:#3399ff;background:rgba(51,153,255,0.08);}
+        .libres-count-line{
+            padding:10px 20px 8px;
+            font-size:0.6rem;color:#3a3a55;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+            flex-shrink:0;
+            display:flex;align-items:center;gap:6px;
+        }
+        .libres-count-line span{
+            font-family:var(--font-display);font-size:1.1rem;letter-spacing:1px;
+            background:linear-gradient(90deg,var(--gold),#ffaa00);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+        }
+        .libres-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px;padding:0 20px 20px;overflow-y:auto;flex:1;}
+        .libres-grid::-webkit-scrollbar{width:4px;}
+        .libres-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+        .libre-card{
+            background:rgba(10,10,22,0.88);border:1px solid rgba(255,255,255,0.06);
+            border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:12px;
+            transition:0.18s;cursor:pointer;backdrop-filter:blur(12px);
+        }
+        .libre-card:hover{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.04);transform:translateY(-1px);}
+        .libre-card.not-my-turn{cursor:default;opacity:0.65;}
+        .libre-card.not-my-turn:hover{border-color:rgba(255,255,255,0.06);background:rgba(10,10,22,0.88);transform:none;}
+        .libre-foto{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.1);flex-shrink:0;}
+        .libre-info{flex:1;min-width:0;}
+        .libre-nombre{font-size:0.8rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;}
+        .libre-pos-badge{font-size:0.56rem;font-weight:800;padding:2px 7px;border-radius:5px;display:inline-block;margin-top:3px;}
+        .libre-fichar-btn{font-size:0.58rem;font-weight:700;color:var(--primary);opacity:0;transition:0.15s;white-space:nowrap;flex-shrink:0;}
+        .libre-card:hover .libre-fichar-btn{opacity:1;}
+        .libres-empty{text-align:center;padding:48px;color:#2a2a2a;font-size:0.82rem;font-style:italic;grid-column:1/-1;}
+        .libres-empty i{display:block;font-size:2rem;margin-bottom:10px;color:#1a1a1a;}
+
+        /* ─── POSICIÓN BADGES ─── */
+        .pos-DC{background:rgba(0,255,204,0.15);color:#00ffcc;}
+        .pos-MC{background:rgba(160,102,255,0.15);color:#a066ff;}
+        .pos-CARR{background:rgba(255,204,0,0.15);color:#ffcc00;}
+        .pos-DFC{background:rgba(255,77,77,0.15);color:#ff4d4d;}
+        .pos-POR{background:rgba(51,153,255,0.15);color:#3399ff;}
+        .pos-badge-sm{font-size:0.58rem;font-weight:800;padding:3px 6px;border-radius:5px;display:inline-block;flex-shrink:0;}
+
+        /* ─── DROPDOWN POSICIÓN (campo) ─── */
+        .pos-dropdown{position:fixed;z-index:500;background:rgba(8,8,20,0.99);border:1px solid var(--border);border-radius:16px;padding:0;width:280px;max-height:420px;display:none;flex-direction:column;backdrop-filter:blur(28px);box-shadow:0 24px 70px rgba(0,0,0,0.9);overflow:hidden;}
+        .pos-dropdown.open{display:flex;}
+        .pdd-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+        .pdd-title{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;}
+        .pdd-close{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:6px;color:#555;cursor:pointer;font-size:0.9rem;padding:3px 8px;transition:0.15s;}
+        .pdd-close:hover{color:#fff;}
+        .pdd-list{overflow-y:auto;padding:7px 9px 9px;display:flex;flex-direction:column;gap:4px;flex:1;}
+        .pdd-list::-webkit-scrollbar{width:3px;}
+        .pdd-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+        .pdd-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;background:rgba(255,255,255,0.02);border:1px solid transparent;cursor:pointer;transition:0.15s;}
+        .pdd-row:hover{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.06);}
+        .pdd-foto{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid rgba(255,255,255,0.12);}
+        .pdd-name{flex:1;font-size:0.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .pdd-pos{font-size:0.6rem;font-weight:800;padding:3px 7px;border-radius:5px;flex-shrink:0;}
+        .pdd-pick{font-size:0.64rem;color:var(--primary);font-weight:700;opacity:0;transition:0.15s;flex-shrink:0;}
+        .pdd-row:hover .pdd-pick{opacity:1;}
+        .pdd-empty{color:#444;font-size:0.78rem;text-align:center;padding:22px;font-style:italic;}
+
+        /* ─── MODAL PICK ─── */
+        .pos-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);z-index:600;align-items:center;justify-content:center;}
+        .pos-modal-overlay.visible{display:flex;}
+        .pos-modal{background:rgba(10,10,22,0.99);border:1px solid rgba(0,255,204,0.18);border-radius:18px;padding:22px;width:min(96vw,400px);max-height:92vh;overflow-y:auto;box-shadow:0 0 80px rgba(0,255,204,0.08);}
+        .pos-modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+        .pos-modal-title{font-size:0.6rem;color:var(--primary);text-transform:uppercase;letter-spacing:3px;font-weight:700;}
+        .pos-modal-close{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:7px;color:#555;cursor:pointer;padding:4px 9px;font-size:0.82rem;transition:0.2s;}
+        .pos-modal-close:hover{color:#fff;}
+        .modal-ph{color:#444;font-size:0.76rem;text-align:center;}
+        .modal-detail{display:none;}
+        .mpd-pos{font-size:1.05rem;font-weight:900;margin-bottom:2px;}
+        .mpd-lbl{font-size:0.62rem;color:#555;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;}
+        .mpd-jug{display:flex;align-items:center;gap:8px;padding:9px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--border);margin-bottom:10px;}
+        .mpd-jug img{width:30px;height:30px;border-radius:50%;object-fit:cover;}
+        .mpd-jug-name{font-size:0.8rem;font-weight:700;}
+        .mpd-jug-pos{font-size:0.6rem;color:#555;}
+        .btn-confirm{width:100%;padding:10px;border-radius:9px;border:none;background:var(--primary);color:#000;font-weight:800;font-size:0.82rem;cursor:pointer;transition:0.2s;font-family:var(--font-body);letter-spacing:1px;}
+        .btn-confirm:hover{background:#fff;}
+        .btn-confirm:disabled{background:#1a1a1a;color:#333;cursor:not-allowed;}
+
+        /* ─── VISTA ESPECTADOR ─── */
+        .spec-wrap{position:fixed;top:calc(var(--nav-h) + var(--subnav-h));left:0;right:0;bottom:0;z-index:10;overflow-y:auto;padding:0 14px 20px;}
+        .spec-layout{display:grid;grid-template-columns:1fr 270px;gap:12px;max-width:1200px;margin:0 auto;}
+        .teams-tracker{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;backdrop-filter:blur(20px);}
+        .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px;}
+        .team-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:10px;}
+        .team-card.turno-activo{border-color:rgba(0,255,204,0.35);background:rgba(0,255,204,0.04);}
+        .tc-head{display:flex;align-items:center;gap:6px;margin-bottom:7px;}
+        .tc-logo{width:22px;height:22px;border-radius:4px;object-fit:cover;}
+        .tc-logo-ph{width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.56rem;color:#333;}
+        .tc-name{font-size:0.72rem;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .tc-turno{font-size:0.5rem;background:rgba(0,255,204,0.15);color:var(--primary);padding:2px 4px;border-radius:4px;font-weight:700;}
+        .tc-picks{display:flex;flex-direction:column;gap:2px;}
+        .tc-pick{display:flex;align-items:center;gap:4px;padding:2px 3px;}
+        .tc-pick-foto{width:12px;height:12px;border-radius:50%;object-fit:cover;}
+        .tc-pick-nombre{font-size:0.62rem;flex:1;}
+        .tc-empty{font-size:0.62rem;color:#2a2a2a;font-style:italic;}
+        .spec-right{display:flex;flex-direction:column;gap:10px;position:sticky;top:0;}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;backdrop-filter:blur(20px);}
+        .panel-title{font-size:0.56rem;color:#555;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+        .panel-title::after{content:'';flex:1;height:1px;background:var(--border);}
+        .order-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;font-size:0.72rem;font-weight:600;transition:0.2s;}
+        .order-item.activo{background:rgba(0,255,204,0.08);color:var(--primary);border:1px solid rgba(0,255,204,0.2);}
+        .order-item.otro{color:#444;}
+        .order-num{font-size:0.55rem;color:#333;width:12px;}
+        .spec-free-list{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;}
+        .spec-free-list::-webkit-scrollbar{width:3px;}
+        .spec-free-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+        .spec-row{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid var(--border);}
+        .spec-foto{width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+        .spec-name{flex:1;font-size:0.7rem;font-weight:600;}
+        .no-items{color:#333;font-size:0.75rem;text-align:center;padding:24px;font-style:italic;}
     </style>
 </head>
 <body>
 
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_para_ruta-draft.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<!-- ───────── NAV PRINCIPAL ───────── -->
 <nav>
     <div class="nav-logo">CLUTCH</div>
-    <div class="nav-links">
-        <a href="/hub"           class="nav-link">Hub</a>
-        <a href="/draft"         class="nav-link active">Draft</a>
-        <a href="/clasificacion" class="nav-link">Clasificación</a>
-        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin">Admin</a><% } %>
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub"       class="nav-link">Hub</a>
+        <a href="/draft"     class="nav-link active">Draft</a>
+        <a href="/torneo"    class="nav-link">Torneo</a>
+        <a href="/directo"   class="nav-link"><i class="fas fa-circle" style="color:#ff4d4d;font-size:0.48rem;vertical-align:middle;margin-right:2px;"></i>Directo</a>
+        <a href="/normas"    class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
     </div>
     <div class="nav-user">
-        <img src="<%= user.avatar %>" class="nav-avatar">
-        <span style="font-size:0.85rem;font-weight:600;"><%= user.username %></span>
-        <a href="/logout" class="logout"><i class="fas fa-sign-out-alt"></i></a>
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
     </div>
 </nav>
 
+<!-- ───────── DRAFT SUB-NAV ───────── -->
+<div class="draft-subnav">
+    <button class="draft-tab tab-miequipo active" onclick="switchTab('miequipo',this)">
+        <i class="fas fa-shield-alt"></i>Mi Equipo
+    </button>
+    <button class="draft-tab tab-rivales" onclick="switchTab('rivales',this)">
+        <i class="fas fa-users"></i>Rivales en Vivo
+        <span class="tab-notif" id="tab-rivals-notif"></span>
+    </button>
+    <button class="draft-tab tab-libres" onclick="switchTab('libres',this)">
+        <i class="fas fa-search"></i>Jugadores Libres
+    </button>
+    <div class="subnav-live">
+        <div class="live-dot"></div>En directo
+    </div>
+</div>
+
+<%
+  const allPicksArr = typeof allPicks !== 'undefined' ? allPicks : [];
+  // Los capitanes NO pueden fichar desde draft.ejs — solo desde draft-stream (admin)
+  // Esta vista es SOLO de seguimiento para los capitanes
+  const esMiTurno = false;
+%>
+
 <!-- TURN BANNER -->
 <% if (draftEstado === 'abierto') { %>
-    <div class="turn-banner <%= turnoActual === user.username ? 'mi-turno' : '' %>" id="turn-banner">
-        <div class="turn-info">
-            <h2>Turno actual</h2>
-            <div class="turn-nombre" id="turn-nombre"><%= turnoActual %></div>
-        </div>
-        <% if (turnoActual === user.username) { %>
-            <span class="turn-badge" id="mi-turno-badge">⚡ ES TU TURNO</span>
-        <% } else { %>
-            <span class="turn-badge" id="mi-turno-badge" style="display:none;">⚡ ES TU TURNO</span>
-        <% } %>
-        <div class="timer-display" id="timer"><%= tiempoRestante %></div>
+<div class="turn-pill <%= turnoActual === user.username ? 'mi-turno' : '' %>" id="turn-banner">
+    <div class="turn-pill-info">
+        <div class="turn-pill-label">Turno</div>
+        <div class="turn-pill-name" id="turn-nombre"><%= turnoActual %></div>
     </div>
+    <span class="turn-pill-badge" id="mi-turno-badge" style="<%= turnoActual !== user.username ? 'display:none' : '' %>">⚡ TU TURNO</span>
+    <div class="timer-divider"></div>
+    <div class="timer-block">
+        <div class="timer-block-lbl">Tiempo</div>
+        <div class="turn-pill-timer" id="timer" style="opacity:0;">—</div>
+    </div>
+</div>
 <% } else { %>
-    <div class="draft-cerrado">
-        <i class="fas fa-lock" style="margin-right:8px;"></i>
-        El draft está cerrado. Espera a que el administrador lo abra.
-    </div>
+<div class="draft-cerrado-pill"><i class="fas fa-lock" style="margin-right:6px;"></i>Draft cerrado</div>
 <% } %>
 
-<div class="container">
-<div class="draft-grid">
+<% if (user.esCapitan) { %>
 
-<!-- ── PANEL IZQUIERDO: Mi Equipo ── -->
-    <div class="team-panel">
-        <div class="panel-title"><i class="fas fa-shield-alt"></i> Mi Equipo</div>
-
-        <% if (user.esCapitan) { %>
-
-            <!-- Renombrar equipo -->
-            <div style="margin-bottom: 20px;">
-                <div style="font-size:0.7rem; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
-                    Nombre del equipo
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <input 
-                        type="text" 
-                        id="inputNombreEquipo"
-                        placeholder="<%= miEquipo?.nombre_equipo || user.username %>"
-                        value="<%= miEquipo?.nombre_equipo || '' %>"
-                        style="flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#fff; padding:8px 12px; border-radius:8px; font-size:0.85rem; outline:none;"
-                    >
-                    <button 
-                        onclick="renombrarEquipo()"
-                        style="background:var(--primary); color:#000; border:none; padding:8px 14px; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.8rem;">
-                        OK
-                    </button>
-                </div>
-                <div id="msg-renombrar" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
-                    ✅ Nombre actualizado
-                </div>
+<!-- ═══════════════════════════════════
+     VISTA: MI EQUIPO
+═══════════════════════════════════ -->
+<div class="draft-view active" id="view-miequipo">
+    <div class="field-wrap">
+        <div class="field-inner">
+            <div class="field-positions" id="main-field-pos"></div>
+        </div>
+    </div>
+    <!-- Panel izquierdo -->
+    <div class="overlay-left">
+        <!-- Escudo grande -->
+        <div class="team-hero">
+            <% if (miEquipo?.logo_url) { %>
+                <img src="<%= miEquipo.logo_url %>" class="team-escudo" id="team-escudo-img" alt="">
+            <% } else { %>
+                <div class="team-escudo-ph" id="team-escudo-img"><i class="fas fa-shield-alt"></i></div>
+            <% } %>
+            <div class="team-hero-name" id="team-display-name"><%= miEquipo?.nombre_equipo || user.username %></div>
+            <div class="team-hero-sub">Tu equipo</div>
+        </div>
+        <!-- Contador picks visible -->
+        <div class="picks-counter">
+            <div class="picks-counter-row">
+                <div class="picks-counter-lbl">Plantilla</div>
+                <div class="picks-counter-val" id="squad-progress-val"><%= misJugadores.length %>/11</div>
             </div>
-
-            <!-- Subir escudo -->
-            <div style="margin-bottom: 20px;">
-                <div style="font-size:0.7rem; color:#444; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;">
-                    Escudo del equipo
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <% if (miEquipo?.logo_url) { %>
-                        <img src="<%= miEquipo.logo_url %>" style="width:40px; height:40px; border-radius:8px; object-fit:cover; border:1px solid rgba(0,255,204,0.3);">
-                    <% } %>
-                    <label style="flex:1; background:rgba(255,255,255,0.04); border:1px dashed rgba(255,255,255,0.15); border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.8rem; color:#555; text-align:center;">
-                        <i class="fas fa-upload" style="margin-right:6px;"></i>
-                        Subir escudo
-                        <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
-                    </label>
-                </div>
-                <div id="msg-escudo" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
-                    ✅ Escudo actualizado
-                </div>
+            <div class="picks-progress-bar">
+                <div class="picks-progress-fill" id="squad-progress-fill" style="width:<%= Math.round((misJugadores.length/11)*100) %>%"></div>
             </div>
-                    </button>
-                </div>
-                <div id="msg-renombrar" style="font-size:0.75rem; margin-top:5px; color:#00ffcc; display:none;">
-                    ✅ Nombre actualizado
-                </div>
+            <div class="picks-slots" id="picks-slots">
+                <% for(let i=0;i<11;i++){%><div class="picks-slot<%= i<misJugadores.length?' filled':'' %>" id="pslot-<%=i%>"></div><%}%>
             </div>
-
-            <!-- Lista de jugadores fichados -->
-            <% const POSORDEN = ['POR','DFC','CARR','MC','DC']; %>
-            <% POSORDEN.forEach(pos => { %>
-                <% const delPos = misJugadores.filter(j => j.posicion === pos); %>
-                <% const lim = LIMS[pos]; %>
-                <% for (let i = 0; i < lim; i++) { %>
-                    <div class="pos-slot <%= delPos[i] ? 'filled' : 'empty' %>" data-pos="<%= pos %>">
-                        <span class="pos-badge-sm pos-<%= pos %>"><%= pos %></span>
-                        <% if (delPos[i]) { %>
-                            <span class="slot-nombre"><%= delPos[i].nombre %></span>
-                            <span class="slot-vacio" style="display:none;">Vacío</span>
+        </div>
+        <!-- Disponibles -->
+        <div class="avail-badge">
+            <div class="avail-badge-num" id="count"><%= jugadores.length %></div>
+            <div class="avail-badge-lbl">Jugadores libres</div>
+        </div>
+        <!-- Acciones -->
+        <div class="team-actions">
+            <div class="team-action-row">
+                <input type="text" id="inputNombreEquipo" class="team-input-sm"
+                    placeholder="<%= miEquipo?.nombre_equipo || user.username %>"
+                    value="<%= miEquipo?.nombre_equipo || '' %>">
+                <button class="team-btn-sm" onclick="renombrarEquipo()">OK</button>
+            </div>
+            <div id="msg-renombrar" class="team-msg-sm">✅ Guardado</div>
+            <label class="team-upload-sm">
+                <i class="fas fa-upload" style="margin-right:4px;font-size:0.65rem;"></i>Subir escudo
+                <input type="file" id="inputEscudo" accept="image/*" style="display:none;" onchange="subirEscudo(this)">
+            </label>
+            <div id="msg-escudo" class="team-msg-sm">✅ Actualizado</div>
+        </div>
+        <!-- Contactos WhatsApp plantilla -->
+        <div class="contacts-badge">
+            <div class="contacts-badge-hdr" onclick="toggleContactos(this)">
+                <div class="contacts-badge-label"><i class="fab fa-whatsapp" style="margin-right:5px;"></i>Contactos del equipo</div>
+                <i class="fas fa-chevron-down contacts-badge-toggle" id="contacts-toggle-icon"></i>
+            </div>
+            <div class="contacts-list" id="contacts-list" style="display:none;">
+                <% if (misJugadores.length === 0) { %>
+                    <div class="contacts-empty">Aún no hay jugadores en tu equipo</div>
+                <% } else { %>
+                    <% misJugadores.forEach(j => {
+                        const digits = (j.telefono || '').replace(/\D/g, '');
+                        const waNum  = digits.length === 9 ? '34' + digits : digits.length >= 10 ? digits : null;
+                        const waUrl  = waNum ? 'https://wa.me/' + waNum : null;
+                    %>
+                    <div class="contact-row">
+                        <span class="contact-pos pos-<%= j.posicion %>"><%= j.posicion %></span>
+                        <span class="contact-name"><%= j.nombre %></span>
+                        <% if (waUrl) { %>
+                            <a href="<%= waUrl %>" target="_blank" class="contact-wa">
+                                <i class="fab fa-whatsapp"></i> Chat
+                            </a>
                         <% } else { %>
-                            <span class="slot-nombre" style="display:none;"></span>
-                            <span class="slot-vacio">Vacío</span>
+                            <span class="contact-no-phone">Sin tlf.</span>
                         <% } %>
                     </div>
-                <% } %>
-            <% }) %>
-
-        <% } else { %>
-            <div class="no-capitan-msg">
-                <i class="fas fa-discord" style="font-size:2rem;color:#333;margin-bottom:12px;display:block;"></i>
-                Regístrate como capitán en Discord con <strong>!panel</strong> para ver tu equipo aquí.
-            </div>
-        <% } %>
-
-        <!-- Orden snake -->
-        <% if (teams.length > 0) { %>
-            <div class="snake-order">
-                <div class="order-title">Orden de picks</div>
-                <div class="order-list">
-                    <% teams.forEach((t, i) => { %>
-                        <div class="order-item <%= t.capitan_username === turnoActual ? 'activo' : 'otro' %>"
-                             data-capitan="<%= t.capitan_username %>">
-                            <span class="order-num"><%= i+1 %></span>
-                            <%= t.capitan_username %>
-                            <i class="fas fa-caret-right order-arrow" style="margin-left:auto;<%= t.capitan_username !== turnoActual ? 'display:none;' : '' %>"></i>
-                        </div>
                     <% }) %>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Formación -->
+        <div class="form-badge">
+            <div class="form-badge-label">Formación</div>
+            <div class="form-badge-val" id="form-label"><%= miEquipo?.formacion || '3-1-4-2' %></div>
+            <% const formacionBloqueada = (!user.esAdmin) && (draftEstado === 'abierto' || torneoGenerado); %>
+            <button class="form-badge-btn" id="btn-cambiar-formacion"
+                onclick="toggleFormPicker()"
+                <%- formacionBloqueada ? 'disabled style="opacity:0.5;cursor:not-allowed;pointer-events:none;"' : '' %>>
+                <% if (!formacionBloqueada) { %>
+                    <i class="fas fa-chevron-right" style="font-size:0.5rem;margin-right:3px;"></i>Cambiar
+                <% } else { %>
+                    <span class="locked-badge">🔒</span> Bloqueado
+                <% } %>
+            </button>
+            <div class="form-picker-drop" id="form-picker-drop">
+                <% ['3-1-4-2','3-5-2'].forEach(f => { %>
+                    <button class="fpick <%= (miEquipo?.formacion||'3-1-4-2')===f?'active':'' %>"
+                        onclick="elegirFormacion('<%= f %>',this)"><%= f %></button>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     VISTA: RIVALES EN VIVO
+═══════════════════════════════════ -->
+<div class="draft-view" id="view-rivales">
+    <div class="rivals-page">
+        <!-- Grid equipos -->
+        <div class="rivals-grid-wrap">
+            <div class="rivals-grid" id="rivals-grid">
+                <% const todosTeamsArr = typeof teams !== 'undefined' ? teams : []; %>
+                <% const todosFichadosRivales = typeof todosFichados !== 'undefined' ? todosFichados : []; %>
+                <% todosTeamsArr.forEach(t => {
+                    const jugEquipo = todosFichadosRivales.filter(j => j.equipo === t.capitan_username);
+                    const esTurno = t.capitan_username === turnoActual;
+                %>
+                <div class="rival-card <%= esTurno ? 'turno-activo' : '' %>"
+                     id="rival-card-<%= t.capitan_username %>"
+                     onclick="abrirDetalleRival('<%= t.capitan_username %>')">
+                    <div class="rival-card-head">
+                        <% if(t.logo_url){ %><img src="<%= t.logo_url %>" class="rival-logo" alt=""><% } else { %><div class="rival-logo-ph"><i class="fas fa-shield-alt"></i></div><% } %>
+                        <div class="rival-head-info">
+                            <div class="rival-name"><%= t.nombre_equipo || t.capitan_username %></div>
+                            <div class="rival-capitan">@<%= t.capitan_username %></div>
+                        </div>
+                        <% if(esTurno){ %><span class="rival-turno-badge">⚡ TURNO</span><% } %>
+                        <span class="rival-picks-count" id="rival-picks-<%= t.capitan_username %>"><%= jugEquipo.length %>/11</span>
+                    </div>
+                    <div class="rival-field">
+                        <div class="rival-field-inner">
+                            <div class="rival-pos-grid" id="rival-pos-<%= t.capitan_username %>"></div>
+                        </div>
+                    </div>
+                    <div class="rival-card-hint">Click para ver detalle →</div>
+                </div>
+                <% }) %>
+            </div>
+        </div>
+        <!-- Panel detalle lateral -->
+        <div class="rival-detail-panel" id="rival-detail-panel">
+            <div class="rdp-inner">
+                <div class="rdp-header">
+                    <div class="rdp-logo-ph" id="rdp-logo"><i class="fas fa-shield-alt"></i></div>
+                    <div class="rdp-header-info">
+                        <div class="rdp-team-name" id="rdp-team-name">—</div>
+                        <div class="rdp-capitan" id="rdp-capitan"></div>
+                    </div>
+                    <button class="rdp-close" onclick="cerrarDetalleRival()">✕</button>
+                </div>
+                <div class="rdp-turno-bar" id="rdp-turno-bar">
+                    <div class="rdp-turno-dot"></div>
+                    <div class="rdp-turno-txt">⚡ Turno activo</div>
+                </div>
+                <!-- Campo grande detalle -->
+                <div class="rdp-field-wrap">
+                    <div class="rdp-field-inner">
+                        <div class="rdp-pos-grid" id="rdp-pos-grid"></div>
+                    </div>
+                </div>
+                <!-- Lista jugadores fichados -->
+                <div class="rdp-picks-header">
+                    <div class="rdp-picks-title">Jugadores fichados</div>
+                    <div class="rdp-picks-count" id="rdp-picks-count">0/11</div>
+                </div>
+                <div class="rdp-players" id="rdp-players">
+                    <div class="rdp-empty-msg">Sin jugadores fichados aún</div>
                 </div>
             </div>
-        <% } %>
-    </div>
-    <!-- ── PANEL DERECHO: Jugadores disponibles ── -->
-    <div class="players-panel">
-        <div class="panel-title"><i class="fas fa-users"></i> Jugadores disponibles (<span id="count"><%= jugadores.length %></span>)</div>
-
-        <!-- Filtros -->
-        <div class="filters">
-            <button class="filter-btn active" onclick="filtrar('TODOS', this)">Todos</button>
-            <button class="filter-btn dc"   onclick="filtrar('DC',   this)">DC</button>
-            <button class="filter-btn carr" onclick="filtrar('CARR', this)">CARR</button>
-            <button class="filter-btn mc"   onclick="filtrar('MC',   this)">MC</button>
-            <button class="filter-btn dfc"  onclick="filtrar('DFC',  this)">DFC</button>
-            <button class="filter-btn por"  onclick="filtrar('POR',  this)">POR</button>
         </div>
+    </div>
+</div>
 
-        <input type="text" class="search-box" placeholder="Buscar jugador..." oninput="buscar(this.value)" id="search">
-
-        <div class="players-grid" id="players-grid">
-            <% const esMiTurno = draftEstado === 'abierto' && turnoActual === user.username && user.esCapitan; %>
-            <% jugadores.forEach(j => { %>
-                <div class="player-card <%= esMiTurno ? 'mi-turno-pick' : '' %>"
-                     data-id="<%= j.discord_id %>"
-                     data-pos="<%= j.posicion %>"
-                     data-nombre="<%= j.nombre.toLowerCase() %>"
-                     onclick="<%= esMiTurno ? `ficharConModal('${j.discord_id}', '${j.nombre}', '${j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png'}', '${j.posicion}')` : '' %>">
-                    <img src="<%= j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png' %>"
-                         class="player-foto" alt="">
-                    <div class="player-nombre"><%= j.nombre %></div>
-                    <span class="pos-badge-sm pos-<%= j.posicion %> player-pos"><%= j.posicion %></span>
-                    <% if (j.telefono) { %>
-                        <div class="player-tel"><i class="fab fa-whatsapp"></i><%= j.telefono %></div>
-                    <% } %>
-                    <% if (esMiTurno) { %>
-                        <button class="btn-pick" onclick="event.stopPropagation();ficharConModal('<%= j.discord_id %>', '<%= j.nombre %>', '<%= j.foto || 'https://cdn.discordapp.com/embed/avatars/0.png' %>', '<%= j.posicion %>')">⚡ FICHAR</button>
-                    <% } %>
-                </div>
-            <% }) %>
-            <% if (jugadores.length === 0) { %>
-                <div class="no-players">No hay jugadores disponibles</div>
+<!-- ═══════════════════════════════════
+     VISTA: JUGADORES LIBRES
+═══════════════════════════════════ -->
+<div class="draft-view" id="view-libres">
+    <div class="libres-layout">
+        <div class="libres-toolbar">
+            <div class="libres-search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" class="libres-search" id="libres-search" placeholder="Buscar jugador..." oninput="filtrarLibresGrid()">
+            </div>
+            <div class="pos-filter-pills">
+                <button class="pos-pill active" data-pos="TODOS" onclick="setPosFilter('TODOS',this)">Todos</button>
+                <button class="pos-pill pill-dc" data-pos="DC" onclick="setPosFilter('DC',this)">DC</button>
+                <button class="pos-pill pill-carr" data-pos="CARR" onclick="setPosFilter('CARR',this)">CARR</button>
+                <button class="pos-pill pill-mc" data-pos="MC" onclick="setPosFilter('MC',this)">MC</button>
+                <button class="pos-pill pill-dfc" data-pos="DFC" onclick="setPosFilter('DFC',this)">DFC</button>
+                <button class="pos-pill pill-por" data-pos="POR" onclick="setPosFilter('POR',this)">POR</button>
+            </div>
+        </div>
+        <div class="libres-count-line">
+            <span id="libres-shown-count"><%= jugadores.length %></span> jugadores disponibles
+        </div>
+        <div class="libres-grid" id="libres-grid">
+            <% if(jugadores.length === 0) { %>
+                <div class="libres-empty"><i class="fas fa-check-circle"></i>No quedan jugadores disponibles</div>
             <% } %>
+            <% jugadores.forEach(j => { %>
+            <div class="libre-card not-my-turn"
+                 data-pos="<%= j.posicion %>"
+                 data-nombre="<%= (j.eafc_id||j.nombre).toLowerCase() %>">
+                <img src="<%= j.foto||'https://cdn.discordapp.com/embed/avatars/0.png' %>" class="libre-foto" alt="">
+                <div class="libre-info">
+                    <div class="libre-nombre"><%= j.eafc_id || j.nombre %></div>
+                    <span class="libre-pos-badge pos-<%= j.posicion %>"><%= j.posicion %></span>
+                </div>
+            </div>
+            <% }) %>
         </div>
     </div>
-
-</div>
 </div>
 
-<!-- ── MODAL SELECCIÓN DE POSICIÓN ── -->
+<!-- Elementos ocultos para JS legacy -->
+<div id="mini-plantilla" style="display:none;">
+    <% const POSORDEN = ['POR','DFC','CARR','MC','DC']; %>
+    <% POSORDEN.forEach(pos => { %>
+        <% const delPos = misJugadores.filter(j => j.posicion === pos); %>
+        <% for (let i = 0; i < LIMS[pos]; i++) { %>
+            <div class="mini-row <%= delPos[i] ? 'filled' : '' %>" data-pos="<%= pos %>"></div>
+        <% } %>
+    <% }) %>
+</div>
+<div id="form-picker" style="display:none;"></div>
+<div id="fpl-list" style="display:none;"></div>
+<div id="field-pos-hdr" style="display:none;"></div>
+<div id="free-list" style="display:none;"></div>
+<div id="form-picker-inline" style="display:none;"></div>
+
+<!-- DROPDOWN POSICIÓN -->
+<div class="pos-dropdown" id="pos-dropdown">
+    <div class="pdd-header">
+        <div class="pdd-title" id="pdd-title">—</div>
+        <button class="pdd-close" onclick="cerrarPosDropdown()">✕</button>
+    </div>
+    <div class="pdd-list" id="pdd-list"></div>
+</div>
+
+<!-- MODAL PICK -->
 <div class="pos-modal-overlay" id="pos-modal-overlay">
     <div class="pos-modal">
-        <div class="pos-modal-header">
-            <div class="pos-modal-title">ES TU TURNO — SELECCIONA UNA POSICION</div>
-            <button class="pos-modal-close" onclick="cerrarModalPosicion()">···</button>
+        <div class="pos-modal-hdr">
+            <div class="pos-modal-title">⚡ Selecciona posición</div>
+            <button class="pos-modal-close" onclick="cerrarModal()">✕</button>
         </div>
-        <div class="formation-tabs" id="formation-tabs"></div>
-        <div class="field-layout">
-            <div class="field-wrap" id="field-wrap">
-                <svg class="field-lines" viewBox="0 0 200 310" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="5" y="5" width="190" height="300" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
-                    <rect x="45" y="5" width="110" height="55" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    <rect x="75" y="5" width="50" height="22" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-                    <line x1="5" y1="155" x2="195" y2="155" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    <circle cx="100" cy="155" r="35" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    <circle cx="100" cy="155" r="2" fill="rgba(255,255,255,0.3)"/>
-                    <rect x="45" y="250" width="110" height="55" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-                    <rect x="75" y="283" width="50" height="22" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-                    <circle cx="100" cy="45" r="2" fill="rgba(255,255,255,0.3)"/>
-                    <circle cx="100" cy="265" r="2" fill="rgba(255,255,255,0.3)"/>
-                </svg>
-                <div class="field-positions" id="field-positions"></div>
-            </div>
-            <div class="field-info-panel" id="field-info-panel">
-                <div class="field-info-placeholder" id="field-placeholder">
-                    <i class="fas fa-hand-pointer" style="font-size:1.5rem;display:block;margin-bottom:8px;color:#333;"></i>
-                    Clicka en una posicion del campo
-                </div>
-                <div class="field-pos-detail" id="field-pos-detail" style="display:none;">
-                    <div class="fpd-pos-name" id="fpd-pos-name"></div>
-                    <div class="fpd-pos-label" id="fpd-pos-label"></div>
-                    <div id="fpd-jugadores-list"></div>
-                    <button class="btn-confirmar-pick" id="btn-confirmar-pick" disabled onclick="confirmarPickConPosicion()">
-                        ⚡ CONFIRMAR FICHAJE
-                    </button>
-                </div>
-            </div>
+        <div id="modal-ph" class="modal-ph" style="padding:14px 0 8px;"><i class="fas fa-hand-pointer" style="display:block;font-size:1rem;margin-bottom:6px;color:#333;"></i>Elige dónde colocar al jugador</div>
+        <div id="modal-detail" class="modal-detail">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div class="mpd-pos" id="mpd-pos"></div><div class="mpd-lbl" id="mpd-lbl"></div></div>
+            <div class="mpd-jug" id="mpd-jug"></div>
+            <button class="btn-confirm" id="btn-confirm" disabled onclick="confirmarPick()">⚡ CONFIRMAR FICHAJE</button>
         </div>
+        <div id="modal-slots-list" style="display:flex;flex-direction:column;gap:5px;margin-top:10px;max-height:300px;overflow-y:auto;"></div>
     </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-    // ── CAMPO DE POSICIONES ────────────────────────────────────────
-    const FORMATIONS = {
-        '4-3-3': [
-            { pos:'DC',   x:35,  y:12, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:12, label:'Delantero Centro' },
-            { pos:'CARR', x:18,  y:28, label:'Carrilero Izq' },
-            { pos:'CAM',  x:50,  y:28, label:'Mediapunta' },
-            { pos:'CARR', x:82,  y:28, label:'Carrilero Der' },
-            { pos:'MCD',  x:36,  y:45, label:'Mediocentro Def' },
-            { pos:'MCD',  x:64,  y:45, label:'Mediocentro Def' },
-            { pos:'DFC',  x:22,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:78,  y:63, label:'Defensa Central' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '4-4-2': [
-            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
-            { pos:'CARR', x:18,  y:30, label:'Extremo Izq' },
-            { pos:'MC',   x:40,  y:30, label:'Mediocampista' },
-            { pos:'MC',   x:60,  y:30, label:'Mediocampista' },
-            { pos:'CARR', x:82,  y:30, label:'Extremo Der' },
-            { pos:'DFC',  x:22,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:42,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:62,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:82,  y:63, label:'Defensa Lateral' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '4-2-3-1': [
-            { pos:'DC',   x:50,  y:10, label:'Delantero Centro' },
-            { pos:'CARR', x:20,  y:25, label:'Extremo Izq' },
-            { pos:'CAM',  x:50,  y:25, label:'Mediapunta' },
-            { pos:'CARR', x:80,  y:25, label:'Extremo Der' },
-            { pos:'MCD',  x:36,  y:45, label:'Mediocentro Def' },
-            { pos:'MCD',  x:64,  y:45, label:'Mediocentro Def' },
-            { pos:'DFC',  x:20,  y:63, label:'Lateral Izq' },
-            { pos:'DFC',  x:40,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:60,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:80,  y:63, label:'Lateral Der' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '3-5-2': [
-            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
-            { pos:'CARR', x:18,  y:30, label:'Carrilero Izq' },
-            { pos:'MC',   x:38,  y:33, label:'Mediocampista' },
-            { pos:'CAM',  x:58,  y:25, label:'Mediapunta' },
-            { pos:'MC',   x:72,  y:38, label:'Mediocampista' },
-            { pos:'CARR', x:88,  y:30, label:'Carrilero Der' },
-            { pos:'DFC',  x:25,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:75,  y:63, label:'Defensa Central' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '3-1-4-2': [
-            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
-            { pos:'CARR', x:18,  y:28, label:'Carrilero Izq' },
-            { pos:'MC',   x:38,  y:28, label:'Mediocampista' },
-            { pos:'MC',   x:62,  y:28, label:'Mediocampista' },
-            { pos:'CARR', x:82,  y:28, label:'Carrilero Der' },
-            { pos:'MCD',  x:50,  y:45, label:'Pivote' },
-            { pos:'DFC',  x:25,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:75,  y:63, label:'Defensa Central' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '4-1-2-1-2': [
-            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
-            { pos:'CAM',  x:50,  y:23, label:'Mediapunta' },
-            { pos:'MC',   x:30,  y:37, label:'Mediocampista' },
-            { pos:'MC',   x:70,  y:37, label:'Mediocampista' },
-            { pos:'MCD',  x:50,  y:50, label:'Pivote' },
-            { pos:'DFC',  x:20,  y:63, label:'Lateral Izq' },
-            { pos:'DFC',  x:40,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:60,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:80,  y:63, label:'Lateral Der' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-        '5-3-2': [
-            { pos:'DC',   x:35,  y:10, label:'Delantero Centro' },
-            { pos:'DC',   x:65,  y:10, label:'Delantero Centro' },
-            { pos:'MC',   x:30,  y:35, label:'Mediocampista' },
-            { pos:'MC',   x:50,  y:30, label:'Mediocampista' },
-            { pos:'MC',   x:70,  y:35, label:'Mediocampista' },
-            { pos:'CARR', x:12,  y:55, label:'Carrilero Izq' },
-            { pos:'DFC',  x:30,  y:60, label:'Defensa Central' },
-            { pos:'DFC',  x:50,  y:63, label:'Defensa Central' },
-            { pos:'DFC',  x:70,  y:60, label:'Defensa Central' },
-            { pos:'CARR', x:88,  y:55, label:'Carrilero Der' },
-            { pos:'POR',  x:50,  y:82, label:'Portero' },
-        ],
-    };
-
-    const POS_COLORS = {
-        DC:'#00ffcc', MC:'#a066ff', CARR:'#ffcc00',
-        DFC:'#ff4d4d', POR:'#3399ff', MCD:'#ff9900', CAM:'#a066ff', EXT:'#ffcc00'
-    };
-
-    const POS_CLASS = {
-        DC:'fd-dc', MC:'fd-mc', CARR:'fd-carr',
-        DFC:'fd-dfc', POR:'fd-por', MCD:'fd-mcd', CAM:'fd-cam', EXT:'fd-ext'
-    };
-
-    let _modalJugadorId   = null;
-    let _modalJugadorNom  = null;
-    let _modalJugadorFoto = null;
-    let _modalJugadorPos  = null; // posición real del jugador
-    let _posSeleccionada  = null; // slot del campo seleccionado
-    let _formacionActual  = '4-3-3';
-
-    function abrirModalPosicion(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion) {
-        _modalJugadorId   = jugadorId;
-        _modalJugadorNom  = jugadorNombre;
-        _modalJugadorFoto = jugadorFoto || 'https://cdn.discordapp.com/embed/avatars/0.png';
-        _modalJugadorPos  = jugadorPosicion;
-        _posSeleccionada  = null;
-
-        // Construir tabs
-        const tabsEl = document.getElementById('formation-tabs');
-        tabsEl.innerHTML = '';
-        Object.keys(FORMATIONS).forEach(f => {
-            const btn = document.createElement('button');
-            btn.className = 'formation-tab' + (f === _formacionActual ? ' active' : '');
-            btn.textContent = f;
-            btn.onclick = () => cambiarFormacion(f, btn);
-            tabsEl.appendChild(btn);
-        });
-
-        renderField(_formacionActual);
-        document.getElementById('pos-modal-overlay').classList.add('visible');
-        resetFieldInfo();
-    }
-
-    function cerrarModalPosicion() {
-        document.getElementById('pos-modal-overlay').classList.remove('visible');
-        _modalJugadorId = null;
-        _posSeleccionada = null;
-    }
-
-    function cambiarFormacion(f, btn) {
-        _formacionActual = f;
-        _posSeleccionada = null;
-        document.querySelectorAll('.formation-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderField(f);
-        resetFieldInfo();
-    }
-
-    function renderField(formacion) {
-        const positions = FORMATIONS[formacion] || [];
-        const container = document.getElementById('field-positions');
-        container.innerHTML = '';
-
-        positions.forEach((p, i) => {
-            const dot = document.createElement('div');
-            dot.className = `field-dot ${POS_CLASS[p.pos] || ''}`;
-            dot.style.left = p.x + '%';
-            dot.style.top  = p.y + '%';
-            dot.textContent = p.pos;
-            dot.dataset.index = i;
-            dot.dataset.pos   = p.pos;
-            dot.dataset.label = p.label;
-            dot.onclick = () => seleccionarSlot(i, p);
-            container.appendChild(dot);
-        });
-    }
-
-    function seleccionarSlot(index, posData) {
-        // Deseleccionar anterior
-        document.querySelectorAll('.field-dot').forEach(d => d.classList.remove('selected'));
-        const dot = document.querySelector(`.field-dot[data-index="${index}"]`);
-        if (dot) dot.classList.add('selected');
-
-        _posSeleccionada = posData;
-
-        // Mostrar info panel
-        document.getElementById('field-placeholder').style.display = 'none';
-        document.getElementById('field-pos-detail').style.display  = 'block';
-
-        const color = POS_COLORS[posData.pos] || '#fff';
-        document.getElementById('fpd-pos-name').textContent  = posData.pos;
-        document.getElementById('fpd-pos-name').style.color  = color;
-        document.getElementById('fpd-pos-label').textContent = posData.label;
-
-        // Jugador seleccionado para fichar
-        const listEl = document.getElementById('fpd-jugadores-list');
-        listEl.innerHTML = `
-            <div class="fpd-jugador-sel">
-                <img src="${_modalJugadorFoto}" alt="">
-                <div>
-                    <div class="fpd-jugador-nombre">${_modalJugadorNom}</div>
-                    <div class="fpd-jugador-pos">${_modalJugadorPos}</div>
+<% } else { %>
+<!-- VISTA ESPECTADOR -->
+<div class="spec-wrap">
+  <div class="spec-layout">
+    <div class="teams-tracker">
+        <div class="panel-title"><i class="fas fa-users"></i> Equipos</div>
+        <div class="teams-grid">
+            <%
+              const todosFichadosArr = typeof todosFichados !== 'undefined' ? todosFichados : [];
+              teams.forEach(t => { const jugEquipo = todosFichadosArr.filter(j => j.equipo === t.capitan_username);
+            %>
+            <div class="team-card <%= t.capitan_username===turnoActual?'turno-activo':'' %>" data-capitan="<%= t.capitan_username %>">
+                <div class="tc-head">
+                    <% if(t.logo_url){%><img src="<%= t.logo_url %>" class="tc-logo" alt=""><%}else{%><div class="tc-logo-ph"><i class="fas fa-shield-alt"></i></div><%}%>
+                    <span class="tc-name"><%= t.nombre_equipo||t.capitan_username %></span>
+                    <% if(t.capitan_username===turnoActual){%><span class="tc-turno">TURNO</span><%}%>
                 </div>
-            </div>`;
+                <div class="tc-picks">
+                    <%if(jugEquipo.length===0){%><div class="tc-empty">Sin picks</div><%}%>
+                    <% jugEquipo.forEach(j => { %><div class="tc-pick" data-discord-id="<%= j.discord_id %>"><img src="<%= j.foto||'https://cdn.discordapp.com/embed/avatars/0.png' %>" class="tc-pick-foto" alt=""><span class="tc-pick-nombre"><%= j.eafc_id || j.nombre %></span><span class="pos-badge-sm pos-<%= j.posicion %>"><%= j.posicion %></span></div><% }) %>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+    <div class="spec-right">
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-users"></i> Disponibles (<span id="count"><%= jugadores.length %></span>)</div>
+            <div class="spec-free-list" id="free-list">
+                <% jugadores.forEach(j => { %><div class="spec-row" data-pos="<%= j.posicion %>" data-discord-id="<%= j.discord_id %>"><img src="<%= j.foto||'https://cdn.discordapp.com/embed/avatars/0.png' %>" class="spec-foto" alt=""><span class="spec-name"><%= j.eafc_id || j.nombre %></span><span class="pos-badge-sm pos-<%= j.posicion %>"><%= j.posicion %></span></div><% }) %>
+                <%if(jugadores.length===0){%><div class="no-items">Sin disponibles</div><%}%>
+            </div>
+        </div>
+        <% if(teams.length>0){ %>
+        <div class="panel">
+            <div class="panel-title"><i class="fas fa-sort-numeric-down"></i> Orden</div>
+            <% teams.forEach((t,i) => { %>
+            <div class="order-item <%= t.capitan_username===turnoActual?'activo':'otro' %>" data-capitan="<%= t.capitan_username %>">
+                <span class="order-num"><%= i+1 %></span><%= t.capitan_username %>
+                <i class="fas fa-caret-right" style="margin-left:auto;<%= t.capitan_username!==turnoActual?'display:none;':'' %>"></i>
+            </div>
+            <% }) %>
+        </div>
+        <% } %>
+    </div>
+  </div>
+</div>
+<% } %>
 
-        document.getElementById('btn-confirmar-pick').disabled = false;
-    }
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/main.js"></script>
+<script>
+const MIS_JUGADORES = <%- JSON.stringify(typeof misJugadores!=='undefined'?misJugadores:[]) %>;
+window.__JUGADORES_DISPONIBLES__ = <%- JSON.stringify(typeof jugadores!=='undefined'?jugadores:[]) %>;
+window.__CLUTCH__ = {
+    username:'<%= user.username %>',
+    esCapitan:<%= user.esCapitan?'true':'false' %>,
+    esAdmin:<%= user.esAdmin?'true':'false' %>,
+    turno:'<%= turnoActual %>',
+    estado:'<%= draftEstado %>',
+    timer:<%= (typeof tiempoRestante !== 'undefined' && tiempoRestante !== null) ? parseInt(tiempoRestante) : 0 %>,
+};
 
-    function resetFieldInfo() {
-        document.getElementById('field-placeholder').style.display = 'block';
-        document.getElementById('field-pos-detail').style.display  = 'none';
-        document.getElementById('btn-confirmar-pick').disabled = true;
-    }
-
-    async function confirmarPickConPosicion() {
-        if (!_modalJugadorId) return;
-        cerrarModalPosicion();
-        // Llama a la función fichar original
-        await fichar(_modalJugadorId, _modalJugadorNom);
-    }
-
-    // Override fichar para que abra el modal de posición
-    const _ficharOriginal = window.fichar;
-    window.ficharConModal = function(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion) {
-        abrirModalPosicion(jugadorId, jugadorNombre, jugadorFoto, jugadorPosicion);
-    };
-
-    // Cerrar modal al clicar fondo
-    document.getElementById('pos-modal-overlay').addEventListener('click', function(e) {
-        if (e.target === this) cerrarModalPosicion();
-    });
-
-    window.__CLUTCH__ = {
-        username:  '<%= user.username %>',
-        esCapitan: <%= user.esCapitan ? "true" : "false" %>,
-        turno:     '<%= turnoActual %>',
-        estado:    '<%= draftEstado %>',
-        timer:     <%= tiempoRestante %>,
-    };
-
-    async function renombrarEquipo() {
-        const nombre = document.getElementById('inputNombreEquipo').value.trim();
-        if (!nombre) return;
-
-        const res = await fetch('/equipo/renombrar', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ nombre_equipo: nombre })
-        });
-
-        if (res.ok) {
-            const msg = document.getElementById('msg-renombrar');
-            msg.style.display = 'block';
-            setTimeout(() => msg.style.display = 'none', 3000);
-        async function subirEscudo(input) {
-    if (!input.files || !input.files[0]) return;
-
-    const formData = new FormData();
-    formData.append('escudo', input.files[0]);
-
-    const res = await fetch('/equipo/escudo', {
-        method: 'POST',
-        body: formData
-    });
-
-    if (res.ok) {
-        const data = await res.json();
-        const msg = document.getElementById('msg-escudo');
-        msg.style.display = 'block';
-        setTimeout(() => {
-            msg.style.display = 'none';
-            location.reload();
-        }, 1500);
+/* ══════════ TABS ══════════ */
+function switchTab(tabId, btnEl){
+    document.querySelectorAll('.draft-view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.draft-tab').forEach(t=>t.classList.remove('active'));
+    const view = document.getElementById('view-'+tabId);
+    if(view) view.classList.add('active');
+    if(btnEl) btnEl.classList.add('active');
+    if(tabId==='rivales'){
+        renderAllRivals();
+        document.getElementById('tab-rivals-notif').classList.remove('show');
     }
 }
-        }
+
+/* ══════════ FORMACIONES ══════════ */
+const FORMATIONS = {
+    '3-5-2':[
+        {pos:'DC',  x:33, y:8,  lbl:'Delantero'},
+        {pos:'DC',  x:67, y:8,  lbl:'Delantero'},
+        {pos:'CARR',x:14, y:33, lbl:'Carrilero Izq'},
+        {pos:'MC',  x:32, y:33, lbl:'Mediocentro'},
+        {pos:'MC',  x:50, y:33, lbl:'Mediocentro'},
+        {pos:'MC',  x:68, y:33, lbl:'Mediocentro'},
+        {pos:'CARR',x:86, y:33, lbl:'Carrilero Der'},
+        {pos:'DFC', x:22, y:64, lbl:'Central'},
+        {pos:'DFC', x:50, y:64, lbl:'Central'},
+        {pos:'DFC', x:78, y:64, lbl:'Central'},
+        {pos:'POR', x:50, y:83, lbl:'Portero'},
+    ],
+    '3-1-4-2':[
+        {pos:'DC',  x:33, y:8,  lbl:'Delantero'},
+        {pos:'DC',  x:67, y:8,  lbl:'Delantero'},
+        {pos:'CARR',x:14, y:30, lbl:'Carrilero Izq'},
+        {pos:'MC',  x:37, y:30, lbl:'Mediocampista'},
+        {pos:'MC',  x:63, y:30, lbl:'Mediocampista'},
+        {pos:'CARR',x:86, y:30, lbl:'Carrilero Der'},
+        {pos:'MC',  x:50, y:48, lbl:'Pivote'},
+        {pos:'DFC', x:22, y:64, lbl:'Central'},
+        {pos:'DFC', x:50, y:64, lbl:'Central'},
+        {pos:'DFC', x:78, y:64, lbl:'Central'},
+        {pos:'POR', x:50, y:83, lbl:'Portero'},
+    ],
+};
+const POS_COLORS={DC:'#00ffcc',MC:'#a066ff',CARR:'#ffcc00',DFC:'#ff4d4d',POR:'#3399ff',MCD:'#ff9900',CAM:'#a066ff',EXT:'#ffcc00'};
+const POS_CLASS={DC:'fd-dc',MC:'fd-mc',CARR:'fd-carr',DFC:'fd-dfc',POR:'fd-por',MCD:'fd-mcd',CAM:'fd-cam',EXT:'fd-ext'};
+const POS_MAP={DC:'DC',MC:'MC',CARR:'CARR',DFC:'DFC',POR:'POR',MCD:'MC',CAM:'MC',EXT:'CARR'};
+
+// TOTY gradient palette por posición
+const TOTY_GRADS = {
+    DC:  ['#003a2e','#00c99a','#002a20'],  // verde esmeralda
+    MC:  ['#1a0035','#8a44ff','#100025'],  // violeta profundo
+    CARR:['#2a1a00','#d4900a','#1a1000'],  // dorado oscuro
+    DFC: ['#2a0008','#cc2240','#1a0005'],  // rojo profundo
+    POR: ['#001a3a','#1a6dcc','#001025'],  // azul profundo
+    MCD: ['#1f0e00','#c06800','#130900'],
+};
+
+let _formacion='<%= miEquipo?.formacion||"3-1-4-2" %>';
+let _posFilter=null, _pickJugador=null, _slotSeleccionado=null;
+
+const FUT_PATH='M7,0 L47,0 Q54,0 54,7 L54,50 Q54,57 49,61 L30,64 Q27,65.5 24,64 L5,61 Q0,57 0,50 L0,7 Q0,0 7,0 Z';
+
+// Decorative path para efecto TOTY (franja diagonal)
+const TOTY_STRIPE_PATH='M0,14 L54,30 L54,24 L0,8 Z';
+const TOTY_DOT_PATH='M27,60 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0';
+
+function fieldToImg(fx, fy) {
+    const t = fy / 100;
+    const topLeft=28,topRight=72,botLeft=5,botRight=95,topY=14,botY=95;
+    const leftEdge  = topLeft  + t*(botLeft  - topLeft);
+    const rightEdge = topRight + t*(botRight - topRight);
+    return {x: leftEdge + (fx/100)*(rightEdge - leftEdge), y: topY + t*(botY - topY)};
+}
+
+/* ══════════ TIMER ══════════ */
+(function initTimer(){
+    const timerEl = document.getElementById('timer');
+    if(!timerEl) return;
+
+    let seconds = 0;
+
+    function updateDisplay(){
+        if(seconds < 0) seconds = 0;
+        const m = Math.floor(seconds/60), s = seconds % 60;
+        timerEl.textContent = m > 0 ? m+':'+(s<10?'0':'')+s : String(seconds);
+        timerEl.style.opacity = '1';
+        if(seconds <= 10){ timerEl.classList.add('danger'); timerEl.classList.remove('warning'); }
+        else if(seconds <= 30){ timerEl.classList.add('warning'); timerEl.classList.remove('danger'); }
+        else{ timerEl.classList.remove('warning','danger'); }
     }
+
+    // Timer 100% servidor — sin intervalo local, evita desincronización
+    window.__updateTimer__ = function(s){
+        seconds = parseInt(s) || 0;
+        updateDisplay();
+    };
+})();
+
+/* ══════════ CAMPO PRINCIPAL (TOTY cards) ══════════ */
+function renderMainField(){
+    const container=document.getElementById('main-field-pos');
+    if(!container) return;
+    container.innerHTML='';
+    const positions=FORMATIONS[_formacion]||[];
+    const slotMap={},sinSlot={};
+    MIS_JUGADORES.forEach(j=>{
+        const pos=j._slotPos||j.posicion;
+        if(j._slotIdx!==undefined){slotMap[pos+'-'+j._slotIdx]=j;}
+        else{if(!sinSlot[pos])sinSlot[pos]=[];sinSlot[pos].push(j);}
+    });
+    const cuentaPos={};
+    positions.forEach((p,i)=>{
+        if(!cuentaPos[p.pos])cuentaPos[p.pos]=0;
+        const idx=cuentaPos[p.pos]++;
+        const key=p.pos+'-'+idx;
+        if(!slotMap[key]&&sinSlot[p.pos]?.length) slotMap[key]=sinSlot[p.pos].shift();
+        const jug=slotMap[key];
+        const {x:imgX,y:imgY}=fieldToImg(p.x,p.y);
+        const scaleMin=0.55,scaleMax=1.0;
+        const cardW = 7.0 * (scaleMin+(p.y/100)*(scaleMax-scaleMin));
+        const dot=document.createElement('div');
+        dot.className=`field-dot ${POS_CLASS[p.pos]||''}`;
+        dot.style.cssText=`position:absolute;left:${imgX}%;top:${imgY}%;width:${cardW}%;aspect-ratio:54/66;transform:translate(-50%,-50%);transition:transform 0.18s,filter 0.18s;z-index:${10+Math.round(p.y/10)};cursor:${jug?'default':'pointer'};`;
+
+        const uid=`fc${i}_${Math.random().toString(36).slice(2,6)}`;
+        const color=POS_COLORS[p.pos]||'#fff';
+        const grad=TOTY_GRADS[p.pos]||TOTY_GRADS.MC;
+        const photo=jug
+            ?`<img src="${jug.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="">`
+            :`<div class="dot-ph-icon"><i class="fas fa-user"></i></div>`;
+
+        // SVG TOTY: fondo degradado oscuro + acento de color + franja diagonal + brillo superior
+        dot.innerHTML=`
+<svg class="dot-svg" viewBox="0 0 54 66" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg${uid}" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="${grad[0]}"/>
+      <stop offset="45%" stop-color="${grad[1]}" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="${grad[2]}"/>
+    </linearGradient>
+    <linearGradient id="shine${uid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>
+      <stop offset="35%" stop-color="rgba(255,255,255,0.04)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.0)"/>
+    </linearGradient>
+    <linearGradient id="stripe${uid}" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="${color}" stop-opacity="0"/>
+      <stop offset="50%" stop-color="${color}" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow${uid}" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- base dark -->
+  <path d="${FUT_PATH}" fill="url(#bg${uid})" stroke="${color}" stroke-width="0.9" stroke-opacity="0.55"/>
+  <!-- stripe diagonal TOTY -->
+  <path d="${TOTY_STRIPE_PATH}" fill="url(#stripe${uid})"/>
+  <!-- shine top -->
+  <path d="${FUT_PATH}" fill="url(#shine${uid})"/>
+  <!-- color accent bottom line -->
+  <line x1="8" y1="63" x2="46" y2="63" stroke="${color}" stroke-width="1.1" stroke-opacity="0.4" stroke-linecap="round"/>
+  <!-- corner gems -->
+  <circle cx="9" cy="8" r="1.2" fill="${color}" opacity="0.35"/>
+  <circle cx="45" cy="8" r="1.2" fill="${color}" opacity="0.35"/>
+</svg>
+<div class="dot-photo">${photo}</div>
+<div class="dot-poslbl" style="color:${color};">${p.pos}</div>
+${jug?`<div class="dot-name">${jug.eafc_id||jug.nombre}</div>`:''}`;
+
+        if(jug){ dot.classList.add('occupied'); }
+        else{
+            // Solo visual — sin onclick: los picks se hacen en draft-stream
+            dot.style.cursor='default';
+        }
+        container.appendChild(dot);
+    });
+}
+
+/* ══════════ DROPDOWN POSICIÓN ══════════ */
+function abrirPosDropdown(pos,slotData,dotEl,evt){
+    _posFilter=pos; _slotSeleccionado=slotData;
+    document.querySelectorAll('#main-field-pos .field-dot').forEach(d=>d.classList.remove('active-filter'));
+    dotEl.classList.add('active-filter');
+    const posReal=POS_MAP[pos]||pos;
+    const disp=(window.__JUGADORES_DISPONIBLES__||[]).filter(j=>j.posicion===posReal);
+    const color=POS_COLORS[pos]||'#fff';
+    const esMiTurno=window.__CLUTCH__.estado==='abierto'&&window.__CLUTCH__.turno===window.__CLUTCH__.username;
+    document.getElementById('pdd-title').innerHTML=`<span style="color:${color};">${pos}</span> &nbsp;·&nbsp; ${disp.length} disponible${disp.length!==1?'s':''}`;
+    const list=document.getElementById('pdd-list');
+    list.innerHTML='';
+    if(disp.length===0){list.innerHTML=`<div class="pdd-empty">No hay ${pos} disponibles</div>`;}
+    else{
+        disp.forEach(j=>{
+            const row=document.createElement('div');
+            row.className='pdd-row';
+            row.innerHTML=`<img src="${j.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" class="pdd-foto" alt=""><span class="pdd-name">${j.eafc_id||j.nombre}</span><span class="pdd-pos pos-${j.posicion}">${j.posicion}</span>${esMiTurno?'<span class="pdd-pick">⚡ Fichar</span>':''}`;
+            if(esMiTurno) row.onclick=()=>{cerrarPosDropdown();ficharEnSlot(j.discord_id,j.nombre,j.foto||'',j.posicion);};
+            list.appendChild(row);
+        });
+    }
+    const dd=document.getElementById('pos-dropdown');
+    const rect=dotEl.getBoundingClientRect();
+    const ddW=240,ddH=Math.min(disp.length*48+60,360);
+    let left=rect.right+10,top=rect.top;
+    if(left+ddW>window.innerWidth-10) left=rect.left-ddW-10;
+    if(top+ddH>window.innerHeight-10) top=window.innerHeight-ddH-10;
+    if(top<60) top=60;
+    dd.style.left=left+'px'; dd.style.top=top+'px';
+    dd.classList.add('open');
+}
+function cerrarPosDropdown(){
+    document.getElementById('pos-dropdown').classList.remove('open');
+    document.querySelectorAll('#main-field-pos .field-dot').forEach(d=>d.classList.remove('active-filter'));
+    _posFilter=null;
+}
+document.addEventListener('click',e=>{
+    const dd=document.getElementById('pos-dropdown');
+    if(dd?.classList.contains('open')&&!dd.contains(e.target)&&!e.target.closest('.field-dot')) cerrarPosDropdown();
+});
+
+/* ══════════ FILTROS JUGADORES LIBRES ══════════ */
+let _posFilterLibres='TODOS';
+function setPosFilter(pos,btnEl){
+    _posFilterLibres=pos;
+    document.querySelectorAll('.pos-pill').forEach(b=>b.classList.remove('active'));
+    btnEl.classList.add('active');
+    filtrarLibresGrid();
+}
+function filtrarLibresGrid(){
+    const search=(document.getElementById('libres-search')?.value||'').toLowerCase().trim();
+    const cards=document.querySelectorAll('#libres-grid .libre-card');
+    let shown=0;
+    cards.forEach(c=>{
+        const posMatch=_posFilterLibres==='TODOS'||c.dataset.pos===_posFilterLibres;
+        const nameMatch=!search||c.dataset.nombre.includes(search);
+        c.style.display=(posMatch&&nameMatch)?'':'none';
+        if(posMatch&&nameMatch) shown++;
+    });
+    const countEl=document.getElementById('libres-shown-count');
+    if(countEl) countEl.textContent=shown;
+    let emptyEl=document.getElementById('libres-empty-msg');
+    if(shown===0){
+        if(!emptyEl){emptyEl=document.createElement('div');emptyEl.id='libres-empty-msg';emptyEl.className='libres-empty';emptyEl.innerHTML='<i class="fas fa-filter"></i>Sin resultados';document.getElementById('libres-grid').appendChild(emptyEl);}
+        emptyEl.style.display='';
+    } else if(emptyEl){ emptyEl.style.display='none'; }
+}
+
+/* ══════════ RIVALES — DETALLE PANEL ══════════ */
+const RIVAL_FORM_POSITIONS = {
+    '3-5-2':[
+        {pos:'DC',  x:33, y:8 },
+        {pos:'DC',  x:67, y:8 },
+        {pos:'CARR',x:14, y:33},
+        {pos:'MC',  x:32, y:33},
+        {pos:'MC',  x:50, y:33},
+        {pos:'MC',  x:68, y:33},
+        {pos:'CARR',x:86, y:33},
+        {pos:'DFC', x:22, y:64},
+        {pos:'DFC', x:50, y:64},
+        {pos:'DFC', x:78, y:64},
+        {pos:'POR', x:50, y:83},
+    ],
+    '3-1-4-2':[
+        {pos:'DC',  x:33, y:8 },
+        {pos:'DC',  x:67, y:8 },
+        {pos:'CARR',x:14, y:30},
+        {pos:'MC',  x:37, y:30},
+        {pos:'MC',  x:63, y:30},
+        {pos:'CARR',x:86, y:30},
+        {pos:'MC',  x:50, y:48},
+        {pos:'DFC', x:22, y:64},
+        {pos:'DFC', x:50, y:64},
+        {pos:'DFC', x:78, y:64},
+        {pos:'POR', x:50, y:83},
+    ],
+};
+const RPOS_COLORS={DC:'#00ffcc',MC:'#a066ff',CARR:'#ffcc00',DFC:'#ff4d4d',POR:'#3399ff'};
+
+const RIVAL_FORMATIONS = <%- JSON.stringify(typeof teams !== 'undefined' ? teams.map(t=>({capitan:t.capitan_username,formacion:t.formacion||'3-1-4-2',nombre:t.nombre_equipo||t.capitan_username,logo:t.logo_url||null})) : []) %>;
+const TODOS_FICHADOS_INIT = <%- JSON.stringify(typeof todosFichados !== 'undefined' ? todosFichados : []) %>;
+let _rivalData={};
+TODOS_FICHADOS_INIT.forEach(j=>{if(!_rivalData[j.equipo])_rivalData[j.equipo]=[];_rivalData[j.equipo].push(j);});
+
+let _rivalDetalleAbierto=null;
+
+function abrirDetalleRival(capitan){
+    const panel=document.getElementById('rival-detail-panel');
+    const tf=RIVAL_FORMATIONS.find(t=>t.capitan===capitan);
+    if(!tf) return;
+    _rivalDetalleAbierto=capitan;
+    panel.classList.add('open');
+
+    // Header
+    const logoEl=document.getElementById('rdp-logo');
+    if(tf.logo){
+        logoEl.outerHTML=`<img src="${tf.logo}" class="rdp-logo" id="rdp-logo" alt="">`;
+    } else {
+        if(logoEl.tagName==='IMG'){logoEl.outerHTML=`<div class="rdp-logo-ph" id="rdp-logo"><i class="fas fa-shield-alt"></i></div>`;}
+    }
+    document.getElementById('rdp-team-name').textContent=tf.nombre;
+    document.getElementById('rdp-capitan').textContent='@'+capitan;
+
+    // Turno bar
+    const turnoBar=document.getElementById('rdp-turno-bar');
+    turnoBar.classList.toggle('visible', window.__CLUTCH__.turno===capitan);
+
+    // Campo grande
+    renderRivalDetailField(capitan, tf.formacion);
+
+    // Lista jugadores
+    const jugadores=_rivalData[capitan]||[];
+    const list=document.getElementById('rdp-players');
+    const cntEl=document.getElementById('rdp-picks-count');
+    cntEl.textContent=jugadores.length+'/11';
+    list.innerHTML='';
+    if(jugadores.length===0){
+        list.innerHTML='<div class="rdp-empty-msg">Sin jugadores fichados aún</div>';
+    } else {
+        jugadores.forEach(j=>{
+            const row=document.createElement('div');
+            row.className='rdp-player-row';
+            row.innerHTML=`<img src="${j.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" class="rdp-pfoto" alt=""><span class="rdp-pname">${j.nombre}</span><span class="rdp-ppos pos-badge-sm pos-${j.posicion}">${j.posicion}</span>`;
+            list.appendChild(row);
+        });
+    }
+}
+function cerrarDetalleRival(){
+    document.getElementById('rival-detail-panel').classList.remove('open');
+    _rivalDetalleAbierto=null;
+}
+function renderRivalDetailField(capitan, formacion){
+    const grid=document.getElementById('rdp-pos-grid');
+    if(!grid) return;
+    grid.innerHTML='';
+    const form=formacion||'3-1-4-2';
+    const positions=RIVAL_FORM_POSITIONS[form]||RIVAL_FORM_POSITIONS['3-1-4-2']||RIVAL_FORM_POSITIONS['4-3-3'];
+    const jugadores=_rivalData[capitan]||[];
+    const posCounts={};
+    positions.forEach(p=>{
+        if(!posCounts[p.pos])posCounts[p.pos]=0;
+        const idx=posCounts[p.pos]++;
+        const jug=jugadores.filter(j=>j.posicion===p.pos)[idx];
+        const dot=document.createElement('div');
+        dot.className='rdp-dot';
+        dot.style.cssText=`position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;`;
+        const color=RPOS_COLORS[p.pos]||'#fff';
+        if(jug){
+            dot.innerHTML=`<div class="rdp-dot-avatar"><img src="${jug.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" alt=""></div><div class="rdp-dot-pos" style="color:${color};">${p.pos}</div>`;
+            dot.title=jug.nombre;
+        } else {
+            dot.innerHTML=`<div class="rdp-empty-dot" style="border-color:${color}33;"></div><div class="rdp-dot-pos" style="color:${color}66;">${p.pos}</div>`;
+        }
+        grid.appendChild(dot);
+    });
+}
+
+function renderAllRivals(){
+    RIVAL_FORMATIONS.forEach(t=>renderRivalMiniField(t.capitan,t.formacion));
+}
+function renderRivalMiniField(capitan,formacion){
+    const container=document.getElementById('rival-pos-'+capitan);
+    if(!container) return;
+    container.innerHTML='';
+    const positions=(RIVAL_FORM_POSITIONS[formacion||'3-1-4-2']||RIVAL_FORM_POSITIONS['3-1-4-2']||RIVAL_FORM_POSITIONS['4-3-3']);
+    const jugadores=_rivalData[capitan]||[];
+    const posCounts={};
+    positions.forEach(p=>{
+        if(!posCounts[p.pos])posCounts[p.pos]=0;
+        const idx=posCounts[p.pos]++;
+        const jug=jugadores.filter(j=>j.posicion===p.pos)[idx];
+        const dot=document.createElement('div');
+        dot.className='rival-dot';
+        dot.style.cssText=`position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;`;
+        const color=RPOS_COLORS[p.pos]||'#fff';
+        if(jug){
+            dot.innerHTML=`<div class="rival-dot-avatar"><img src="${jug.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" alt=""></div><div class="rival-dot-pos" style="color:${color};">${p.pos}</div>`;
+        } else {
+            dot.innerHTML=`<div class="rival-empty-dot" style="border-color:${color}44;"></div><div class="rival-dot-pos" style="color:${color}88;">${p.pos}</div>`;
+        }
+        container.appendChild(dot);
+    });
+}
+
+/* ══════════ FORMACIÓN ══════════ */
+function toggleContactos(hdr) {
+    const list = document.getElementById('contacts-list');
+    const icon = document.getElementById('contacts-toggle-icon');
+    const open = list.style.display === 'none';
+    list.style.display = open ? 'flex' : 'none';
+    list.style.flexDirection = 'column';
+    icon.classList.toggle('open', open);
+}
+function renderContactos(jugadores) {
+    const list = document.getElementById('contacts-list');
+    if (!list) return;
+    if (!jugadores.length) {
+        list.innerHTML = '<div class="contacts-empty">Aún no hay jugadores en tu equipo</div>';
+        return;
+    }
+    const POS_COLOR = { DC:'#00ffcc', MC:'#a066ff', CARR:'#ffcc00', DFC:'#ff4d4d', POR:'#3399ff' };
+    list.innerHTML = jugadores.map(j => {
+        const digits = (j.telefono || '').replace(/\D/g, '');
+        const waNum  = digits.length === 9 ? '34' + digits : digits.length >= 10 ? digits : null;
+        const waBtn  = waNum
+            ? `<a href="https://wa.me/${waNum}" target="_blank" class="contact-wa"><i class="fab fa-whatsapp"></i> Chat</a>`
+            : `<span class="contact-no-phone">Sin tlf.</span>`;
+        return `<div class="contact-row">
+            <span class="contact-pos pos-${j.posicion}" style="background:${POS_COLOR[j.posicion]}22;color:${POS_COLOR[j.posicion]}">${j.posicion}</span>
+            <span class="contact-name">${j.nombre}</span>
+            ${waBtn}
+        </div>`;
+    }).join('');
+}
+
+function toggleFormPicker(){
+    if(window.__CLUTCH__.estado==='abierto'&&!window.__CLUTCH__.esAdmin) return; // bloqueado durante draft
+    document.getElementById('form-picker-drop').classList.toggle('open');
+}
+function toggleFormPickerInline(){}
+async function elegirFormacion(f,btn){
+    if(window.__CLUTCH__.estado==='abierto'&&!window.__CLUTCH__.esAdmin){
+        document.getElementById('form-picker-drop').classList.remove('open');
+        return; // bloqueado durante draft
+    }
+    _formacion=f;
+    document.getElementById('form-label').textContent=f;
+    document.querySelectorAll('.fpick').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('form-picker-drop').classList.remove('open');
+    renderMainField();
+    await fetch('/equipo/formacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({formacion:f})}).catch(()=>{});
+}
+
+/* ══════════ FICHAR — BLOQUEADO: los picks se hacen en draft-stream ══════════ */
+// Los capitanes visualizan su equipo pero NO pueden fichar desde aquí.
+// Los picks los realiza el admin desde draft-stream.ejs vía /admin/forzar-pick.
+window.ficharEnSlot=function(id,nombre,foto,posicion){
+    // Bloqueado — solo lectura
+    return;
+};
+window.ficharConModal=function(id,nombre,foto,posicion){
+    // Bloqueado — solo lectura
+    return;
+};
+function cerrarModal(){document.getElementById('pos-modal-overlay')?.classList.remove('visible');_pickJugador=null;_slotSeleccionado=null;}
+document.getElementById('pos-modal-overlay')?.addEventListener('click',e=>{if(e.target===e.currentTarget)cerrarModal();});
+async function confirmarPick(){
+    // Bloqueado — solo lectura
+    return;
+}
+
+function renderModalSlots(){
+    const positions=FORMATIONS[_formacion]||[];
+    const ocupados={},usados={};
+    MIS_JUGADORES.forEach(j=>{if(!ocupados[j.posicion])ocupados[j.posicion]=[];ocupados[j.posicion].push(j);});
+    const posReal=POS_MAP[_pickJugador.posicion]||_pickJugador.posicion;
+    const color=POS_COLORS[posReal]||'#fff';
+    const libres=[];
+    positions.forEach(p=>{if(!usados[p.pos])usados[p.pos]=0;const jug=ocupados[p.pos]?.[usados[p.pos]];if(jug)usados[p.pos]++;else if(p.pos===posReal)libres.push(p);});
+    const list=document.getElementById('modal-slots-list');
+    if(!list) return;
+    list.innerHTML='';
+    if(libres.length===0){list.innerHTML=`<div style="color:#444;font-size:0.75rem;text-align:center;padding:12px;font-style:italic;">No hay slots libres para ${posReal}</div>`;return;}
+    libres.forEach((p,i)=>{
+        const btn=document.createElement('button');
+        btn.style.cssText=`display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);color:#fff;cursor:pointer;transition:0.15s;width:100%;text-align:left;font-family:var(--font-body);`;
+        btn.innerHTML=`<span style="background:rgba(255,255,255,0.06);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;color:${color};flex-shrink:0;">${i+1}</span><span style="flex:1;font-size:0.76rem;font-weight:600;">${p.lbl}</span><span style="font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.05);color:${color};">${p.pos}</span>`;
+        btn.onmouseenter=()=>btn.style.borderColor=color+'66';
+        btn.onmouseleave=()=>btn.style.borderColor='rgba(255,255,255,0.07)';
+        btn.onclick=()=>{list.querySelectorAll('button').forEach(b=>b.style.background='rgba(255,255,255,0.02)');btn.style.background='rgba(255,255,255,0.06)';_slotSeleccionado=p;document.getElementById('modal-ph').style.display='none';const det=document.getElementById('modal-detail');det.style.display='block';document.getElementById('mpd-pos').textContent=p.pos;document.getElementById('mpd-pos').style.color=color;document.getElementById('mpd-lbl').textContent=p.lbl;document.getElementById('mpd-jug').innerHTML=`<img src="${_pickJugador.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" alt=""><div><div class="mpd-jug-name">${_pickJugador.nombre}</div><div class="mpd-jug-pos">${_pickJugador.posicion}</div></div>`;document.getElementById('btn-confirm').disabled=false;};
+        list.appendChild(btn);
+    });
+}
+
+/* ══════════ UI UPDATE ══════════ */
+function agregarJugador(j){
+    if(_slotSeleccionado){
+        const positions=FORMATIONS[_formacion]||[];
+        let idx=0;
+        for(const p of positions){if(p.pos===_slotSeleccionado.pos){if(p===_slotSeleccionado){j._slotIdx=idx;j._slotPos=p.pos;break;}idx++;}}
+    }
+    MIS_JUGADORES.push(j);
+    window.__JUGADORES_DISPONIBLES__=window.__JUGADORES_DISPONIBLES__.filter(x=>x.discord_id!==j.discord_id);
+    _slotSeleccionado=null; _posFilter=null;
+    renderMainField();
+    // Contador picks
+    const total=MIS_JUGADORES.length;
+    const pct=Math.round((total/11)*100);
+    const pv=document.getElementById('squad-progress-val');
+    const pf=document.getElementById('picks-progress-fill');
+    if(pv) pv.textContent=total+'/11';
+    if(pf) pf.style.width=pct+'%';
+    // Slots visuales
+    for(let i=0;i<11;i++){const s=document.getElementById('pslot-'+i);if(s)s.classList.toggle('filled',i<total);}
+    // Disponibles
+    const countEl=document.getElementById('count');
+    if(countEl) countEl.textContent=window.__JUGADORES_DISPONIBLES__.length;
+    // Eliminar de libres grid
+    const libreCard=document.querySelector(`#libres-grid .libre-card[data-nombre="${j.nombre.toLowerCase()}"]`);
+    if(libreCard){libreCard.remove();filtrarLibresGrid();}
+}
+
+/* ══════════ EQUIPO ══════════ */
+async function renombrarEquipo(){
+    const nombre=document.getElementById('inputNombreEquipo')?.value.trim();
+    if(!nombre) return;
+    const res=await fetch('/equipo/renombrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre_equipo:nombre})});
+    if(res.ok){
+        const m=document.getElementById('msg-renombrar');m.style.display='block';setTimeout(()=>m.style.display='none',3000);
+        const dn=document.getElementById('team-display-name');if(dn)dn.textContent=nombre;
+    }
+}
+async function subirEscudo(input){
+    if(!input.files?.[0]) return;
+    const fd=new FormData();fd.append('escudo',input.files[0]);
+    const res=await fetch('/equipo/escudo',{method:'POST',body:fd});
+    if(res.ok){
+        const m=document.getElementById('msg-escudo');m.style.display='block';
+        const reader=new FileReader();
+        reader.onload=e=>{
+            const el=document.getElementById('team-escudo-img');
+            if(el.tagName==='IMG'){el.src=e.target.result;}
+            else{const img=document.createElement('img');img.src=e.target.result;img.className='team-escudo';img.id='team-escudo-img';el.replaceWith(img);}
+        };
+        reader.readAsDataURL(input.files[0]);
+        setTimeout(()=>m.style.display='none',2000);
+    }
+}
+
+if(window.__CLUTCH__.esCapitan) renderMainField();
+
+/* ══════════ SOCKET LIVE ══════════ */
+(function(){
+    // Reutilizar el socket de main.js
+    const socket = window.__clutchSocket__;
+    if(!socket) return;
+
+    // Al conectar/reconectar: servidor envía estado real (timer incluido)
+    socket.on('init',function(data){
+        if(window.__updateTimer__&&data?.timer!==undefined) window.__updateTimer__(data.timer);
+        if(data?.turno) _actualizarTurnoBanner(data.turno);
+        if(data?.estado) window.__CLUTCH__.estado = data.estado;
+    });
+
+    // Timer 100% servidor — sin intervalo local aquí
+    socket.on('timer_tick',function(data){
+        if(window.__updateTimer__&&data?.segundos!==undefined) window.__updateTimer__(data.segundos);
+    });
+
+    socket.on('jugador_fichado',function(data){
+        if(!data?.equipo||!data?.jugador) return;
+        const jug = data.jugador;
+
+        // ── Actualizar rivalData ──
+        if(!_rivalData[data.equipo]) _rivalData[data.equipo]=[];
+        if(!_rivalData[data.equipo].some(j=>j.discord_id===jug.discord_id))
+            _rivalData[data.equipo].push(jug);
+
+        // ── Si es MI equipo: actualizar mi plantilla (vista capitán) ──
+        if(data.equipo === window.__CLUTCH__.username && window.__CLUTCH__.esCapitan){
+            if(!MIS_JUGADORES.some(j=>j.discord_id===jug.discord_id)){
+                MIS_JUGADORES.push(jug);
+                renderMainField();
+                renderContactos(MIS_JUGADORES);
+                const total=MIS_JUGADORES.length;
+                const pv=document.getElementById('squad-progress-val');
+                const pf=document.getElementById('picks-progress-fill');
+                if(pv) pv.textContent=total+'/11';
+                if(pf) pf.style.width=Math.round((total/11)*100)+'%';
+                for(let i=0;i<11;i++){const s=document.getElementById('pslot-'+i);if(s)s.classList.toggle('filled',i<total);}
+            }
+        }
+
+        // ── Actualizar vista espectador (team-card) en tiempo real ──
+        (function actualizarVistaBechamel(){
+            // team-card en spec-wrap (espectadores sin equipo)
+            const teamCard=document.querySelector(`.team-card[data-capitan="${data.equipo}"]`);
+            if(teamCard){
+                const picksList=teamCard.querySelector('.tc-picks');
+                if(picksList){
+                    // Quitar mensaje "Sin picks" si existe
+                    const emptyEl=picksList.querySelector('.tc-empty');
+                    if(emptyEl) emptyEl.remove();
+                    // Añadir pick si no está ya
+                    if(!picksList.querySelector(`[data-discord-id="${jug.discord_id}"]`)){
+                        const div=document.createElement('div');
+                        div.className='tc-pick';
+                        div.dataset.discordId=jug.discord_id;
+                        div.innerHTML=`<img src="${jug.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" class="tc-pick-foto" alt=""><span class="tc-pick-nombre">${jug.eafc_id||jug.nombre}</span><span class="pos-badge-sm pos-${jug.posicion}">${jug.posicion}</span>`;
+                        picksList.appendChild(div);
+                    }
+                }
+                // Turno badge
+                document.querySelectorAll('.team-card .tc-turno').forEach(b=>b.remove());
+            }
+            // Eliminar de spec free-list
+            const specRow=document.querySelector(`#free-list .spec-row[data-discord-id="${jug.discord_id}"]`);
+            if(specRow) specRow.remove();
+            // Actualizar orden items turno (spec order list)
+            document.querySelectorAll('.order-item').forEach(item=>{
+                item.classList.remove('activo');item.classList.add('otro');
+                const arrow=item.querySelector('i.fa-caret-right');if(arrow) arrow.style.display='none';
+            });
+            if(data.turno){
+                const nextItem=document.querySelector(`.order-item[data-capitan="${data.turno}"]`);
+                if(nextItem){nextItem.classList.add('activo');nextItem.classList.remove('otro');const a=nextItem.querySelector('i.fa-caret-right');if(a)a.style.display='';}
+                // Actualizar turno badge en team-card espectador
+                document.querySelectorAll('.team-card').forEach(c=>{
+                    c.classList.remove('turno-activo');
+                    const tb=c.querySelector('.tc-turno');if(tb)tb.remove();
+                });
+                const nextCard=document.querySelector(`.team-card[data-capitan="${data.turno}"]`);
+                if(nextCard){
+                    nextCard.classList.add('turno-activo');
+                    const head=nextCard.querySelector('.tc-head');
+                    if(head&&!head.querySelector('.tc-turno')){const span=document.createElement('span');span.className='tc-turno';span.textContent='TURNO';head.appendChild(span);}
+                }
+            }
+        })();
+
+        // ── Eliminar de __JUGADORES_DISPONIBLES__ (fuente de verdad del dropdown) ──
+        window.__JUGADORES_DISPONIBLES__ = (window.__JUGADORES_DISPONIBLES__||[]).filter(x=>x.discord_id!==jug.discord_id);
+
+        // ── Eliminar de libres grid ──
+        const lc=document.querySelector(`#libres-grid .libre-card[data-nombre="${jug.nombre.toLowerCase()}"]`);
+        if(lc){lc.remove();filtrarLibresGrid();}
+
+        // ── Contador disponibles ──
+        const cnt=document.getElementById('count');
+        if(cnt) cnt.textContent=window.__JUGADORES_DISPONIBLES__.length;
+
+        // ── Actualizar timer y turno desde el propio evento (sin esperar turno_actualizado) ──
+        if(data.timer!==undefined&&window.__updateTimer__) window.__updateTimer__(data.timer);
+        if(data.turno){ _actualizarTurnoBanner(data.turno); window.__CLUTCH__.turno=data.turno; }
+
+        // ── Notif tab rivales ──
+        const rivView=document.getElementById('view-rivales');
+        if(!rivView?.classList.contains('active')){
+            const nd=document.getElementById('tab-rivals-notif');
+            if(nd){nd.classList.add('show');setTimeout(()=>nd.classList.remove('show'),3500);}
+        }
+        // Picks count en tarjeta mini
+        const cntEl=document.getElementById('rival-picks-'+data.equipo);
+        if(cntEl) cntEl.textContent=_rivalData[data.equipo].length+'/11';
+
+        // Re-render mini
+        if(rivView?.classList.contains('active')){
+            const rf=RIVAL_FORMATIONS.find(t=>t.capitan===data.equipo);
+            renderRivalMiniField(data.equipo, rf?.formacion||'3-1-4-2');
+            if(_rivalDetalleAbierto===data.equipo) abrirDetalleRival(data.equipo);
+        }
+    });
+
+    // Pick deshecho: devolver jugador a disponibles
+    socket.on('pick_deshecho',function(data){
+        if(!data?.equipo||!data?.jugador) return;
+        const jug = data.jugador;
+        // Quitar de rivalData
+        if(_rivalData[data.equipo]) _rivalData[data.equipo]=_rivalData[data.equipo].filter(j=>j.discord_id!==jug.discord_id);
+        // Si es mi equipo, quitar de MIS_JUGADORES
+        if(data.equipo===window.__CLUTCH__.username&&window.__CLUTCH__.esCapitan){
+            const idx=MIS_JUGADORES.findIndex(j=>j.discord_id===jug.discord_id);
+            if(idx>-1){ MIS_JUGADORES.splice(idx,1); renderMainField(); }
+        }
+        // Devolver a disponibles
+        if(jug.discord_id&&!window.__JUGADORES_DISPONIBLES__.some(x=>x.discord_id===jug.discord_id)){
+            window.__JUGADORES_DISPONIBLES__.push(jug);
+        }
+        const cnt=document.getElementById('count');
+        if(cnt) cnt.textContent=window.__JUGADORES_DISPONIBLES__.length;
+        // Actualizar vista espectador: quitar de tc-picks, devolver a free-list
+        (function deshacerVistaBechamel(){
+            const teamCard=document.querySelector(`.team-card[data-capitan="${data.equipo}"]`);
+            if(teamCard){
+                const pickEl=teamCard.querySelector(`.tc-pick[data-discord-id="${jug.discord_id}"]`);
+                if(pickEl) pickEl.remove();
+                const picksList=teamCard.querySelector('.tc-picks');
+                if(picksList&&!picksList.querySelector('.tc-pick')&&!picksList.querySelector('.tc-empty')){
+                    const empty=document.createElement('div');empty.className='tc-empty';empty.textContent='Sin picks';picksList.appendChild(empty);
+                }
+            }
+            const freeList=document.getElementById('free-list');
+            if(freeList&&jug.discord_id&&!freeList.querySelector(`[data-discord-id="${jug.discord_id}"]`)){
+                const div=document.createElement('div');
+                div.className='spec-row';div.dataset.pos=jug.posicion;div.dataset.discordId=jug.discord_id;
+                div.innerHTML=`<img src="${jug.foto||'https://cdn.discordapp.com/embed/avatars/0.png'}" class="spec-foto" alt=""><span class="spec-name">${jug.eafc_id||jug.nombre}</span><span class="pos-badge-sm pos-${jug.posicion}">${jug.posicion}</span>`;
+                freeList.appendChild(div);
+            }
+        })();
+        // Re-render rivales
+        const rivView=document.getElementById('view-rivales');
+        if(rivView?.classList.contains('active')){
+            const rf=RIVAL_FORMATIONS.find(t=>t.capitan===data.equipo);
+            renderRivalMiniField(data.equipo, rf?.formacion||'3-1-4-2');
+        }
+    });
+
+    socket.on('turno_actualizado',function(data){
+        if(!data?.turno) return;
+        _actualizarTurnoBanner(data.turno);
+        window.__CLUTCH__.turno=data.turno;
+        // Actualizar turno bar en detalle
+        const turnoBar=document.getElementById('rdp-turno-bar');
+        if(turnoBar&&_rivalDetalleAbierto) turnoBar.classList.toggle('visible', data.turno===_rivalDetalleAbierto);
+        // Actualizar vista espectador: team-card turno-activo y order-item
+        document.querySelectorAll('.team-card').forEach(c=>{
+            c.classList.remove('turno-activo');
+            const tb=c.querySelector('.tc-turno');if(tb) tb.remove();
+        });
+        const nextCard=document.querySelector(`.team-card[data-capitan="${data.turno}"]`);
+        if(nextCard){
+            nextCard.classList.add('turno-activo');
+            const head=nextCard.querySelector('.tc-head');
+            if(head&&!head.querySelector('.tc-turno')){const span=document.createElement('span');span.className='tc-turno';span.textContent='TURNO';head.appendChild(span);}
+        }
+        document.querySelectorAll('.order-item').forEach(item=>{
+            const esTurno=item.dataset.capitan===data.turno;
+            item.classList.toggle('activo',esTurno);item.classList.toggle('otro',!esTurno);
+            const arrow=item.querySelector('i.fa-caret-right');if(arrow) arrow.style.display=esTurno?'':'none';
+        });
+    });
+
+    // Jugador añadido manualmente — aparece en lista de libres sin recargar
+    socket.on('jugador_añadido', function(data) {
+        if (!data?.discord_id || !data?.nombre || !data?.posicion) return;
+        // Evitar duplicados
+        if (document.querySelector(`#libres-grid .libre-card[data-discord-id="${data.discord_id}"]`)) return;
+        // Añadir a __JUGADORES_DISPONIBLES__
+        window.__JUGADORES_DISPONIBLES__ = window.__JUGADORES_DISPONIBLES__ || [];
+        if (!window.__JUGADORES_DISPONIBLES__.find(x => x.discord_id === data.discord_id)) {
+            window.__JUGADORES_DISPONIBLES__.push({ discord_id: data.discord_id, nombre: data.nombre, eafc_id: data.eafc_id || '', posicion: data.posicion, foto: '' });
+        }
+        // Añadir card al grid
+        const grid = document.getElementById('libres-grid');
+        if (grid) {
+            const display = data.eafc_id || data.nombre;
+            const card = document.createElement('div');
+            card.className = 'libre-card not-my-turn';
+            card.dataset.pos     = data.posicion;
+            card.dataset.nombre  = display.toLowerCase();
+            card.dataset.discordId = data.discord_id;
+            card.innerHTML = `<img src="https://cdn.discordapp.com/embed/avatars/0.png" class="libre-foto" alt="">
+                <div class="libre-info">
+                    <div class="libre-nombre">${display}</div>
+                    <span class="libre-pos-badge pos-${data.posicion}">${data.posicion}</span>
+                </div>`;
+            grid.appendChild(card);
+            filtrarLibresGrid();
+        }
+        // Actualizar contador
+        const countEl = document.getElementById('count');
+        if (countEl) countEl.textContent = (window.__JUGADORES_DISPONIBLES__ || []).length;
+    });
+
+    socket.on('draft-cerrado',function(){
+        window.__CLUTCH__.estado='cerrado';
+        const pill=document.getElementById('turn-banner');
+        if(pill) pill.style.display='none';
+        const cerradoPill=document.querySelector('.draft-cerrado-pill');
+        if(!cerradoPill){
+            const el=document.createElement('div');
+            el.className='draft-cerrado-pill';
+            el.innerHTML='<i class="fas fa-lock" style="margin-right:6px;"></i>Draft cerrado — Todos los equipos formados';
+            document.body.appendChild(el);
+        }
+    });
+
+    function _actualizarTurnoBanner(turno){
+        document.querySelectorAll('.rival-card').forEach(c=>c.classList.remove('turno-activo'));
+        const active=document.getElementById('rival-card-'+turno);
+        if(active) active.classList.add('turno-activo');
+        document.querySelectorAll('.rival-turno-badge').forEach(b=>b.remove());
+        if(active){
+            const head=active.querySelector('.rival-card-head');
+            if(head){const badge=document.createElement('span');badge.className='rival-turno-badge';badge.textContent='⚡ TURNO';head.appendChild(badge);}
+        }
+        const tnEl=document.getElementById('turn-nombre');
+        const pill=document.getElementById('turn-banner');
+        const badge=document.getElementById('mi-turno-badge');
+        if(tnEl) tnEl.textContent=turno;
+        // Los capitanes no pueden fichar — no hay badge "TU TURNO" funcional
+        if(pill){ pill.classList.remove('mi-turno'); }
+        if(badge) badge.style.display='none';
+        window.__CLUTCH__.turno=turno;
+    }
+})();
+
+/* ══════════ HAMBURGER MOBILE ══════════ */
+(function(){
+    const burger=document.getElementById('nav-hamburger');
+    const links=document.getElementById('nav-links');
+    if(!burger) return;
+    burger.addEventListener('click',()=>{links.classList.toggle('open');burger.classList.toggle('open');});
+    links.querySelectorAll('.nav-link').forEach(l=>l.addEventListener('click',()=>{links.classList.remove('open');burger.classList.remove('open');}));
+})();
 </script>
-<script src="/js/main.js"></script>
 </body>
 </html>
