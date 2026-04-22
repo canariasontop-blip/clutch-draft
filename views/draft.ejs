@@ -1398,20 +1398,33 @@ async function renombrarEquipo(){
 }
 async function subirEscudo(input){
     if(!input.files?.[0]) return;
-    const fd=new FormData();fd.append('escudo',input.files[0]);
-    const res=await fetch('/equipo/escudo',{method:'POST',body:fd});
-    if(res.ok){
-        const m=document.getElementById('msg-escudo');m.style.display='block';
-        const reader=new FileReader();
-        reader.onload=e=>{
+    const m=document.getElementById('msg-escudo');
+    m.textContent='⏳ Subiendo...';m.style.display='block';m.style.color='#aaa';
+    try{
+        const fd=new FormData();fd.append('escudo',input.files[0]);
+        const res=await fetch('/equipo/escudo',{method:'POST',body:fd});
+        const data=await res.json();
+        if(res.ok && data.logo_url){
             const el=document.getElementById('team-escudo-img');
-            if(el.tagName==='IMG'){el.src=e.target.result;}
-            else{const img=document.createElement('img');img.src=e.target.result;img.className='team-escudo';img.id='team-escudo-img';el.replaceWith(img);}
-        };
-        reader.readAsDataURL(input.files[0]);
-        setTimeout(()=>m.style.display='none',2000);
+            const url=data.logo_url+'?t='+Date.now();
+            if(el.tagName==='IMG'){el.src=url;}
+            else{const img=document.createElement('img');img.src=url;img.className='team-escudo';img.id='team-escudo-img';el.replaceWith(img);}
+            m.textContent='✅ Actualizado';m.style.color='#00ffcc';
+        } else {
+            m.textContent='❌ '+(data.error||'Error al subir');m.style.color='#ff4d4d';
+        }
+    } catch(e){
+        m.textContent='❌ Error de conexión';m.style.color='#ff4d4d';
     }
+    setTimeout(()=>m.style.display='none',3000);
+    input.value='';
 }
+
+// Listener extra para compatibilidad móvil (algunos browsers no disparan onchange en inputs ocultos)
+(function(){
+    const inp=document.getElementById('inputEscudo');
+    if(inp) inp.addEventListener('change',function(){subirEscudo(this);});
+})();
 
 if(window.__CLUTCH__.esCapitan) renderMainField();
 
