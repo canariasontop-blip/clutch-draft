@@ -15,8 +15,10 @@ app.post('/deploy', (req, res) => {
 
     res.status(200).send('Deploy iniciado');
 
-    exec('git pull origin main && npm install --production && pm2 restart all', {
-        cwd: __dirname
+    const cmd = 'git pull origin main && npm install --production && /usr/bin/pm2 restart all';
+    exec(cmd, {
+        cwd: __dirname,
+        env: { ...process.env, PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' }
     }, (err, stdout, stderr) => {
         if (err) {
             console.error('[deploy] Error:', err.message);
