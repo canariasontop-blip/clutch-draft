@@ -3707,7 +3707,7 @@ client.on('interactionCreate', async (interaction) => {
 
         // DM con las restricciones de la normativa
         try {
-            await interaction.user.send({ embeds: [new EmbedBuilder()
+            const embedNormas = new EmbedBuilder()
                 .setColor(0xff4d4d)
                 .setTitle('⚠️ Restricciones de Clutch Draft — Léelas antes de jugar')
                 .setDescription('Te has inscrito correctamente. Antes de que empiece el draft, asegúrate de cumplir con estas normas. **El incumplimiento puede suponer tu descalificación.**')
@@ -3719,7 +3719,7 @@ client.on('interactionCreate', async (interaction) => {
                     },
                     {
                         name: '🚫 Estilos de juego baneados',
-                        value: 'Hay PlayStyles y mecánicas expresamente prohibidos en Clutch Draft. Consúltalos en el canal de normativa del servidor o en la sección **Normas** de la web.',
+                        value: 'Los PlayStyles de la imagen de abajo están **completamente prohibidos** en todas las competiciones.',
                         inline: false
                     },
                     {
@@ -3733,9 +3733,11 @@ client.on('interactionCreate', async (interaction) => {
                         inline: false
                     }
                 )
+                .setImage('https://clutch-draft.duckdns.org/uploads/playstyles_banneados.png')
                 .setFooter({ text: 'Clutch Draft · Si no cumples la normativa, no podrás participar.' })
-                .setTimestamp()
-            ] });
+                .setTimestamp();
+
+            await interaction.user.send({ embeds: [embedNormas] });
         } catch(e) { /* DMs desactivados */ }
         return;
     }
