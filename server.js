@@ -232,9 +232,24 @@ app.get('/inscripciones', (req, res) => {
         jugadorExistente,
         jugadoresPorPosicion,
         totalJugadores,
-        mensaje: null,
-        tipoMensaje: null
+        mensaje: req.query.cancelado ? 'cancelado' : null,
+        tipoMensaje: req.query.cancelado ? 'success' : null
     });
+});
+
+app.post('/inscripciones/cancelar', (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/discord?next=/inscripciones');
+    if (cache.draftEstado === 'abierto') return res.redirect('/inscripciones');
+    const did = req.session.user.id;
+    const jugador = db.prepare(`SELECT nombre, equipo FROM players WHERE discord_id=?`).get(did);
+    if (!jugador) return res.redirect('/inscripciones');
+    if (jugador.equipo) return res.redirect('/inscripciones'); // ya tiene equipo asignado, no puede salirse
+    db.prepare(`DELETE FROM players WHERE discord_id=?`).run(did);
+    emitNuevoJugador();
+    io.emit('activity', `🚪 ${jugador.nombre} se ha desinscrito.`);
+    axios.post('http://localhost:3001/api/actualizar-lista-draft').catch(() => {});
+    axios.post('http://localhost:3001/api/actualizar-jugadores-inscritos').catch(() => {});
+    return res.redirect('/inscripciones?cancelado=1');
 });
 
 app.post('/inscripciones', async (req, res) => {

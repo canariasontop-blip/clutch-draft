@@ -211,6 +211,13 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
             </div>
             <% } %>
 
+            <% if (mensaje === 'cancelado') { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>Te has desinscrito correctamente.</span>
+            </div>
+            <% } %>
+
             <% if (jugadorExistente) { %>
             <div class="inscrito-box">
                 <div class="inscrito-tit">✅ Ya estás inscrito — edita tus datos abajo</div>
@@ -218,6 +225,14 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
                 <div class="inscrito-row"><span class="inscrito-key">Posición</span><span><%= jugadorExistente.posicion %></span></div>
                 <div class="inscrito-row"><span class="inscrito-key">Teléfono</span><span><%= jugadorExistente.telefono || '—' %></span></div>
             </div>
+            <% if (!jugadorExistente.equipo) { %>
+            <form method="POST" action="/inscripciones/cancelar" onsubmit="return confirm('¿Seguro que quieres cancelar tu inscripción? Se borrarán tus datos.')">
+                <button type="submit" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,77,77,0.35);background:rgba(255,77,77,0.06);color:#ff4d4d;font-family:var(--font-b);font-size:0.85rem;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:16px;transition:0.2s;"
+                    onmouseover="this.style.background='rgba(255,77,77,0.12)'" onmouseout="this.style.background='rgba(255,77,77,0.06)'">
+                    <i class="fas fa-sign-out-alt"></i> &nbsp;CANCELAR INSCRIPCIÓN
+                </button>
+            </form>
+            <% } %>
             <% } %>
 
             <form method="POST" action="/inscripciones" id="form-insc">
@@ -266,9 +281,11 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
                             Otras pos. máx. <strong style="color:#ffcc00;">182cm</strong> ·
                             Portero máx. <strong style="color:#00ffcc;">192cm</strong>
                         </div>
+                        <div style="margin-bottom:8px;">
+                            🚫 <strong style="color:#ccc;">PlayStyles baneados:</strong>
+                        </div>
                         <div style="margin-bottom:6px;">
-                            🚫 <strong style="color:#ccc;">PlayStyles baneados</strong> — consulta la imagen en
-                            <a href="/normas" target="_blank" style="color:var(--accent);text-decoration:none;">Normas</a>
+                            <img src="/uploads/playstyles_banneados.png" alt="PlayStyles baneados" style="width:100%;max-width:380px;border-radius:8px;border:1px solid rgba(255,77,77,0.25);">
                         </div>
                         <div style="margin-bottom:6px;">
                             🛡️ Los DFC <strong style="color:#ccc;">no pueden subir al ataque de forma fija</strong> hasta el min. 75
