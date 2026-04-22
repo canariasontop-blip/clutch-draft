@@ -2432,6 +2432,20 @@ function buildAdminPanelBlocks() {
         ),
     ];
 
+    // Bloque 5b — Canales de Partido
+    const b5bembed = new EmbedBuilder().setTitle('📡 CANALES DE PARTIDO').setColor(0x3399ff)
+        .setDescription('Gestión manual de canales de partido. Usa si algún canal no se creó bien o necesitas regenerarlo.');
+    const b5brows = [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_canal_lista').setLabel('📋 Ver partidos y canales').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('admp_canal_crear').setLabel('🔧 Crear/regenerar canal').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('admp_canal_borrar').setLabel('🗑️ Borrar canal').setStyle(ButtonStyle.Danger),
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_canal_add_usuario').setLabel('👤 Añadir usuario a canal').setStyle(ButtonStyle.Secondary),
+        ),
+    ];
+
     // Bloque 6 — Testing & Simulación
     const b6embed = new EmbedBuilder().setTitle('🧪 TESTING & SIMULACIÓN').setColor(0x888888)
         .setDescription('Comandos para probar el flujo completo con equipos bot. Solo para pruebas, no usar en producción.');
@@ -2458,6 +2472,7 @@ function buildAdminPanelBlocks() {
         { embed: b3embed, rows: b3rows },
         { embed: b4embed, rows: b4rows },
         { embed: b5embed, rows: b5rows },
+        { embed: b5bembed, rows: b5brows },
         { embed: b6embed, rows: b6rows },
     ];
 }
@@ -2624,6 +2639,76 @@ client.on('messageCreate', async (message) => {
             await message.reply('✅ Todo limpiado (canales + clasificación + partidos).');
         } else {
             await message.reply('Uso: `!limpiar [canales|fichajes|texto|clasificacion|todo]`\n• `canales` — borra canales de partido\n• `fichajes` — limpia canal de fichajes\n• `texto` — limpia todos los canales de texto (fichajes, equipos, clasificación, calendario)\n• `clasificacion` — actualiza el canal de clasificación\n• `todo` — limpieza completa (Discord + DB)');
+        }
+        message.delete().catch(() => {});
+        return;
+    }
+
+    // ── !lista-partidos ─────────────────────────────────────
+    if (content === '!lista-partidos') {
+        const isAdmin = await esAdminDiscord(message.author.id);
+        if (!isAdmin) return message.reply('❌ Solo los admins pueden usar este comando.');
+        const matches = db.prepare(`SELECT id, jornada, equipo1, equipo2, estado, canal_discord FROM matches ORDER BY jornada, id`).all();
+        if (!matches.length) { await message.reply('No hay partidos registrados.'); message.delete().catch(() => {}); return; }
+        const lineas = matches.map(m => {
+            const canal = m.canal_discord ? `<#${m.canal_discord}>` : '❌ sin canal';
+            const estado = m.estado === 'finalizado' ? '✅' : m.estado === 'en_curso' ? '🟡' : '⏳';
+            return `${estado} **ID ${m.id}** · J${m.jornada} · ${m.equipo1} vs ${m.equipo2} · ${canal}`;
+        }).join('\n');
+        await message.channel.send({ embeds: [new EmbedBuilder().setColor(0x00ffcc).setTitle('📋 Partidos registrados').setDescription(lineas).setFooter({ text: 'Usa !crear-canal <id> para regenerar un canal' })] });
+        message.delete().catch(() => {});
+        return;
+    }
+
+    // ── !crear-canal <match_id> ──────────────────────────────
+    if (content.startsWith('!crear-canal')) {
+        const isAdmin = await esAdminDiscord(message.author.id);
+        if (!isAdmin) return message.reply('❌ Solo los admins pueden usar este comando.');
+        const matchId = parseInt(content.split(' ')[1]);
+        if (isNaN(matchId)) { await message.reply('Uso: `!crear-canal <match_id>`\nEjemplo: `!crear-canal 5`\nUsa `!lista-partidos` para ver los IDs.'); message.delete().catch(() => {}); return; }
+        const match = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!match) { await message.reply(`❌ No existe ningún partido con ID **${matchId}**.`); message.delete().catch(() => {}); return; }
+        if (match.estado === 'finalizado') { await message.reply(`⚠️ El partido **ID ${matchId}** ya está finalizado. ¿Seguro que quieres recrear el canal? Usa \`!crear-canal ${matchId} forzar\` para confirmar.`); message.delete().catch(() => {}); return; }
+
+        // Si ya tiene canal, borrarlo primero
+        if (match.canal_discord) {
+            try {
+                const chViejo = await message.guild.channels.fetch(match.canal_discord).catch(() => null);
+                if (chViejo) await chViejo.delete();
+            } catch(e) { /* ya borrado */ }
+        }
+
+        const cap1Id = db.prepare('SELECT capitan_id FROM teams WHERE capitan_username=?').get(match.equipo1)?.capitan_id;
+        const cap2Id = db.prepare('SELECT capitan_id FROM teams WHERE capitan_username=?').get(match.equipo2)?.capitan_id;
+        const canalId = await crearCanalPartido(message.guild, matchId, match.jornada, match.equipo1, match.equipo2, cap1Id, cap2Id);
+
+        if (canalId) {
+            db.prepare('UPDATE matches SET canal_discord=? WHERE id=?').run(canalId, matchId);
+            canalesPartido[matchId] = canalId;
+            await message.reply(`✅ Canal creado para **ID ${matchId}** · ${match.equipo1} vs ${match.equipo2} → <#${canalId}>`);
+        } else {
+            await message.reply(`❌ Error al crear el canal para **ID ${matchId}**. Revisa los logs con \`pm2 logs clutch-bot\`.`);
+        }
+        message.delete().catch(() => {});
+        return;
+    }
+
+    // ── !borrar-canal <match_id> ─────────────────────────────
+    if (content.startsWith('!borrar-canal')) {
+        const isAdmin = await esAdminDiscord(message.author.id);
+        if (!isAdmin) return message.reply('❌ Solo los admins pueden usar este comando.');
+        const matchId = parseInt(content.split(' ')[1]);
+        if (isNaN(matchId)) { await message.reply('Uso: `!borrar-canal <match_id>`'); message.delete().catch(() => {}); return; }
+        const match = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!match || !match.canal_discord) { await message.reply(`❌ El partido **ID ${matchId}** no tiene canal asignado.`); message.delete().catch(() => {}); return; }
+        try {
+            const ch = await message.guild.channels.fetch(match.canal_discord).catch(() => null);
+            if (ch) await ch.delete();
+            db.prepare('UPDATE matches SET canal_discord=NULL WHERE id=?').run(matchId);
+            delete canalesPartido[matchId];
+            await message.reply(`✅ Canal del partido **ID ${matchId}** borrado.`);
+        } catch(e) {
+            await message.reply(`❌ Error al borrar el canal: ${e.message}`);
         }
         message.delete().catch(() => {});
         return;
@@ -3690,6 +3775,83 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
+    // ── Modal: crear canal de partido ────────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_canal_crear') {
+        await interaction.deferReply({ ephemeral: true });
+        const guild = interaction.guild;
+        const matchId = parseInt(interaction.fields.getTextInputValue('cc_match_id').trim());
+        const partido = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!partido) return interaction.editReply({ content: `❌ No existe ningún partido con ID \`${matchId}\`.` });
+
+        // Borrar canal anterior si existe
+        if (partido.canal_discord) {
+            const canalViejo = guild.channels.cache.get(partido.canal_discord);
+            if (canalViejo) await canalViejo.delete().catch(() => {});
+            db.prepare('UPDATE matches SET canal_discord=NULL WHERE id=?').run(matchId);
+            delete canalesPartido[matchId];
+        }
+
+        const eq1row = db.prepare('SELECT capitan_id FROM teams WHERE capitan_username=?').get(partido.equipo1);
+        const eq2row = db.prepare('SELECT capitan_id FROM teams WHERE capitan_username=?').get(partido.equipo2);
+        const canalId = await crearCanalPartido(guild, matchId, partido.jornada, partido.equipo1, partido.equipo2, eq1row?.capitan_id, eq2row?.capitan_id);
+        if (canalId) {
+            db.prepare('UPDATE matches SET canal_discord=? WHERE id=?').run(canalId, matchId);
+            canalesPartido[matchId] = canalId;
+            return interaction.editReply({ content: `✅ Canal creado: <#${canalId}> para el partido **[${matchId}]** ${partido.equipo1} vs ${partido.equipo2}.` });
+        } else {
+            return interaction.editReply({ content: `❌ Error al crear el canal para el partido \`${matchId}\`.` });
+        }
+    }
+
+    // ── Modal: borrar canal de partido ───────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_canal_borrar') {
+        await interaction.deferReply({ ephemeral: true });
+        const guild = interaction.guild;
+        const matchId = parseInt(interaction.fields.getTextInputValue('cb_match_id').trim());
+        const partido = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!partido) return interaction.editReply({ content: `❌ No existe ningún partido con ID \`${matchId}\`.` });
+        if (!partido.canal_discord) return interaction.editReply({ content: `⚠️ El partido \`${matchId}\` no tiene canal de Discord asignado.` });
+
+        const canal = guild.channels.cache.get(partido.canal_discord);
+        if (canal) {
+            await canal.delete().catch(e => console.warn('Error borrando canal:', e.message));
+        }
+        db.prepare('UPDATE matches SET canal_discord=NULL WHERE id=?').run(matchId);
+        delete canalesPartido[matchId];
+        return interaction.editReply({ content: `✅ Canal del partido **[${matchId}]** ${partido.equipo1} vs ${partido.equipo2} eliminado.` });
+    }
+
+    // ── Modal: añadir usuario a canal de partido ─────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_canal_add_usuario') {
+        await interaction.deferReply({ ephemeral: true });
+        const guild = interaction.guild;
+        const matchId = parseInt(interaction.fields.getTextInputValue('cau_match_id').trim());
+        let rawUserId = interaction.fields.getTextInputValue('cau_user_id').trim();
+        const mentionMatch = rawUserId.match(/^<@!?(\d+)>$/);
+        if (mentionMatch) rawUserId = mentionMatch[1];
+
+        const partido = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!partido) return interaction.editReply({ content: `❌ No existe ningún partido con ID \`${matchId}\`.` });
+        if (!partido.canal_discord) return interaction.editReply({ content: `⚠️ El partido \`${matchId}\` no tiene canal de Discord asignado. Créalo primero.` });
+
+        const canal = guild.channels.cache.get(partido.canal_discord);
+        if (!canal) return interaction.editReply({ content: `❌ No se encontró el canal en Discord (puede haber sido borrado). Usa **Crear canal** para regenerarlo.` });
+
+        let member;
+        try {
+            member = await guild.members.fetch(rawUserId);
+        } catch(e) {
+            return interaction.editReply({ content: `❌ No se encontró ningún miembro con ID \`${rawUserId}\`.` });
+        }
+
+        await canal.permissionOverwrites.create(member, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true,
+        });
+        return interaction.editReply({ content: `✅ **${member.user.username}** añadido al canal <#${partido.canal_discord}> del partido **[${matchId}]** ${partido.equipo1} vs ${partido.equipo2}.` });
+    }
+
     // ── Modal inscripción ─────────────────────────────────────
     if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_')) {
         const posicion = interaction.customId.split('_')[1];
@@ -4611,6 +4773,62 @@ client.on('interactionCreate', async (interaction) => {
             } else if (id === 'admp_refresh') {
                 await refrescarStatusPanelAdmin(guild);
                 await interaction.editReply({ content: '✅ Estado del panel actualizado.' });
+
+            // ── Canales de Partido ─────────────────────────────────
+            } else if (id === 'admp_canal_lista') {
+                const todosPartidos = db.prepare("SELECT id, jornada, equipo1, equipo2, estado, canal_discord FROM matches ORDER BY jornada, id").all();
+                if (!todosPartidos.length) {
+                    await interaction.editReply({ content: '⚠️ No hay partidos generados todavía.' });
+                } else {
+                    const lines = todosPartidos.map(m => {
+                        const canalInfo = m.canal_discord ? `✅ <#${m.canal_discord}>` : '❌ Sin canal';
+                        return `**[${m.id}]** J${m.jornada} · ${m.equipo1} vs ${m.equipo2} · ${m.estado} · ${canalInfo}`;
+                    });
+                    const embed = new EmbedBuilder()
+                        .setTitle('📡 Lista de Partidos y Canales')
+                        .setColor(0x3399ff)
+                        .setDescription(lines.join('\n').slice(0, 4000));
+                    await interaction.editReply({ embeds: [embed] });
+                }
+
+            } else if (id === 'admp_canal_crear') {
+                const modal = new ModalBuilder()
+                    .setCustomId('modal_canal_crear')
+                    .setTitle('Crear canal de partido');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cc_match_id').setLabel('ID del partido (ej: 1)').setStyle(TextInputStyle.Short).setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
+
+            } else if (id === 'admp_canal_borrar') {
+                const modal = new ModalBuilder()
+                    .setCustomId('modal_canal_borrar')
+                    .setTitle('Borrar canal de partido');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cb_match_id').setLabel('ID del partido (ej: 1)').setStyle(TextInputStyle.Short).setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
+
+            } else if (id === 'admp_canal_add_usuario') {
+                const modal = new ModalBuilder()
+                    .setCustomId('modal_canal_add_usuario')
+                    .setTitle('Añadir usuario a canal de partido');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cau_match_id').setLabel('ID del partido (ej: 1)').setStyle(TextInputStyle.Short).setRequired(true)
+                    ),
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cau_user_id').setLabel('Discord ID del usuario').setStyle(TextInputStyle.Short).setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
             }
 
         } catch(e) {
