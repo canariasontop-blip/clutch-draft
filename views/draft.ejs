@@ -1403,9 +1403,7 @@ async function subirEscudo(input){
     try{
         const fd=new FormData();fd.append('escudo',input.files[0]);
         const res=await fetch('/equipo/escudo',{method:'POST',body:fd,credentials:'same-origin'});
-        const text=await res.text();
-        let data;
-        try{ data=JSON.parse(text); } catch(_){ throw new Error('Servidor: '+text.slice(0,120)); }
+        const data=await res.json();
         if(res.ok && data.logo_url){
             const el=document.getElementById('team-escudo-img');
             const url=data.logo_url+'?t='+Date.now();
