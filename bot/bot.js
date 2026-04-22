@@ -401,7 +401,7 @@ async function publicarFormatos(guild) {
     await ch.send({ embeds: [new EmbedBuilder().setColor(0xa066ff).setTitle('⚡  COPA — ELIMINATORIAS · 4 Equipos')
         .addFields(
             { name: '🎯 Semifinales — Ida y Vuelta (Jornadas 1 y 2)', value: '▸ **Llave A:** Equipo 1 vs Equipo 4\n▸ **Llave B:** Equipo 2 vs Equipo 3\n▸ Jornada 1 → partidos de **ida**\n▸ Jornada 2 → partidos de **vuelta** (campos invertidos)\n▸ Pasa quien tenga mejor **global** (suma de los 2 partidos)\n▸ Empate en global → **3er partido a gol de oro** (el primero en marcar pasa)' },
-            { name: '🏆 Final — Partido Único (Jornada 3)', value: '▸ Los dos ganadores de semifinales se enfrentan en **un solo partido**\n▸ Empate al 90' → **prórroga** · Si persiste → **penaltis**' },
+            { name: '🏆 Final — Partido Único (Jornada 3)', value: '▸ Los dos ganadores de semifinales se enfrentan en **un solo partido**\n▸ Empate al 90\' → **prórroga** · Si persiste → **penaltis**' },
             { name: '🏅 Resultado Final', value: '🥇 **1º** — Campeón\n🥈 **2º** — Subcampeón\n▪️ **3º–4º** — Eliminados en semifinales' }
         )] });
 
