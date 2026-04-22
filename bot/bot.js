@@ -3060,7 +3060,7 @@ client.on('messageCreate', async (message) => {
                 if (!esBot) { omitidos++; continue; } // el admin real se aprueba manualmente
 
                 // Solo insertar en teams si no está ya (los de seed ya están)
-                db.prepare("INSERT OR IGNORE INTO teams (capitan_id, capitan_username) VALUES (?,?)").run(eq.capitan_id, eq.capitan_username);
+                db.prepare("INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')").run(eq.capitan_id, eq.capitan_username);
                 aprobados++;
             }
             await message.reply(
@@ -3173,7 +3173,7 @@ client.on('messageCreate', async (message) => {
             const nombres_equipos = ['Los Cracks','Galácticos','Los Titanes','Dream Team','Thunder FC','Los Invictos','Elite Squad','Phoenix FC','Los Fenómenos','Underdogs FC'];
 
             for (let i = 0; i < caps.length; i++) {
-                db.prepare("INSERT OR IGNORE INTO teams (capitan_id,capitan_username,nombre_equipo) VALUES (?,?,?)")
+                db.prepare("INSERT OR IGNORE INTO teams (capitan_id,capitan_username,nombre_equipo,formacion) VALUES (?,?,?,'3-1-4-2')")
                     .run(caps[i].id, caps[i].username, nombres_equipos[i]);
                 db.prepare("INSERT OR IGNORE INTO clasificacion (capitan_id,equipo_nombre) VALUES (?,?)")
                     .run(caps[i].id, caps[i].username);
@@ -3534,7 +3534,7 @@ client.on('interactionCreate', async (interaction) => {
                 await interaction.update({ components: [rowDone] });
             } else {
                 if (!yaCapitan) {
-                    db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username) VALUES (?,?)`).run(targetId, member.user.username);
+                    db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')`).run(targetId, member.user.username);
                     db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(targetId, member.user.username);
                 }
                 try { await member.send('👑 ¡Tu pago ha sido confirmado! Ya tienes el rol **Capitán**.'); } catch(e) {}
@@ -3695,7 +3695,7 @@ client.on('interactionCreate', async (interaction) => {
             .run(member.id, member.user.username, posicion);
 
         // Crear entrada en teams
-        db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo) VALUES (?, ?, ?)`)
+        db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo, formacion) VALUES (?, ?, ?, '3-1-4-2')`)
             .run(member.id, member.user.username, nombreEquipo);
 
         await interaction.editReply({
@@ -4731,7 +4731,7 @@ client.on('interactionCreate', async (interaction) => {
                     { id: 'BOT_CAP_009', username: 'BotCapitan9', eq: 'Underdogs FC'  },
                 ];
                 for (const c of caps) {
-                    db.prepare("INSERT OR IGNORE INTO teams (capitan_id,capitan_username,nombre_equipo) VALUES (?,?,?)").run(c.id, c.username, c.eq);
+                    db.prepare("INSERT OR IGNORE INTO teams (capitan_id,capitan_username,nombre_equipo,formacion) VALUES (?,?,?,'3-1-4-2')").run(c.id, c.username, c.eq);
                     db.prepare("INSERT OR IGNORE INTO clasificacion (capitan_id,equipo_nombre) VALUES (?,?)").run(c.id, c.username);
                 }
                 const seedPlayers = [

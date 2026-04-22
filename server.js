@@ -958,7 +958,7 @@ app.post('/admin/auto-draft', requireLogin, requireAdmin, (req, res) => {
 app.post('/admin/registrar-capitan', requireLogin, requireAdmin, (req, res) => {
     const { capitan_id, capitan_username } = req.body;
     try {
-        db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username) VALUES (?,?)`).run(capitan_id, capitan_username);
+        db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')`).run(capitan_id, capitan_username);
         db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(capitan_id, capitan_username);
         io.emit('activity', `👑 Nuevo capitán registrado: ${capitan_username}`);
         axios.post('http://localhost:3001/api/actualizar-equipos').catch(() => {});
@@ -1618,7 +1618,7 @@ app.post('/admin/confirmar-capitanes-ruleta', requireLogin, requireAdmin, (req, 
             // Ensure player exists
             db.prepare(`INSERT OR IGNORE INTO players (discord_id, nombre, posicion) VALUES (?, ?, 'DC')`).run(discordId, cand.nombre);
             // Register as team captain
-            db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo) VALUES (?, ?, ?)`).run(discordId, cand.nombre, cand.nombre);
+            db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo, formacion) VALUES (?, ?, ?, '3-1-4-2')`).run(discordId, cand.nombre, cand.nombre);
             // Mark as confirmed
             db.prepare(`UPDATE candidatos_capitan SET confirmado=1 WHERE discord_id=?`).run(discordId);
         }
@@ -1844,7 +1844,7 @@ app.post('/api/bot/cerrar-draft', (req, res) => {
 app.post('/api/bot/capitan-add', (req, res) => {
     const { discord_id, username } = req.body;
     if (!discord_id || !username) return res.status(400).json({ error: 'Faltan datos' });
-    db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo) VALUES (?,?,?)`).run(discord_id, username, username);
+    db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, nombre_equipo, formacion) VALUES (?,?,?,'3-1-4-2')`).run(discord_id, username, username);
     db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(discord_id, username);
     io.emit('activity', `👑 Capitán añadido (rol Discord): ${username}`);
     io.emit('clasificacion-update');
