@@ -19,7 +19,6 @@
         #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
         #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.75);}
         /* ── CONTENIDO SOBRE EL VIDEO ── */
-        nav{position:sticky!important;z-index:200!important;}
         .container,.page-wrap,.normas-hero,.normas-content,.hof-hero,.hof-content,
         .page-header,.stats-row,.tabs,.tab-content,.section,.controls-grid,
         .teams-tracker,.live-section,.stream-section,.proximos-section,
@@ -29,16 +28,6 @@
         body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
 
         /* NAV */
-        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:58px;background:rgba(3,3,10,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
-        .nav-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .nav-links{display:flex;gap:2px;}
-        .nav-link{color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;padding:6px 13px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
-        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
-        .nav-link.admin-lnk{color:var(--accent);}
-        .nav-user{display:flex;align-items:center;gap:10px;}
-        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
-        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
-        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;transition:0.2s;}
 
         /* PAGE HEADER */
         .page-header{padding:50px 24px 20px;max-width:1200px;margin:0 auto;position:relative;z-index:1;}
@@ -187,25 +176,24 @@
         .fmt-desempate-sub{font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
 
         @media(max-width:768px){
-            nav{padding:0 12px;height:52px;}
-            .nav-link{font-size:0.62rem;padding:4px 8px;}
-            .nav-username{display:none;}
-            .page-header{padding:30px 14px 0;}
-            .tabs-inner{padding:0 14px;}
-            .tab-btn{padding:14px 14px;font-size:0.7rem;}
+            .page-header{padding:80px 14px 0;}
+            .tabs-inner{padding:0 14px;overflow-x:auto;}
+            .tab-btn{padding:14px 12px;font-size:0.68rem;white-space:nowrap;flex-shrink:0;}
             .content{padding:24px 14px 40px;}
             .equipos-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
             .match-team{font-size:0.78rem;}
             .match-score{font-size:1.2rem;min-width:60px;}
             .fmt-body{grid-template-columns:1fr;}
             .fmt-phase.full{grid-column:auto;}
+            .controls-grid{grid-template-columns:1fr;}
+            .controls-grid.two{grid-template-columns:1fr;}
+            .controls-grid.three{grid-template-columns:1fr;}
         }
-            /* ── NAV LINKS FIX ── */
-        .nav-link{ color:#bbb!important; }
-        .nav-link:hover,.nav-link.active{ color:var(--primary)!important; background:rgba(0,255,204,0.08)!important; }
-        .nav-link.admin-lnk{ color:var(--accent)!important; }
-        .nav-link.admin-lnk.active{ color:var(--accent)!important; background:rgba(160,102,255,0.1)!important; }
+        @media(max-width:480px){
+            .equipos-grid{grid-template-columns:repeat(2,1fr);}
+        }
         </style>
+    <link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
 

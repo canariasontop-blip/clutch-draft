@@ -25,9 +25,7 @@ html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#
 #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
 #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:rgba(3,3,10,0.88);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
-.nav-logo{font-family:var(--font-d);font-size:1.4rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;}
-.nav-back{color:#555;text-decoration:none;font-size:0.82rem;letter-spacing:1px;display:flex;align-items:center;gap:6px;transition:color 0.2s;}
+.nav-back{color:#555;text-decoration:none;font-size:0.82rem;letter-spacing:1px;display:flex;align-items:center;gap:6px;transition:color 0.2s;flex-shrink:0;}
 .nav-back:hover{color:#aaa;}
 
 .page{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:88px 20px 60px;}
@@ -63,6 +61,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .btn-install{display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#000;font-family:var(--font-d);font-size:1.1rem;letter-spacing:3px;border-radius:12px;text-decoration:none;font-weight:700;transition:opacity 0.2s;}
 .btn-install:hover{opacity:0.85;}
 </style>
+<link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
 

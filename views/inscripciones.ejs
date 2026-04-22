@@ -133,21 +133,16 @@ html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#
 @keyframes livePulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 .live-txt{font-size:0.65rem;color:#444;text-transform:uppercase;letter-spacing:2px;}
 
-/* Nav */
-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;padding:0 20px;height:52px;background:rgba(3,3,10,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05);}
-.nav-logo{font-family:var(--font-d);font-size:1.1rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:8px;white-space:nowrap;}
-.nav-links{display:flex;gap:2px;align-items:center;flex:1;flex-wrap:wrap;}
-.nav-link{font-size:0.72rem;color:#444;text-decoration:none;text-transform:uppercase;letter-spacing:1px;padding:6px 10px;border-radius:7px;transition:0.2s;font-family:var(--font-b);font-weight:600;}
-.nav-link:hover{color:#ccc;background:rgba(255,255,255,0.05);}
-.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
-.nav-link.admin-lnk{color:var(--accent);}
-.nav-link.admin-lnk:hover{background:rgba(160,102,255,0.1);}
-.nav-user{display:flex;align-items:center;gap:8px;margin-left:auto;}
-.nav-avatar{width:28px;height:28px;border-radius:50%;border:2px solid rgba(0,255,204,0.3);object-fit:cover;}
-.nav-username{font-size:0.78rem;font-weight:700;color:#ccc;}
-.nav-logout{font-size:0.65rem;color:#333;text-decoration:none;padding:4px 8px;border:1px solid rgba(255,255,255,0.06);border-radius:6px;transition:0.2s;}
-.nav-logout:hover{color:#777;}
+@media(max-width:768px){
+    .page{padding-top:70px;}
+    .layout{grid-template-columns:1fr;}
+    .pos-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:400px){
+    .pos-grid{grid-template-columns:repeat(2,1fr);}
+}
 </style>
+<link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
 <div id="bg-video-wrap">
@@ -160,7 +155,8 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
 
 <nav>
     <div class="nav-logo">CLUTCH</div>
-    <div class="nav-links">
+    <button class="nav-hamburger" id="nav-hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
         <a href="/hub"           class="nav-link">Hub</a>
         <a href="/draft"         class="nav-link">Draft</a>
         <a href="/torneo"        class="nav-link">Torneo</a>
@@ -175,7 +171,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
     <div class="nav-user">
         <img src="<%= user.avatar %>" class="nav-avatar" alt="">
         <span class="nav-username"><%= user.username %></span>
-        <a href="/logout" class="nav-logout"><i class="fas fa-sign-out-alt"></i></a>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
     </div>
 </nav>
 
@@ -499,6 +495,15 @@ socket.on('nuevo-jugador', function(data) {
         if (tot) tot.textContent = data.totalJugadores;
     }
 });
+</script>
+<script>
+(function(){
+    var burger = document.getElementById('nav-hamburger');
+    var links  = document.getElementById('nav-links');
+    if (!burger) return;
+    burger.addEventListener('click', function(){ links.classList.toggle('open'); burger.classList.toggle('open'); });
+    links.querySelectorAll('.nav-link').forEach(function(l){ l.addEventListener('click', function(){ links.classList.remove('open'); burger.classList.remove('open'); }); });
+})();
 </script>
 </body>
 </html>

@@ -20,7 +20,6 @@
         #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.82);}
         /* Contenido sobre el video */
         body>*:not(#bg-video-wrap){position:relative;z-index:1;}
-        nav{z-index:200!important;}
         .normas-hero,.normas-main,.norma-section,.norma-card,.banned-img-block,
         .alturas-table,.alert-row,.aviso-final{position:relative;z-index:1;}
 
@@ -28,16 +27,6 @@
         :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
         body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
 
-        nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:58px;background:rgba(3,3,10,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);}
-        .nav-logo{font-family:var(--font-display);font-size:1.5rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .nav-links{display:flex;gap:2px;}
-        .nav-link{color:#bbb;text-decoration:none;font-size:0.78rem;font-weight:700;padding:6px 13px;border-radius:6px;transition:0.2s;text-transform:uppercase;letter-spacing:1.5px;}
-        .nav-link:hover,.nav-link.active{color:var(--primary);background:rgba(0,255,204,0.08);}
-        .nav-link.admin-lnk{color:var(--accent);}
-        .nav-user{display:flex;align-items:center;gap:10px;}
-        .nav-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;}
-        .nav-username{font-size:0.82rem;font-weight:700;color:#ccc;}
-        .logout-btn{color:#ff4d4d;text-decoration:none;font-size:0.75rem;padding:5px 9px;border-radius:6px;}
 
         /* HERO NORMAS */
         .normas-hero{
@@ -168,15 +157,18 @@
         .desempate-ol li::before{content:counter(dc);font-family:var(--font-display);font-size:1.1rem;color:var(--primary);width:22px;text-align:center;flex-shrink:0;}
 
         @media(max-width:768px){
-            nav{padding:0 12px;height:52px;}
-            .nav-link{font-size:0.62rem;padding:4px 8px;}
-            .nav-username{display:none;}
             .alturas-table{grid-template-columns:1fr;}
             .fmt-body{grid-template-columns:1fr;}
             .fmt-phase.full{grid-column:auto;}
+            .normas-hero{padding:80px 16px 30px;}
+            .normas-content{padding:24px 16px 40px;}
+            .playstyles-img{max-width:100%;}
         }
-
+        @media(max-width:480px){
+            .fmt-stats{grid-template-columns:repeat(2,1fr);}
+        }
         </style>
+    <link rel="stylesheet" href="/css/nav.css">
 </head>
 <body>
 <div id="bg-video-wrap">
