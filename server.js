@@ -1254,6 +1254,11 @@ app.get('/normas', requireLogin, (req, res) => {
     catch(e) { res.status(500).send('Error cargando normas: ' + e.message); }
 });
 
+app.get('/app', requireLogin, (req, res) => {
+    try { res.render('app', { user: req.session.user }); }
+    catch(e) { res.status(500).send('Error: ' + e.message); }
+});
+
 app.get('/directo', requireLogin, (req, res) => {
     try {
         const matches        = db.prepare(`SELECT * FROM matches ORDER BY jornada ASC, id ASC`).all();

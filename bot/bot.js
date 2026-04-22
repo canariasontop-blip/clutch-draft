@@ -2088,6 +2088,54 @@ async function comprobarLimpiezaAutomatica() {
 // ══════════════════════════════════════════════════════════════
 //  NORMATIVA — publicar en canal dedicado
 // ══════════════════════════════════════════════════════════════
+async function publicarGuiaApp(guild) {
+    const canal = await guild.channels.fetch(CANAL_NORMATIVA);
+
+    const embedAndroid = new EmbedBuilder()
+        .setTitle('🤖 Android — Chrome')
+        .setColor(0x00ffcc)
+        .setDescription(
+            '**1.** Abre **clutch-draft.duckdns.org** en Chrome\n' +
+            '**2.** Pulsa el icono **⋮** (tres puntos) arriba a la derecha\n' +
+            '**3.** Selecciona **"Añadir a pantalla de inicio"** o **"Instalar app"**\n' +
+            '**4.** Confirma pulsando **Instalar** — el icono aparecerá en tu pantalla de inicio\n\n' +
+            '> 💡 Si no ves la opción, asegúrate de que la web carga con **https://** (candado en la barra)'
+        );
+
+    const embedIOS = new EmbedBuilder()
+        .setTitle('🍎 iPhone / iPad — Safari')
+        .setColor(0xa066ff)
+        .setDescription(
+            '**1.** Abre **clutch-draft.duckdns.org** en **Safari** (no Chrome)\n' +
+            '**2.** Pulsa el botón **Compartir** — el cuadrado con flecha **⬆** en la barra inferior\n' +
+            '**3.** Desliza el menú y pulsa **"Añadir a pantalla de inicio"**\n' +
+            '**4.** Pulsa **Añadir** arriba a la derecha — el icono aparecerá en tu pantalla\n\n' +
+            '> 💡 Solo funciona desde Safari en iOS. Actualiza a iOS 16.4 o superior para pantalla completa'
+        );
+
+    const rowWeb = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setLabel('📱 Ver guía en la web')
+            .setStyle(ButtonStyle.Link)
+            .setURL(`${WEB}/app`),
+        new ButtonBuilder()
+            .setLabel('🌐 Abrir Clutch Draft')
+            .setStyle(ButtonStyle.Link)
+            .setURL(WEB),
+    );
+
+    const embedHeader = new EmbedBuilder()
+        .setTitle('📱  INSTALA CLUTCH DRAFT COMO APP')
+        .setColor(0x5865f2)
+        .setDescription(
+            'Añade Clutch Draft a la pantalla de inicio de tu móvil.\n**Gratis, sin App Store, como una app nativa.**\n\nSigue los pasos según tu dispositivo:'
+        )
+        .setThumbnail(`${WEB}/icon-512.png`);
+
+    await canal.send({ embeds: [embedHeader] });
+    await canal.send({ embeds: [embedAndroid, embedIOS], components: [rowWeb] });
+}
+
 async function publicarNormativa(guild) {
     try {
         const canal = await guild.channels.fetch(CANAL_NORMATIVA);
@@ -2429,6 +2477,7 @@ function buildAdminPanelBlocks() {
         new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('admp_limpiar_todo').setLabel('💥 LIMPIAR TODO').setStyle(ButtonStyle.Danger),
             new ButtonBuilder().setCustomId('admp_refresh').setLabel('🔄 Actualizar estado').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('admp_guia_app').setLabel('📱 Publicar guía app').setStyle(ButtonStyle.Secondary),
         ),
     ];
 
@@ -4600,6 +4649,10 @@ client.on('interactionCreate', async (interaction) => {
             } else if (id === 'admp_normativa') {
                 await publicarNormativa(guild);
                 await interaction.editReply({ content: '✅ Normativa publicada en el canal 📜-normativa.' });
+
+            } else if (id === 'admp_guia_app') {
+                await publicarGuiaApp(guild);
+                await interaction.editReply({ content: '✅ Guía de instalación de la app publicada en el canal 📜-normativa.' });
 
             } else if (id === 'admp_formatos') {
                 await publicarFormatos(guild);

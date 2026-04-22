@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#03030a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clutch Draft">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<title>Clutch Draft — Instalar App</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+    --primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;
+    --bg:#03030a;--card:rgba(10,10,22,0.95);--border:rgba(255,255,255,0.07);
+    --font-d:'Bebas Neue',sans-serif;--font-b:'Rajdhani',sans-serif;
+}
+html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#fff;}
+
+#bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+#bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
+#bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.70);}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:56px;background:rgba(3,3,10,0.88);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);}
+.nav-logo{font-family:var(--font-d);font-size:1.4rem;letter-spacing:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-decoration:none;}
+.nav-back{color:#555;text-decoration:none;font-size:0.82rem;letter-spacing:1px;display:flex;align-items:center;gap:6px;transition:color 0.2s;}
+.nav-back:hover{color:#aaa;}
+
+.page{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:88px 20px 60px;}
+
+.hero{text-align:center;margin-bottom:48px;}
+.hero-icon{width:100px;height:100px;border-radius:22px;margin:0 auto 20px;display:block;box-shadow:0 0 40px rgba(0,255,204,0.2);}
+.hero-title{font-family:var(--font-d);font-size:2.6rem;letter-spacing:8px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;}
+.hero-sub{color:#555;font-size:0.9rem;letter-spacing:2px;line-height:1.7;}
+
+.os-tabs{display:flex;gap:10px;margin-bottom:32px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:6px;}
+.os-tab{flex:1;padding:12px;border-radius:10px;border:none;background:transparent;color:#555;font-family:var(--font-b);font-size:0.95rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.os-tab.active{background:rgba(0,255,204,0.1);color:var(--primary);border:1px solid rgba(0,255,204,0.2);}
+.os-tab i{font-size:1.1rem;}
+
+.os-panel{display:none;}
+.os-panel.active{display:block;}
+
+.steps{display:flex;flex-direction:column;gap:16px;}
+.step{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;}
+.step-num{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:1.3rem;flex-shrink:0;}
+.step-num.android{background:rgba(0,255,204,0.12);color:var(--primary);border:1px solid rgba(0,255,204,0.2);}
+.step-num.ios{background:rgba(160,102,255,0.12);color:var(--accent);border:1px solid rgba(160,102,255,0.2);}
+.step-body{}
+.step-title{font-weight:700;font-size:1rem;margin-bottom:4px;color:#fff;}
+.step-desc{color:#666;font-size:0.85rem;line-height:1.6;}
+.step-desc strong{color:#aaa;}
+.step-icon{font-size:1.2rem;margin-right:4px;}
+
+.tip{background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:12px;padding:14px 18px;margin-top:24px;font-size:0.82rem;color:#888;line-height:1.6;}
+.tip strong{color:var(--gold);}
+
+.cta{text-align:center;margin-top:40px;}
+.btn-install{display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#000;font-family:var(--font-d);font-size:1.1rem;letter-spacing:3px;border-radius:12px;text-decoration:none;font-weight:700;transition:opacity 0.2s;}
+.btn-install:hover{opacity:0.85;}
+</style>
+</head>
+<body>
+
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/wallpaper_para_ruta-draft.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<nav>
+    <a href="/hub" class="nav-logo">CLUTCH DRAFT</a>
+    <a href="/hub" class="nav-back"><i class="fas fa-arrow-left"></i> Volver</a>
+</nav>
+
+<div class="page">
+
+    <div class="hero">
+        <img src="/icon-512.png" class="hero-icon" alt="Clutch Draft">
+        <div class="hero-title">INSTALA LA APP</div>
+        <div class="hero-sub">Añade Clutch Draft a tu pantalla de inicio.<br>Gratis, sin App Store, como una app nativa.</div>
+    </div>
+
+    <div class="os-tabs">
+        <button class="os-tab active" onclick="switchTab('android')">
+            <i class="fab fa-android"></i> Android
+        </button>
+        <button class="os-tab" onclick="switchTab('ios')">
+            <i class="fab fa-apple"></i> iPhone / iPad
+        </button>
+    </div>
+
+    <!-- ANDROID -->
+    <div id="panel-android" class="os-panel active">
+        <div class="steps">
+            <div class="step">
+                <div class="step-num android">1</div>
+                <div class="step-body">
+                    <div class="step-title">Abre Chrome en tu Android</div>
+                    <div class="step-desc">Entra a <strong>clutch-draft.duckdns.org</strong> desde el navegador Chrome. Otros navegadores también pueden funcionar pero Chrome es el más fiable.</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num android">2</div>
+                <div class="step-body">
+                    <div class="step-title">Toca el menú de los tres puntos</div>
+                    <div class="step-desc">Pulsa el icono <strong>⋮</strong> (tres puntos) en la esquina superior derecha del navegador.</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num android">3</div>
+                <div class="step-body">
+                    <div class="step-title">Selecciona "Añadir a pantalla de inicio"</div>
+                    <div class="step-desc">Busca la opción <strong>"Añadir a pantalla de inicio"</strong> o <strong>"Instalar app"</strong> en el menú desplegable. Puede que aparezca también un banner automático en la parte de abajo.</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num android">4</div>
+                <div class="step-body">
+                    <div class="step-title">Confirma y listo</div>
+                    <div class="step-desc">Dale a <strong>Instalar</strong> o <strong>Añadir</strong>. El icono de Clutch Draft aparecerá en tu pantalla de inicio como cualquier otra app.</div>
+                </div>
+            </div>
+        </div>
+        <div class="tip">
+            <strong>💡 Consejo:</strong> Si no te aparece la opción, asegúrate de que estás usando Chrome y de que la web carga con <strong>https://</strong> (candado en la barra de direcciones).
+        </div>
+    </div>
+
+    <!-- iOS -->
+    <div id="panel-ios" class="os-panel">
+        <div class="steps">
+            <div class="step">
+                <div class="step-num ios">1</div>
+                <div class="step-body">
+                    <div class="step-title">Abre Safari en tu iPhone o iPad</div>
+                    <div class="step-desc">Entra a <strong>clutch-draft.duckdns.org</strong> desde Safari. Esta función solo funciona en Safari en iOS, no en Chrome ni otros navegadores.</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num ios">2</div>
+                <div class="step-body">
+                    <div class="step-title">Pulsa el botón Compartir</div>
+                    <div class="step-desc">Toca el icono de <strong>compartir</strong> — es un cuadrado con una flecha apuntando hacia arriba <strong>⬆</strong>, en la barra inferior de Safari.</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num ios">3</div>
+                <div class="step-body">
+                    <div class="step-title">Selecciona "Añadir a pantalla de inicio"</div>
+                    <div class="step-desc">Desliza hacia abajo en el menú de compartir y pulsa <strong>"Añadir a pantalla de inicio"</strong> (tiene un icono de cuadrado con un +).</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num ios">4</div>
+                <div class="step-body">
+                    <div class="step-title">Confirma el nombre y añade</div>
+                    <div class="step-desc">Verás "Clutch Draft" como nombre. Pulsa <strong>Añadir</strong> en la esquina superior derecha. El icono aparecerá en tu pantalla de inicio.</div>
+                </div>
+            </div>
+        </div>
+        <div class="tip">
+            <strong>💡 Consejo:</strong> En iOS 16.4 o superior la app se abre en pantalla completa sin barra de Safari, igual que una app nativa. Asegúrate de tener iOS actualizado para la mejor experiencia.
+        </div>
+    </div>
+
+    <div class="cta">
+        <a href="/hub" class="btn-install">
+            <i class="fas fa-home"></i> IR AL HUB
+        </a>
+    </div>
+
+</div>
+
+<script>
+function switchTab(os) {
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.os-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + os).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
