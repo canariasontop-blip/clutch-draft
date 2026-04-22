@@ -398,10 +398,11 @@ async function publicarFormatos(guild) {
         .setDescription('El formato se determina automáticamente según el número de equipos inscritos.')
         .setFooter({ text: 'Clutch Draft · Sistema Swiss de emparejamientos' })] });
 
-    await ch.send({ embeds: [new EmbedBuilder().setColor(0xa066ff).setTitle('👥  LIGUILLA — 4 Equipos')
+    await ch.send({ embeds: [new EmbedBuilder().setColor(0xa066ff).setTitle('⚡  COPA — ELIMINATORIAS · 4 Equipos')
         .addFields(
-            { name: '📋 Fase Única — 3 Jornadas', value: '▸ Todos en una tabla única.\n▸ Cada equipo juega **3 partidos** (uno vs cada rival).\n▸ Sin fases eliminatorias: gana el que más puntos acumule.\n▸ Emparejamientos Swiss (orden por puntos).' },
-            { name: '🏅 Clasificación Final', value: '🥇 **1º** — Campeón\n🥈 **2º** — Subcampeón\n▪️ **3º–4º** — Clasificados' }
+            { name: '🎯 Semifinales — Ida y Vuelta (Jornadas 1 y 2)', value: '▸ **Llave A:** Equipo 1 vs Equipo 4\n▸ **Llave B:** Equipo 2 vs Equipo 3\n▸ Jornada 1 → partidos de **ida**\n▸ Jornada 2 → partidos de **vuelta** (campos invertidos)\n▸ Pasa quien tenga mejor **global** (suma de los 2 partidos)\n▸ Empate en global → **3er partido a gol de oro** (el primero en marcar pasa)' },
+            { name: '🏆 Final — Partido Único (Jornada 3)', value: '▸ Los dos ganadores de semifinales se enfrentan en **un solo partido**\n▸ Empate al final del tiempo reglamentario → **penaltis** (sin prórroga)' },
+            { name: '🏅 Resultado Final', value: '🥇 **1º** — Campeón\n🥈 **2º** — Subcampeón\n▪️ **3º–4º** — Eliminados en semifinales' }
         )] });
 
     await ch.send({ embeds: [new EmbedBuilder().setColor(0xf0c040).setTitle('✂️  CHAMPIONS CORTE DIRECTO — 6 Equipos')
@@ -2230,8 +2231,8 @@ async function publicarNormativa(guild) {
             .setDescription('El formato se determina **automáticamente** según el número de equipos participantes.')
             .addFields(
                 {
-                    name: '👥  LIGUILLA — 4 Equipos  `(3 jornadas)`',
-                    value: '▸ Todos en tabla única · Sin eliminatorias · Gana quien más puntos acumule\n▸ Emparejamientos Swiss (orden por puntos)',
+                    name: '⚡  COPA — 4 Equipos  `(3 jornadas · 5 partidos)`',
+                    value: '▸ Semis ida y vuelta (J1+J2) · Final partido único (J3)\n▸ Llave A: 1º vs 4º · Llave B: 2º vs 3º · Empate global → 3er partido a gol de oro',
                     inline: false,
                 },
                 {

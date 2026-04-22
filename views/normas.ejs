@@ -384,32 +384,53 @@
             <!-- 4 EQUIPOS -->
             <details class="fmt-card">
                 <summary class="fmt-hdr">
-                    <div class="fmt-ico" style="background:rgba(160,102,255,.12);color:var(--accent);"><i class="fas fa-users"></i></div>
+                    <div class="fmt-ico" style="background:rgba(160,102,255,.12);color:var(--accent);"><i class="fas fa-bolt"></i></div>
                     <div class="fmt-meta">
-                        <div class="fmt-name" style="color:var(--accent);">LIGUILLA</div>
+                        <div class="fmt-name" style="color:var(--accent);">COPA — ELIMINATORIAS</div>
                         <div class="fmt-sub">Formato para 4 Equipos</div>
                     </div>
-                    <span class="fmt-pill" style="background:rgba(160,102,255,.12);color:var(--accent);">4 EQ · 3 JORNADAS</span>
+                    <span class="fmt-pill" style="background:rgba(160,102,255,.12);color:var(--accent);">4 EQ · 3 JORNADAS · 5 PARTIDOS</span>
                     <i class="fas fa-chevron-down fmt-toggle"></i>
                 </summary>
                 <div class="fmt-body">
                     <div class="fmt-phase">
-                        <div class="fph-ttl" style="color:var(--accent);">Fase Única — 3 Jornadas</div>
+                        <div class="fph-ttl" style="color:var(--accent);">Semifinales — Ida y Vuelta</div>
                         <ul class="fph-list">
-                            <li><span class="arr">▸</span> Todos los equipos en una tabla única.</li>
-                            <li><span class="arr">▸</span> Cada equipo juega <strong>3 partidos</strong> (uno contra cada rival).</li>
-                            <li><span class="arr">▸</span> Sin fases eliminatorias: gana quien más puntos acumule.</li>
-                            <li><span class="arr">▸</span> Emparejamientos decididos por sistema Swiss (orden por puntos).</li>
+                            <li><span class="arr">▸</span> Sorteo de llaves: <strong>Llave A</strong> y <strong>Llave B</strong>.</li>
+                            <li><span class="arr">▸</span> <strong>Jornada 1 — Ida:</strong> cada llave juega su partido de ida.</li>
+                            <li><span class="arr">▸</span> <strong>Jornada 2 — Vuelta:</strong> los mismos equipos se enfrentan con campos invertidos.</li>
+                            <li><span class="arr">▸</span> Pasa el equipo con <strong>mejor global</strong> (suma de los dos partidos).</li>
+                            <li><span class="arr">▸</span> En caso de empate en el global se juega un <strong>tercer partido a gol de oro</strong> — el primero en marcar pasa.</li>
                         </ul>
                     </div>
                     <div class="fmt-phase">
-                        <div class="fph-ttl" style="color:var(--accent);">Clasificación Final</div>
-                        <div class="clasi-rows">
-                            <div class="clasi-item up"><span class="clasi-pos">1º</span> <span>Campeón</span></div>
-                            <div class="clasi-item up" style="border-color:rgba(0,255,204,.08);opacity:.75"><span class="clasi-pos">2º</span> <span>Subcampeón</span></div>
-                            <div class="clasi-item out" style="opacity:.5"><span class="clasi-pos">3º–4º</span> <span>Clasificados</span></div>
+                        <div class="fph-ttl" style="color:var(--accent);">Final — Partido Único</div>
+                        <ul class="fph-list">
+                            <li><span class="arr">▸</span> <strong>Jornada 3:</strong> los dos ganadores de semifinales se enfrentan en un único partido.</li>
+                            <li><span class="arr">▸</span> En caso de empate al final del tiempo reglamentario, se decide por <strong>penaltis</strong>.</li>
+                            <li><span class="arr">▸</span> No hay prórroga.</li>
+                        </ul>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Llaves del sorteo</div>
+                        <div style="display:flex;gap:8px;flex-direction:column;margin-top:4px;">
+                            <div style="background:rgba(160,102,255,.07);border:1px solid rgba(160,102,255,.2);border-radius:8px;padding:10px 12px;font-size:.8rem;">
+                                <span style="color:var(--accent);font-weight:700;">LLAVE A</span>
+                                <span style="color:#aaa;margin-left:8px;">Equipo 1 vs Equipo 4</span>
+                            </div>
+                            <div style="background:rgba(160,102,255,.07);border:1px solid rgba(160,102,255,.2);border-radius:8px;padding:10px 12px;font-size:.8rem;">
+                                <span style="color:var(--accent);font-weight:700;">LLAVE B</span>
+                                <span style="color:#aaa;margin-left:8px;">Equipo 2 vs Equipo 3</span>
+                            </div>
                         </div>
-                        <p style="font-size:.72rem;color:#666;margin-top:10px;">En caso de empate en puntos se aplican criterios de desempate.</p>
+                    </div>
+                    <div class="fmt-phase">
+                        <div class="fph-ttl" style="color:var(--accent);">Resultado Final</div>
+                        <div class="clasi-rows">
+                            <div class="clasi-item up"><span class="clasi-pos">🥇 1º</span> <span>Campeón — ganador de la final</span></div>
+                            <div class="clasi-item up" style="border-color:rgba(0,255,204,.08);opacity:.8"><span class="clasi-pos">🥈 2º</span> <span>Subcampeón — finalista</span></div>
+                            <div class="clasi-item out" style="opacity:.5"><span class="clasi-pos">3º–4º</span> <span>Eliminados en semifinales</span></div>
+                        </div>
                     </div>
                 </div>
             </details>
