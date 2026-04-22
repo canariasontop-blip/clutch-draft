@@ -192,7 +192,26 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
                 <a href="/logout" class="user-logout">Cerrar sesión</a>
             </div>
 
-            <% if (draftAbierto) { %>
+            <% if (!enServidor) { %>
+            <div style="background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.3);border-radius:14px;padding:24px 20px;text-align:center;margin-bottom:4px;">
+                <div style="font-size:2rem;margin-bottom:10px;">⚠️</div>
+                <div style="font-family:var(--font-d);font-size:1.3rem;letter-spacing:4px;color:#ff4d4d;margin-bottom:8px;">NO ESTÁS EN EL SERVIDOR</div>
+                <div style="font-size:0.82rem;color:#888;line-height:1.7;margin-bottom:20px;">
+                    Para inscribirte en Clutch Draft debes estar en nuestro <strong style="color:#fff;">servidor de Discord</strong>.<br>
+                    Los canales de partido y notificaciones del torneo se gestionan allí.<br>
+                    Únete primero y vuelve a esta página.
+                </div>
+                <a href="<%= discordInvite %>" target="_blank" rel="noopener"
+                   style="display:inline-flex;align-items:center;gap:10px;padding:12px 28px;background:#5865f2;color:#fff;border-radius:10px;font-weight:700;font-size:0.95rem;text-decoration:none;letter-spacing:1px;transition:background 0.2s;">
+                    <i class="fab fa-discord" style="font-size:1.1rem;"></i>
+                    UNIRME AL SERVIDOR
+                </a>
+                <div style="margin-top:14px;font-size:0.72rem;color:#444;">
+                    ¿Ya te has unido?
+                    <a href="/inscripciones" style="color:#a066ff;text-decoration:underline;">Recarga la página</a>
+                </div>
+            </div>
+            <% } else if (draftAbierto) { %>
             <div class="closed-box">
                 <div class="closed-icon"><i class="fas fa-lock"></i></div>
                 <div class="closed-title">PICKS EN CURSO</div>

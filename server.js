@@ -213,10 +213,21 @@ app.get('/logout', (req, res) => {
 // ══════════════════════════════════════════════════════════════
 //  INSCRIPCIONES (web, público)
 // ══════════════════════════════════════════════════════════════
-app.get('/inscripciones', (req, res) => {
+app.get('/inscripciones', async (req, res) => {
     if (!req.session.user) return res.redirect('/auth/discord?next=/inscripciones');
     const draftAbierto = cache.draftEstado === 'abierto';
     const did = req.session.user.id;
+
+    // Comprobar si el usuario está en el servidor de Discord
+    let enServidor = true;
+    try {
+        const check = await axios.get(`http://localhost:3001/api/en-servidor/${did}`, { timeout: 2000 });
+        enServidor = check.data.enServidor === true;
+    } catch(e) {
+        // Si el bot no responde, permitimos el acceso para no bloquear
+        enServidor = true;
+    }
+
     const jugadorExistente = db.prepare(`SELECT * FROM players WHERE discord_id=?`).get(did);
     const jugadoresPorPosicion = {
         POR:  db.prepare(`SELECT eafc_id, nombre, discord_id FROM players WHERE posicion='POR'  ORDER BY nombre`).all(),
@@ -232,6 +243,8 @@ app.get('/inscripciones', (req, res) => {
         jugadorExistente,
         jugadoresPorPosicion,
         totalJugadores,
+        enServidor,
+        discordInvite: process.env.DISCORD_INVITE || '#',
         mensaje: req.query.cancelado ? 'cancelado' : null,
         tipoMensaje: req.query.cancelado ? 'success' : null
     });

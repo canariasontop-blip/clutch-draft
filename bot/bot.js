@@ -5196,6 +5196,17 @@ botApp.post('/api/cerrar-inscripciones', (req, res) => {
     res.sendStatus(200);
 });
 
+// Comprobar si un usuario está en el servidor de Discord
+botApp.get('/api/en-servidor/:discord_id', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        await guild.members.fetch(req.params.discord_id);
+        res.json({ enServidor: true });
+    } catch(e) {
+        res.json({ enServidor: false });
+    }
+});
+
 // Asignar ROL_JUGADOR en Discord al añadir un jugador de última hora
 botApp.post('/api/asignar-rol-jugador', async (req, res) => {
     const { discord_id } = req.body;
