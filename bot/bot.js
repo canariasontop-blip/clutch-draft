@@ -2446,6 +2446,16 @@ function buildAdminPanelBlocks() {
         ),
     ];
 
+    // Bloque 5c — Emergencia Torneo
+    const b5cembed = new EmbedBuilder().setTitle('🚨 EMERGENCIA — AVANCE DE JORNADA').setColor(0xff8800)
+        .setDescription('Usa estos botones si la jornada no avanzó automáticamente tras reportar todos los partidos.\n\n⚠️ **Solo úsalos si hay un problema real** — forzar el avance cuando aún hay partidos pendientes generará la siguiente jornada sin completar la actual.');
+    const b5crows = [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_estado_torneo').setLabel('🔍 Ver estado torneo').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('admp_forzar_jornada').setLabel('⚡ Forzar avance jornada').setStyle(ButtonStyle.Danger),
+        ),
+    ];
+
     // Bloque 6 — Testing & Simulación
     const b6embed = new EmbedBuilder().setTitle('🧪 TESTING & SIMULACIÓN').setColor(0x888888)
         .setDescription('Comandos para probar el flujo completo con equipos bot. Solo para pruebas, no usar en producción.');
@@ -2473,6 +2483,7 @@ function buildAdminPanelBlocks() {
         { embed: b4embed, rows: b4rows },
         { embed: b5embed, rows: b5rows },
         { embed: b5bembed, rows: b5brows },
+        { embed: b5cembed, rows: b5crows },
         { embed: b6embed, rows: b6rows },
     ];
 }
@@ -4773,6 +4784,49 @@ client.on('interactionCreate', async (interaction) => {
             } else if (id === 'admp_refresh') {
                 await refrescarStatusPanelAdmin(guild);
                 await interaction.editReply({ content: '✅ Estado del panel actualizado.' });
+
+            // ── Emergencia Torneo ──────────────────────────────────
+            } else if (id === 'admp_estado_torneo') {
+                const jornadaActual = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';
+                const faseActual    = db.prepare("SELECT value FROM settings WHERE key='fase_actual'").get()?.value || '?';
+                const torneoGen     = db.prepare("SELECT value FROM settings WHERE key='torneo_generado'").get()?.value;
+                const torneoFin     = db.prepare("SELECT value FROM settings WHERE key='torneo_fin_ts'").get()?.value;
+                const pendientes    = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=? AND estado='pendiente'").get(parseInt(jornadaActual))?.c ?? '?';
+                const finalizados   = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=? AND estado='finalizado'").get(parseInt(jornadaActual))?.c ?? '?';
+                const totalPartidos = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=?").get(parseInt(jornadaActual))?.c ?? '?';
+                const generando     = _generandoJornada ? '⚠️ **SÍ** (flag activo)' : '✅ No';
+
+                const partidosPend  = db.prepare("SELECT id, equipo1, equipo2, estado FROM matches WHERE jornada=? ORDER BY id").all(parseInt(jornadaActual));
+                const listaPartidos = partidosPend.map(m => `• [${m.id}] ${m.equipo1} vs ${m.equipo2} → **${m.estado}**`).join('\n') || 'Sin partidos';
+
+                const embed = new EmbedBuilder()
+                    .setTitle('🔍 Estado actual del torneo')
+                    .setColor(torneoFin ? 0x888888 : pendientes === 0 ? 0x00cc00 : 0xff8800)
+                    .addFields(
+                        { name: 'Jornada actual', value: jornadaActual, inline: true },
+                        { name: 'Fase actual', value: faseActual, inline: true },
+                        { name: 'Torneo generado', value: torneoGen ? '✅ Sí' : '❌ No', inline: true },
+                        { name: 'Torneo finalizado', value: torneoFin ? '🏆 Sí' : '❌ No', inline: true },
+                        { name: 'Flag _generandoJornada', value: generando, inline: true },
+                        { name: `Partidos jornada ${jornadaActual}`, value: `✅ ${finalizados} finalizados · ⏳ ${pendientes} pendientes · Total: ${totalPartidos}`, inline: false },
+                        { name: 'Detalle', value: listaPartidos.slice(0, 1000), inline: false },
+                    )
+                    .setFooter({ text: pendientes === 0 && torneoGen && !torneoFin ? '⚡ Todos los partidos finalizados — usa Forzar avance si no avanzó solo' : '' });
+                await interaction.editReply({ embeds: [embed] });
+
+            } else if (id === 'admp_forzar_jornada') {
+                const torneoGen = db.prepare("SELECT value FROM settings WHERE key='torneo_generado'").get()?.value;
+                if (!torneoGen) return interaction.editReply({ content: '❌ No hay torneo generado todavía.' });
+                const torneoFin = db.prepare("SELECT value FROM settings WHERE key='torneo_fin_ts'").get()?.value;
+                if (torneoFin) return interaction.editReply({ content: '🏆 El torneo ya ha finalizado.' });
+
+                // Reset flag por si quedó bloqueado
+                _generandoJornada = false;
+
+                await interaction.editReply({ content: '⚡ Forzando avance de jornada...' });
+                await generarSiguienteJornada(guild);
+                const nuevaJornada = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value;
+                await interaction.editReply({ content: `✅ Avance forzado completado. Jornada actual ahora: **${nuevaJornada}**` });
 
             // ── Canales de Partido ─────────────────────────────────
             } else if (id === 'admp_canal_lista') {
