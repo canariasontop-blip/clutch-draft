@@ -47,7 +47,7 @@
         /* Content above video */
         nav{ z-index:200!important; }
         #nav-links.open{ z-index:199!important; }
-        body>*:not(#bg-video-wrap){ position:relative; z-index:1; }
+        body>*:not(#bg-video-wrap):not(nav){ position:relative; z-index:1; }
         /* ── VIDEO FONDO ── */
         #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
         #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.35;}

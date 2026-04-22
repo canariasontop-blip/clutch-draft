@@ -19,7 +19,9 @@
         #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.12;}
         #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.82);}
         /* Contenido sobre el video */
-        body>*:not(#bg-video-wrap){position:relative;z-index:1;}
+        nav{ z-index:200!important; }
+        #nav-links.open{ z-index:199!important; }
+        body>*:not(#bg-video-wrap):not(nav){position:relative;z-index:1;}
         .normas-hero,.normas-main,.norma-section,.norma-card,.banned-img-block,
         .alturas-table,.alert-row,.aviso-final{position:relative;z-index:1;}
 
@@ -163,6 +165,9 @@
             .normas-hero{padding:80px 16px 30px;}
             .normas-content{padding:24px 16px 40px;}
             .playstyles-img{max-width:100%;}
+            /* dropdown nav por encima del contenido */
+            nav,#nav-links.open{ z-index:9999!important; }
+            .normas-hero,.normas-main,.norma-section{ z-index:0!important; }
         }
         @media(max-width:480px){
             .fmt-stats{grid-template-columns:repeat(2,1fr);}
