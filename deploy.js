@@ -7,19 +7,10 @@ const app    = express();
 const PORT   = 3002;
 const SECRET = process.env.DEPLOY_SECRET || 'clutch-deploy-secret';
 
-app.use(express.raw({ type: 'application/json' }));
+app.use(express.json());
 
 app.post('/deploy', (req, res) => {
-    const rawBody = req.body;
-    const sig = req.headers['x-hub-signature-256'];
-    if (sig) {
-        const expected = 'sha256=' + crypto.createHmac('sha256', SECRET).update(rawBody).digest('hex');
-        if (sig !== expected) return res.status(401).send('Firma inválida');
-    }
-    let body = {};
-    try { body = JSON.parse(rawBody); } catch { }
-
-    const branch = body?.ref;
+    const branch = req.body?.ref;
     if (branch && branch !== 'refs/heads/main') return res.status(200).send('Rama ignorada');
 
     res.status(200).send('Deploy iniciado');
