@@ -1449,6 +1449,20 @@ app.post('/admin/recalcular-clasificacion', requireLogin, requireAdmin, (req, re
     res.redirect('/admin?tab=partidos');
 });
 
+app.post('/admin/ajustar-jornada', requireLogin, requireAdmin, (req, res) => {
+    const nueva = parseInt(req.body.jornada_actual);
+    if (isNaN(nueva) || nueva < 0) return res.redirect('/admin#tab-sistema');
+    db.prepare("UPDATE settings SET value=? WHERE key='jornada_actual'").run(String(nueva));
+    res.redirect('/admin#tab-sistema');
+});
+
+app.post('/admin/borrar-jornada', requireLogin, requireAdmin, (req, res) => {
+    const jornada = parseInt(req.body.jornada);
+    if (isNaN(jornada) || jornada < 1) return res.redirect('/admin#tab-sistema');
+    db.prepare('DELETE FROM matches WHERE jornada=?').run(jornada);
+    res.redirect('/admin#tab-sistema');
+});
+
 // ══════════════════════════════════════════════════════════════
 //  API PARA EL BOT
 // ══════════════════════════════════════════════════════════════

@@ -2448,11 +2448,15 @@ function buildAdminPanelBlocks() {
 
     // Bloque 5c — Emergencia Torneo
     const b5cembed = new EmbedBuilder().setTitle('🚨 EMERGENCIA — AVANCE DE JORNADA').setColor(0xff8800)
-        .setDescription('Usa estos botones si la jornada no avanzó automáticamente tras reportar todos los partidos.\n\n⚠️ **Solo úsalos si hay un problema real** — forzar el avance cuando aún hay partidos pendientes generará la siguiente jornada sin completar la actual.');
+        .setDescription('Usa estos botones si la jornada no avanzó automáticamente o se generó una jornada incorrecta.\n\n⚠️ **Solo úsalos si hay un problema real.**');
     const b5crows = [
         new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('admp_estado_torneo').setLabel('🔍 Ver estado torneo').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId('admp_forzar_jornada').setLabel('⚡ Forzar avance jornada').setStyle(ButtonStyle.Danger),
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_ajustar_jornada').setLabel('✏️ Ajustar jornada actual').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('admp_borrar_jornada').setLabel('🗑️ Borrar partidos de jornada').setStyle(ButtonStyle.Danger),
         ),
     ];
 
@@ -3786,6 +3790,27 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
+    // ── Modal: ajustar jornada actual ────────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_ajustar_jornada') {
+        await interaction.deferReply({ ephemeral: true });
+        const nueva = parseInt(interaction.fields.getTextInputValue('aj_valor').trim());
+        if (isNaN(nueva) || nueva < 0) return interaction.editReply({ content: '❌ Valor inválido. Introduce un número entero mayor o igual a 0.' });
+        const anterior = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value;
+        db.prepare("UPDATE settings SET value=? WHERE key='jornada_actual'").run(String(nueva));
+        return interaction.editReply({ content: `✅ Jornada actual cambiada de **${anterior}** → **${nueva}**.\n\nAhora usa **⚡ Forzar avance jornada** si quieres regenerar la siguiente.` });
+    }
+
+    // ── Modal: borrar partidos de jornada ────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_borrar_jornada') {
+        await interaction.deferReply({ ephemeral: true });
+        const jornada = parseInt(interaction.fields.getTextInputValue('bj_jornada').trim());
+        if (isNaN(jornada) || jornada < 1) return interaction.editReply({ content: '❌ Número de jornada inválido.' });
+        const partidos = db.prepare('SELECT COUNT(*) as c FROM matches WHERE jornada=?').get(jornada)?.c || 0;
+        if (partidos === 0) return interaction.editReply({ content: `⚠️ No hay partidos en la jornada **${jornada}**.` });
+        db.prepare('DELETE FROM matches WHERE jornada=?').run(jornada);
+        return interaction.editReply({ content: `✅ **${partidos}** partido(s) de la jornada **${jornada}** eliminados de la DB.\n\n⚠️ Los canales de Discord de esa jornada **no se han borrado** — usa el botón **🗑️ Limpiar canales partido** si quieres eliminarlos también.` });
+    }
+
     // ── Modal: crear canal de partido ────────────────────────
     if (interaction.isModalSubmit() && interaction.customId === 'modal_canal_crear') {
         await interaction.deferReply({ ephemeral: true });
@@ -4827,6 +4852,37 @@ client.on('interactionCreate', async (interaction) => {
                 await generarSiguienteJornada(guild);
                 const nuevaJornada = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value;
                 await interaction.editReply({ content: `✅ Avance forzado completado. Jornada actual ahora: **${nuevaJornada}**` });
+
+            } else if (id === 'admp_ajustar_jornada') {
+                const jornadaActualAhora = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';
+                const modal = new ModalBuilder().setCustomId('modal_ajustar_jornada').setTitle('Ajustar jornada actual');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder()
+                            .setCustomId('aj_valor')
+                            .setLabel(`Jornada actual (ahora: ${jornadaActualAhora}) → nueva:`)
+                            .setStyle(TextInputStyle.Short)
+                            .setPlaceholder('Ej: 1')
+                            .setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
+
+            } else if (id === 'admp_borrar_jornada') {
+                const modal = new ModalBuilder().setCustomId('modal_borrar_jornada').setTitle('Borrar partidos de jornada');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder()
+                            .setCustomId('bj_jornada')
+                            .setLabel('Número de jornada a borrar (ej: 3)')
+                            .setStyle(TextInputStyle.Short)
+                            .setPlaceholder('Ej: 3')
+                            .setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
 
             // ── Canales de Partido ─────────────────────────────────
             } else if (id === 'admp_canal_lista') {

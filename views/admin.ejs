@@ -1223,6 +1223,48 @@
     <!-- ══ TAB: SISTEMA ══ -->
     <div id="tab-sistema" class="tab-content">
 
+        <!-- Corrección de jornada -->
+        <div class="section" style="margin-bottom:20px; border-left:4px solid #ff8800;">
+            <div class="section-title"><i class="fas fa-exclamation-triangle" style="color:#ff8800;"></i> Corrección de jornada</div>
+            <p style="color:#666; font-size:0.82rem; line-height:1.6; margin-bottom:16px;">
+                Usa esto si se generó una jornada incorrecta (ej: se generó la J3 cuando debía ser la J2).
+                <strong style="color:#ff8800;">Paso 1:</strong> borra los partidos de la jornada mal generada.
+                <strong style="color:#ff8800;">Paso 2:</strong> ajusta la jornada actual al valor correcto.
+                Luego usa <strong>⚡ Forzar avance jornada</strong> en Discord para regenerar.
+            </p>
+            <div class="controls-grid two" style="gap:16px;">
+                <div>
+                    <div class="form-label" style="margin-bottom:8px;">Ajustar jornada actual</div>
+                    <form action="/admin/ajustar-jornada" method="POST"
+                          onsubmit="return confirm('¿Cambiar la jornada actual a ' + this.jornada_actual.value + '? Solo cambia el puntero, no borra ni crea partidos.')">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="number" name="jornada_actual" min="0" placeholder="Ej: 1"
+                                   value="<%= jornadaActual %>"
+                                   style="width:90px; padding:8px; background:#111; border:1px solid #333; color:#fff; border-radius:6px; font-size:0.95rem;">
+                            <button type="submit" class="btn" style="background:#ff8800;color:#000;font-weight:700;white-space:nowrap;">
+                                <i class="fas fa-pencil-alt"></i> Cambiar
+                            </button>
+                        </div>
+                        <p style="color:#555; font-size:0.75rem; margin-top:6px;">Jornada actual en DB: <strong style="color:#888;"><%= jornadaActual %></strong></p>
+                    </form>
+                </div>
+                <div>
+                    <div class="form-label" style="margin-bottom:8px; color:#ff4d4d;">Borrar partidos de una jornada</div>
+                    <form action="/admin/borrar-jornada" method="POST"
+                          onsubmit="return confirm('¿Borrar TODOS los partidos de la jornada ' + this.jornada.value + '? Esta acción no se puede deshacer.')">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="number" name="jornada" min="1" placeholder="Ej: 3"
+                                   style="width:90px; padding:8px; background:#111; border:1px solid #333; color:#fff; border-radius:6px; font-size:0.95rem;">
+                            <button type="submit" class="btn btn-danger" style="white-space:nowrap;">
+                                <i class="fas fa-trash-alt"></i> Borrar jornada
+                            </button>
+                        </div>
+                        <p style="color:#555; font-size:0.75rem; margin-top:6px;">Borra los partidos de esa jornada de la DB (no borra los canales de Discord).</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Cierre manual de torneo -->
         <div class="section" style="margin-bottom:20px; border-left:4px solid var(--primary);">
             <div class="section-title"><i class="fas fa-flag-checkered"></i> Cierre de torneo</div>
