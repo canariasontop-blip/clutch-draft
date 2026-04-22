@@ -3704,6 +3704,39 @@ client.on('interactionCreate', async (interaction) => {
         } catch(e) { console.error('Error asignando rol:', e.message); }
         await notificarInscripcion(interaction.user.id, interaction.user.username, eafc_id, posicion);
         await interaction.reply({ content: `✅ ¡Inscrito como **${posicion}**!`, ephemeral: true });
+
+        // DM con las restricciones de la normativa
+        try {
+            await interaction.user.send({ embeds: [new EmbedBuilder()
+                .setColor(0xff4d4d)
+                .setTitle('⚠️ Restricciones de Clutch Draft — Léelas antes de jugar')
+                .setDescription('Te has inscrito correctamente. Antes de que empiece el draft, asegúrate de cumplir con estas normas. **El incumplimiento puede suponer tu descalificación.**')
+                .addFields(
+                    {
+                        name: '📏 Límites de altura por posición',
+                        value: '🔴 **DFC (Centrales)** — máx. **187 cm**\n🟡 **Otras posiciones** — máx. **182 cm**\n🟢 **Portero** — máx. **192 cm**\n\n> Sobrepasar el límite conlleva penalización al capitán. El abuso reiterado supone partido perdido. **Debes grabar siempre las alturas.**',
+                        inline: false
+                    },
+                    {
+                        name: '🚫 Estilos de juego baneados',
+                        value: 'Hay PlayStyles y mecánicas expresamente prohibidos en Clutch Draft. Consúltalos en el canal de normativa del servidor o en la sección **Normas** de la web.',
+                        inline: false
+                    },
+                    {
+                        name: '🛡️ Subida de defensas',
+                        value: 'Los DFC **no pueden subir al ataque de forma fija** hasta el minuto **75**. Las subidas puntuales están permitidas.',
+                        inline: false
+                    },
+                    {
+                        name: '📋 Protocolo de partido',
+                        value: '▸ Solo **un reinicio** y antes del **minuto 10**.\n▸ Si un jugador no se presenta, avisa al Staff.\n▸ Cualquier jugador fuera de lista requiere aprobación previa.',
+                        inline: false
+                    }
+                )
+                .setFooter({ text: 'Clutch Draft · Si no cumples la normativa, no podrás participar.' })
+                .setTimestamp()
+            ] });
+        } catch(e) { /* DMs desactivados */ }
         return;
     }
 

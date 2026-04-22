@@ -254,6 +254,34 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:4px;pa
                            required maxlength="20">
                 </div>
 
+                <!-- Restricciones -->
+                <div style="background:rgba(255,77,77,0.05);border:1px solid rgba(255,77,77,0.2);border-radius:12px;padding:14px 16px;margin-bottom:14px;">
+                    <div style="font-size:0.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#ff4d4d;margin-bottom:10px;">
+                        <i class="fas fa-exclamation-triangle"></i> &nbsp;Restricciones — léelas antes de inscribirte
+                    </div>
+                    <div style="font-size:0.8rem;color:#aaa;line-height:1.8;">
+                        <div style="margin-bottom:6px;">
+                            📏 <strong style="color:#ccc;">Límites de altura:</strong>
+                            DFC máx. <strong style="color:#ff4d4d;">187cm</strong> ·
+                            Otras pos. máx. <strong style="color:#ffcc00;">182cm</strong> ·
+                            Portero máx. <strong style="color:#00ffcc;">192cm</strong>
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            🚫 <strong style="color:#ccc;">PlayStyles baneados</strong> — consulta la imagen en
+                            <a href="/normas" target="_blank" style="color:var(--accent);text-decoration:none;">Normas</a>
+                        </div>
+                        <div style="margin-bottom:6px;">
+                            🛡️ Los DFC <strong style="color:#ccc;">no pueden subir al ataque de forma fija</strong> hasta el min. 75
+                        </div>
+                        <div style="margin-bottom:2px;">
+                            🔄 Solo <strong style="color:#ccc;">1 reinicio</strong> permitido y antes del <strong style="color:#ccc;">minuto 10</strong>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,77,77,0.15);font-size:0.75rem;color:#ff4d4d;font-weight:700;">
+                        ⚠️ Si no cumples la normativa no podrás participar en Clutch Draft
+                    </div>
+                </div>
+
                 <button type="submit" class="btn-submit" id="btn-submit">
                     <%= jugadorExistente ? 'ACTUALIZAR DATOS' : 'INSCRIBIRME' %>
                 </button>
