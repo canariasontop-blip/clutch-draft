@@ -1,0 +1,24 @@
+{
+  "name": "Clutch Draft",
+  "short_name": "Clutch Draft",
+  "description": "Portal oficial de Clutch Draft",
+  "start_url": "/hub",
+  "display": "standalone",
+  "background_color": "#03030a",
+  "theme_color": "#03030a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
