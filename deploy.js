@@ -17,7 +17,7 @@ app.post('/deploy', (req, res) => {
 
     const cmd = 'git pull origin main && npm install --production && /usr/bin/pm2 restart all';
     exec(cmd, {
-        cwd: __dirname,
+        cwd: '/root',
         env: { ...process.env, PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' }
     }, (err, stdout, stderr) => {
         if (err) {
