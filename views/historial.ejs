@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#03030a">
+    <title>Clutch Draft — Historial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);}
+        body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#fff;min-height:100vh;}
+
+        /* NAV — igual que el resto de vistas */
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;background:rgba(3,3,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+        .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:4px;color:var(--primary);}
+        .nav-links{display:flex;gap:0;}
+        .nav-link{padding:8px 14px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;text-decoration:none;transition:.2s;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);}
+        .nav-link.admin-lnk{color:#f0c040;}
+        .nav-user{display:flex;align-items:center;gap:8px;}
+        .nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+        .nav-username{font-size:.75rem;color:#aaa;}
+        .logout-btn{color:#ff4d4d;font-size:.75rem;padding:6px 10px;border-radius:6px;text-decoration:none;}
+        .nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+        .nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:.3s;}
+        @media(max-width:768px){
+            .nav-links{display:none;position:fixed;top:58px;left:0;right:0;background:rgba(3,3,10,0.98);flex-direction:column;padding:12px 0;z-index:99;}
+            .nav-links.open{display:flex;}
+            .nav-hamburger{display:flex;}
+            .nav-username{display:none;}
+        }
+
+        .container{max-width:900px;margin:0 auto;padding:88px 24px 60px;}
+        .page-eyebrow{font-size:.65rem;color:var(--primary);letter-spacing:5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+        .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,6vw,4rem);letter-spacing:2px;margin-bottom:36px;}
+
+        .empty{text-align:center;color:#555;padding:80px 0;font-size:.95rem;}
+        .empty i{font-size:3rem;margin-bottom:16px;display:block;color:#333;}
+
+        .torneo-card{background:var(--card);border:1px solid var(--border);border-radius:20px;margin-bottom:24px;overflow:hidden;}
+        .torneo-header{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+        .torneo-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--accent);min-width:48px;}
+        .torneo-meta{flex:1;}
+        .torneo-fecha{font-size:.7rem;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+        .torneo-formato{font-size:.75rem;color:var(--primary);font-weight:700;letter-spacing:1px;}
+        .torneo-badges{display:flex;gap:8px;flex-wrap:wrap;}
+        .badge{padding:4px 12px;border-radius:20px;font-size:.7rem;font-weight:700;letter-spacing:1px;}
+        .badge-gold{background:rgba(240,192,64,.15);color:var(--gold);border:1px solid rgba(240,192,64,.3);}
+        .badge-silver{background:rgba(192,192,192,.1);color:#c0c0c0;border:1px solid rgba(192,192,192,.25);}
+
+        .torneo-body{padding:22px 26px;}
+        .podio{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+        .podio-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:12px 16px;flex:1;min-width:160px;}
+        .podio-medal{font-size:1.5rem;}
+        .podio-label{font-size:.62rem;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;}
+        .podio-name{font-weight:700;font-size:.95rem;}
+
+        .clasi-mini{overflow-x:auto;}
+        .clasi-mini table{width:100%;border-collapse:collapse;font-size:.82rem;}
+        .clasi-mini th{font-size:.6rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;padding:8px 10px;border-bottom:1px solid var(--border);text-align:center;}
+        .clasi-mini th.left{text-align:left;}
+        .clasi-mini td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;color:#ccc;}
+        .clasi-mini td.left{text-align:left;font-weight:600;color:#fff;}
+        .clasi-mini tr:last-child td{border-bottom:none;}
+        .clasi-mini tr:hover td{background:rgba(255,255,255,.02);}
+
+        details summary{cursor:pointer;font-size:.75rem;color:var(--primary);font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 0;user-select:none;}
+        details summary:hover{opacity:.8;}
+        details[open] summary{margin-bottom:12px;}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/historial" class="nav-link active">Historial</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/ganadores" class="nav-link">Ganadores</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-eyebrow">Clutch Draft · Archivo</div>
+    <div class="page-title">HISTORIAL DE TORNEOS</div>
+
+    <% if (!torneos || torneos.length === 0) { %>
+    <div class="empty">
+        <i class="fas fa-trophy"></i>
+        Todavía no hay torneos finalizados.<br>¡El primero está en camino!
+    </div>
+    <% } else { %>
+
+    <% torneos.forEach((t, idx) => { %>
+    <div class="torneo-card">
+        <div class="torneo-header">
+            <div class="torneo-num">#<%= torneos.length - idx %></div>
+            <div class="torneo-meta">
+                <div class="torneo-fecha"><%= t.fecha_inicio %> → <%= t.fecha_fin %></div>
+                <div class="torneo-formato"><%= t.n_equipos %> equipos · <%= t.formato %></div>
+            </div>
+            <div class="torneo-badges">
+                <span class="badge badge-gold">🥇 <%= t.campeon %></span>
+                <span class="badge badge-silver">🥈 <%= t.subcampeon %></span>
+            </div>
+        </div>
+        <div class="torneo-body">
+            <div class="podio">
+                <div class="podio-item">
+                    <span class="podio-medal">🥇</span>
+                    <div>
+                        <div class="podio-label">Campeón</div>
+                        <div class="podio-name"><%= t.campeon %></div>
+                    </div>
+                </div>
+                <div class="podio-item">
+                    <span class="podio-medal">🥈</span>
+                    <div>
+                        <div class="podio-label">Subcampeón</div>
+                        <div class="podio-name"><%= t.subcampeon %></div>
+                    </div>
+                </div>
+            </div>
+
+            <% if (t.clasificacion && t.clasificacion.length > 0) { %>
+            <details>
+                <summary><i class="fas fa-list-ol"></i> Ver clasificación completa (<%= t.clasificacion.length %> equipos)</summary>
+                <div class="clasi-mini">
+                    <table>
+                        <thead><tr>
+                            <th>#</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+                            <th>GF</th><th>GC</th><th>DIF</th><th>PTS</th>
+                        </tr></thead>
+                        <tbody>
+                        <% t.clasificacion.forEach((c, i) => { %>
+                        <tr>
+                            <td><%= i+1 %></td>
+                            <td class="left"><%= c.equipo_nombre || c.display_nombre || '—' %></td>
+                            <td><%= c.pj ?? '—' %></td>
+                            <td><%= c.pg ?? '—' %></td>
+                            <td><%= c.pe ?? '—' %></td>
+                            <td><%= c.pp ?? '—' %></td>
+                            <td><%= c.gf ?? '—' %></td>
+                            <td><%= c.gc ?? '—' %></td>
+                            <td style="color:<%= (c.gf-c.gc)>0?'#2ecc71':(c.gf-c.gc)<0?'#ff4d4d':'#aaa' %>">
+                                <%= c.gf != null && c.gc != null ? (c.gf - c.gc > 0 ? '+' : '') + (c.gf - c.gc) : '—' %>
+                            </td>
+                            <td style="font-weight:800;color:var(--primary);"><%= c.puntos ?? '—' %></td>
+                        </tr>
+                        <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            <% } %>
+        </div>
+    </div>
+    <% }) %>
+    <% } %>
+</div>
+
+<script>
+(function(){
+    var burger = document.getElementById('nav-hamburger');
+    var links  = document.getElementById('nav-links');
+    if (!burger) return;
+    burger.addEventListener('click', function(){ links.classList.toggle('open'); burger.classList.toggle('open'); });
+    links.querySelectorAll('.nav-link').forEach(function(l){ l.addEventListener('click', function(){ links.classList.remove('open'); burger.classList.remove('open'); }); });
+})();
+</script>
+<script src="/js/main.js"></script>
+</body>
+</html>

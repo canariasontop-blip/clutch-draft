@@ -97,10 +97,11 @@ const CATEGORIA_INFO      = '1489288783252820151';
 const CATEGORIA_DRAFT     = '1489289040992927815';
 
 // ── Estado en memoria ────────────────────────────────────────
-const canalesPartido    = {}; // matchId → channelId
-const reportesPendientes= {}; // matchId → { cap1: {g1,g2}, cap2: {g1,g2} }
-const votosPrecios      = { '10': new Set(), '15': new Set(), '20': new Set() };
-const candidatosCapitan = new Set();
+const canalesPartido       = {}; // matchId → channelId
+const reportesPendientes   = {}; // matchId → { cap1: {g1,g2}, cap2: {g1,g2} }
+const recordatoriosEnviados= new Set(); // matchId ya notificado por tardanza >24h
+const votosPrecios         = { '10': new Set(), '15': new Set(), '20': new Set() };
+const candidatosCapitan    = new Set();
 let msgVotoPrecio  = null;
 let msgVotoCapitan = null;
 let slotsCapitan   = 0;
@@ -2093,6 +2094,31 @@ async function anunciarCampeon(guild, campeon, subcampeon, tabla) {
     } catch(e) { console.error('Error anunciando campeón:', e.message); }
 }
 
+async function anunciarResultadoPublico(guild, match, g1, g2) {
+    try {
+        const top3 = db.prepare(`
+            SELECT c.*, COALESCE(NULLIF(t.nombre_equipo,''), c.equipo_nombre) AS display_nombre
+            FROM clasificacion c LEFT JOIN teams t ON t.capitan_id = c.capitan_id
+            ORDER BY c.puntos DESC, c.pg DESC, (c.gf-c.gc) DESC, c.gf DESC LIMIT 3
+        `).all();
+        const medals = ['🥇','🥈','🥉'];
+        const top3Txt = top3.length > 0
+            ? top3.map((t, i) => `${medals[i]} **${t.display_nombre}** — ${t.puntos} pts`).join('\n')
+            : '*Sin datos aún*';
+        const embed = new EmbedBuilder()
+            .setTitle('⚽ Resultado confirmado')
+            .setColor(0x00ffcc)
+            .addFields(
+                { name: '🏠 ' + match.equipo1, value: String(g1), inline: true },
+                { name: '✈️ ' + match.equipo2, value: String(g2), inline: true },
+                { name: '📊 Top 3 actual', value: top3Txt, inline: false }
+            )
+            .setTimestamp();
+        const ch = await guild.channels.fetch(CANAL_ANUNCIOS).catch(() => null);
+        if (ch) await ch.send({ embeds: [embed] });
+    } catch(e) { /* no bloquear flujo principal */ }
+}
+
 async function comprobarFinTorneo() {
     _lastCronCheck = Date.now();
     // Safety: si el flag lleva más de 5 min colgado, resetear
@@ -2108,6 +2134,33 @@ async function comprobarFinTorneo() {
         if (pendientes === 0) {
             const guild = client.guilds.cache.first();
             if (guild) await generarSiguienteJornada(guild);
+        }
+        // Recordatorio para partidos pendientes > 24 horas
+        const demorados = db.prepare(
+            "SELECT * FROM matches WHERE estado='pendiente' AND fecha < datetime('now','-24 hours')"
+        ).all();
+        for (const m of demorados) {
+            if (recordatoriosEnviados.has(m.id)) continue;
+            recordatoriosEnviados.add(m.id);
+            const cap1row = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(m.equipo1);
+            const cap2row = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(m.equipo2);
+            const embedRec = new EmbedBuilder()
+                .setTitle('⏰ Recordatorio: partido pendiente')
+                .setColor(0xffcc00)
+                .setDescription('Tu partido lleva más de **24 horas** sin reportar. ¡No olvidéis jugarlo y reportar el resultado!')
+                .addFields(
+                    { name: '⚔️ Partido', value: `**${m.equipo1}** vs **${m.equipo2}**`, inline: false },
+                    { name: '🔗 Canal', value: m.canal_discord ? `<#${m.canal_discord}>` : 'Ver en Discord', inline: false }
+                )
+                .setFooter({ text: 'Clutch Draft · Recordatorio automático' })
+                .setTimestamp();
+            for (const capRow of [cap1row, cap2row]) {
+                if (!capRow?.capitan_id) continue;
+                try {
+                    const u = await client.users.fetch(capRow.capitan_id);
+                    await u.send({ embeds: [embedRec] });
+                } catch(e) { /* DMs bloqueados */ }
+            }
         }
     } catch(e) { console.error('Error en comprobarFinTorneo:', e.message); }
 }
@@ -4504,6 +4557,54 @@ client.on('interactionCreate', async (interaction) => {
         return;
     }
 
+    // ── Resolver conflicto de resultado (botones en DM del admin) ──
+    if (interaction.isButton() && (interaction.customId.startsWith('conf_eq1_') || interaction.customId.startsWith('conf_eq2_'))) {
+        const esAdminConf = await esAdminDiscord(interaction.user.id);
+        if (!esAdminConf) return interaction.reply({ content: '❌ Solo el admin puede resolver conflictos.', ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
+
+        const esEq1   = interaction.customId.startsWith('conf_eq1_');
+        const matchId = interaction.customId.split('_')[2];
+        const match   = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!match) return interaction.editReply({ content: '❌ Partido no encontrado.' });
+        if (match.estado === 'finalizado') return interaction.editReply({ content: '✅ Este partido ya fue resuelto.' });
+
+        const reportes = reportesPendientes[matchId];
+        if (!reportes?.[ match.equipo1] || !reportes?.[match.equipo2])
+            return interaction.editReply({ content: '❌ Los reportes ya no están en memoria (puede que el bot se reiniciara). Usa el panel de admin web para registrar el resultado manualmente.' });
+
+        const resultado = esEq1 ? reportes[match.equipo1] : reportes[match.equipo2];
+        try {
+            await axios.post('http://localhost:3000/api/resultado-confirmado', { match_id: matchId, goles1: resultado.g1, goles2: resultado.g2 });
+        } catch(e) { console.error('Error resolviendo conflicto:', e.message); }
+        delete reportesPendientes[matchId];
+
+        if (match.canal_discord) {
+            try {
+                const ch = await client.channels.fetch(match.canal_discord);
+                await ch.send({ embeds: [new EmbedBuilder()
+                    .setTitle('✅ CONFLICTO RESUELTO POR ADMIN')
+                    .setColor(0xf0c040)
+                    .addFields(
+                        { name: '🏠 ' + match.equipo1, value: String(resultado.g1), inline: true },
+                        { name: '✈️ ' + match.equipo2, value: String(resultado.g2), inline: true }
+                    )
+                    .setDescription('El administrador ha resuelto el conflicto y registrado el resultado definitivo.')
+                    .setTimestamp()
+                ]});
+            } catch(e) { /* canal puede no existir */ }
+        }
+        const guildConf = client.guilds.cache.first();
+        if (guildConf) {
+            await actualizarCanalClasificacion(guildConf).catch(() => {});
+            await actualizarCanalResultadosPub(guildConf).catch(() => {});
+            await actualizarCanalRondasFinalesPub(guildConf).catch(() => {});
+            await comprobarAvanceJornada(guildConf).catch(() => {});
+            await anunciarResultadoPublico(guildConf, match, resultado.g1, resultado.g2).catch(() => {});
+        }
+        return interaction.editReply({ content: `✅ Conflicto resuelto. Resultado: **${match.equipo1} ${resultado.g1} - ${resultado.g2} ${match.equipo2}**` });
+    }
+
     // ── Botón reportar resultado ─────────────────────────────
     if (interaction.isButton() && interaction.customId.startsWith('reportar_')) {
         const matchId = interaction.customId.split('_')[1];
@@ -4640,6 +4741,7 @@ client.on('interactionCreate', async (interaction) => {
                     await actualizarCanalResultadosPub(guild).catch(() => {});
                     await actualizarCanalRondasFinalesPub(guild).catch(() => {});
                     await comprobarAvanceJornada(guild).catch(() => {});
+                    await anunciarResultadoPublico(guild, match, g1, g2).catch(() => {});
                 }
                 return interaction.editReply({ content: '✅ ¡Resultado confirmado! La clasificación se ha actualizado.' });
             } else {
@@ -4655,10 +4757,20 @@ client.on('interactionCreate', async (interaction) => {
                         { name: 'Match ID', value: String(matchId), inline: true }
                     )
                     .setTimestamp();
-                // Alerta 1: DM al admin
+                // Alerta 1: DM al admin CON BOTONES para resolver directamente
                 try {
+                    const rowConf = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`conf_eq1_${matchId}`)
+                            .setLabel(`✅ ${match.equipo1}: ${r1.g1}-${r1.g2}`)
+                            .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
+                            .setCustomId(`conf_eq2_${matchId}`)
+                            .setLabel(`✅ ${match.equipo2}: ${r2.g1}-${r2.g2}`)
+                            .setStyle(ButtonStyle.Danger),
+                    );
                     const admin = await client.users.fetch(ADMIN_ID);
-                    await admin.send({ embeds: [embedConflicto] });
+                    await admin.send({ embeds: [embedConflicto], components: [rowConf] });
                 } catch(e) { /* DMs bloqueados */ }
                 // Alerta 2: canal de anuncios con mención
                 try {
@@ -5613,19 +5725,46 @@ async function generarCanalEquiposIds() {
 //  BIENVENIDAS
 // ══════════════════════════════════════════════════════════════
 client.on('guildMemberAdd', async (member) => {
+    // Mensaje en canal de bienvenida
     try {
         const canal = await member.guild.channels.fetch(CANAL_BIENVENIDA_ID);
-        if (!canal) return;
-        const embed = new EmbedBuilder()
-            .setTitle('⚽ ¡BIENVENIDO A CLUTCH DRAFT!')
-            .setDescription(`¡Bienvenido/a al vestuario, ${member}!\n\nRevisa los canales de información para estar al tanto de los próximos Drafts.`)
+        if (canal) {
+            const embed = new EmbedBuilder()
+                .setTitle('⚽ ¡BIENVENIDO A CLUTCH DRAFT!')
+                .setDescription(`¡Bienvenido/a al vestuario, ${member}!\n\nRevisa los canales de información para estar al tanto de los próximos Drafts.`)
+                .setColor(0x00ffcc)
+                .setThumbnail(member.user.displayAvatarURL({ forceStatic: false }))
+                .setImage('https://cdn.discordapp.com/attachments/1256961086792405145/1492511486302748682/BANNER-BLUELOCK-2-1536x559.png?ex=69db9923&is=69da47a3&hm=6b930ab94036b0cfacef31bd704105fdfde564c58a9826009fc252a4e997ab59&.png')
+                .setFooter({ text: `Miembro número ${member.guild.memberCount}` })
+                .setTimestamp();
+            await canal.send({ content: `¡Bienvenido ${member}!`, embeds: [embed] });
+        }
+    } catch(e) { console.error('Error en bienvenida canal:', e.message); }
+
+    // DM privado de bienvenida
+    try {
+        const embedDM = new EmbedBuilder()
+            .setTitle('👋 ¡Bienvenido a Clutch Draft!')
             .setColor(0x00ffcc)
-            .setThumbnail(member.user.displayAvatarURL({ forceStatic: false }))
-            .setImage('https://cdn.discordapp.com/attachments/1256961086792405145/1492511486302748682/BANNER-BLUELOCK-2-1536x559.png?ex=69db9923&is=69da47a3&hm=6b930ab94036b0cfacef31bd704105fdfde564c58a9826009fc252a4e997ab59&.png')
-            .setFooter({ text: `Miembro número ${member.guild.memberCount}` })
+            .setDescription(
+                `Hola **${member.displayName}**, ¡me alegra tenerte aquí!\n\n` +
+                '🏆 **¿Qué es Clutch Draft?**\n' +
+                'Un torneo de EA Sports FC donde los capitanes fichan jugadores en un draft y compiten en liga. Cada temporada tiene su propia historia.\n\n' +
+                '📋 **¿Cómo participar?**\n' +
+                '> **1.** Ve al canal de inscripciones y pulsa tu posición (DC, MC, DFC…)\n' +
+                '> **2.** Rellena el formulario: nombre en EA FC, teléfono y posición\n' +
+                '> **3.** ¡Listo! El admin te avisará cuando empiece el draft\n\n' +
+                '🌐 También puedes inscribirte y seguir todo desde la **web**.'
+            )
+            .setFooter({ text: 'Clutch Draft — El draft más competitivo' })
             .setTimestamp();
-        await canal.send({ content: `¡Bienvenido ${member}!`, embeds: [embed] });
-    } catch(e) { console.error('Error en bienvenida:', e.message); }
+        const rowDM = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setLabel('📋 Inscribirme').setURL(webUrl('/inscripciones')).setStyle(ButtonStyle.Link),
+            new ButtonBuilder().setLabel('🏆 Ver el torneo').setURL(webUrl('/torneo')).setStyle(ButtonStyle.Link),
+            new ButtonBuilder().setLabel('📖 Normas').setURL(webUrl('/normas')).setStyle(ButtonStyle.Link),
+        );
+        await member.send({ embeds: [embedDM], components: [rowDM] });
+    } catch(e) { /* DMs bloqueados — normal */ }
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -6113,6 +6252,30 @@ botApp.post('/api/dar-rol-capitanes', async (req, res) => {
                 if (!member.roles.cache.has(ROL_CAPITAN))
                     await member.roles.add(ROL_CAPITAN);
             } catch(e) { console.error(`[dar-rol-capitanes] ${id}:`, e.message); }
+        }
+        res.json({ ok: true });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+botApp.post('/api/notificar-turno', async (req, res) => {
+    try {
+        const { capitan } = req.body;
+        const team = db.prepare("SELECT capitan_id, capitan2_id FROM teams WHERE capitan_username=?").get(capitan);
+        if (!team) return res.json({ ok: false, error: 'Equipo no encontrado' });
+        const embed = new EmbedBuilder()
+            .setTitle('👑 ¡Es tu turno en el draft!')
+            .setColor(0x00ffcc)
+            .setDescription(`**${capitan}**, es tu momento de fichar un jugador. ¡El temporizador ya está corriendo!\n\nVe rápido antes de que se agote el tiempo.`)
+            .setTimestamp()
+            .setFooter({ text: 'Clutch Draft · Draft en curso' });
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setLabel('🎮 Ir al draft ahora').setURL(webUrl('/draft')).setStyle(ButtonStyle.Link)
+        );
+        for (const id of [team.capitan_id, team.capitan2_id].filter(Boolean)) {
+            try {
+                const u = await client.users.fetch(id);
+                await u.send({ embeds: [embed], components: [row] });
+            } catch(e) { /* DMs bloqueados */ }
         }
         res.json({ ok: true });
     } catch(e) { res.status(500).json({ error: e.message }); }

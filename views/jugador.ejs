@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#03030a">
+    <title>Clutch Draft — <%= jugador.nombre %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);}
+        body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#fff;min-height:100vh;}
+
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;background:rgba(3,3,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+        .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:4px;color:var(--primary);}
+        .nav-links{display:flex;gap:0;}
+        .nav-link{padding:8px 14px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;text-decoration:none;transition:.2s;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);}
+        .nav-link.admin-lnk{color:#f0c040;}
+        .nav-user{display:flex;align-items:center;gap:8px;}
+        .nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+        .nav-username{font-size:.75rem;color:#aaa;}
+        .logout-btn{color:#ff4d4d;font-size:.75rem;padding:6px 10px;border-radius:6px;text-decoration:none;}
+        .nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+        .nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;}
+        @media(max-width:768px){
+            .nav-links{display:none;position:fixed;top:58px;left:0;right:0;background:rgba(3,3,10,0.98);flex-direction:column;padding:12px 0;z-index:99;}
+            .nav-links.open{display:flex;}
+            .nav-hamburger{display:flex;}
+            .nav-username{display:none;}
+        }
+
+        .container{max-width:900px;margin:0 auto;padding:88px 24px 60px;}
+
+        /* Hero del jugador */
+        .player-hero{display:flex;align-items:center;gap:24px;margin-bottom:36px;flex-wrap:wrap;}
+        .player-avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);}
+        .player-avatar-ph{width:90px;height:90px;border-radius:50%;background:var(--card);border:3px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#444;}
+        .player-info{}
+        .player-pos{font-size:.65rem;color:var(--primary);letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:4px;}
+        .player-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,5vw,3rem);letter-spacing:2px;margin-bottom:4px;}
+        .player-sub{font-size:.8rem;color:#aaa;}
+        .player-tag{display:inline-block;background:rgba(160,102,255,.15);border:1px solid rgba(160,102,255,.3);color:var(--accent);border-radius:20px;padding:3px 12px;font-size:.7rem;font-weight:700;margin-top:6px;}
+
+        /* Stats grid */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;margin-bottom:32px;}
+        .stat-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 16px;text-align:center;}
+        .stat-val{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--primary);line-height:1;}
+        .stat-lbl{font-size:.62rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;margin-top:4px;}
+
+        /* Equipo card */
+        .equipo-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-bottom:28px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+        .escudo{width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--border);}
+        .escudo-ph{width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:#333;font-size:1.4rem;}
+        .equipo-info{}
+        .equipo-lbl{font-size:.62rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
+        .equipo-nombre{font-weight:800;font-size:1.1rem;}
+        .equipo-pos{font-size:.78rem;color:var(--primary);margin-top:3px;}
+
+        /* Partidos recientes */
+        .seccion-titulo{font-size:.68rem;color:#aaa;text-transform:uppercase;letter-spacing:3px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+        .seccion-titulo::after{content:'';flex:1;height:1px;background:var(--border);}
+
+        .match-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);margin-bottom:8px;font-size:.85rem;}
+        .match-jornada{font-size:.6rem;color:#555;text-transform:uppercase;letter-spacing:1px;min-width:52px;}
+        .match-eq{flex:1;font-weight:600;}
+        .match-eq.right{text-align:right;}
+        .match-score{min-width:46px;text-align:center;font-weight:900;font-size:.95rem;}
+        .score-w{color:#2ecc71;}
+        .score-d{color:#aaa;}
+        .score-l{color:#ff4d4d;}
+        .match-result-badge{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:6px;min-width:22px;text-align:center;}
+        .badge-w{background:rgba(46,204,113,.15);color:#2ecc71;}
+        .badge-d{background:rgba(170,170,170,.1);color:#aaa;}
+        .badge-l{background:rgba(255,77,77,.15);color:#ff4d4d;}
+        .no-matches{color:#555;font-size:.85rem;padding:16px 0;}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/historial" class="nav-link">Historial</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Hero -->
+    <div class="player-hero">
+        <% if (jugador.foto) { %>
+            <img src="<%= jugador.foto %>" class="player-avatar" alt="">
+        <% } else { %>
+            <div class="player-avatar-ph"><i class="fas fa-user"></i></div>
+        <% } %>
+        <div class="player-info">
+            <div class="player-pos"><%= jugador.posicion %></div>
+            <div class="player-name"><%= jugador.nombre %></div>
+            <div class="player-sub">EA FC: <strong><%= jugador.eafc_id || jugador.nombre %></strong></div>
+            <% if (jugador.equipo) { %>
+                <span class="player-tag">⚽ <%= jugador.equipo %></span>
+            <% } else { %>
+                <span class="player-tag" style="background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.25);color:#ff4d4d;">Sin equipo</span>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Stats del equipo -->
+    <% if (jugador.equipo) { %>
+    <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val"><%= stats.pj %></div><div class="stat-lbl">Partidos</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:#2ecc71;"><%= stats.pg %></div><div class="stat-lbl">Victorias</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:#aaa;"><%= stats.pe %></div><div class="stat-lbl">Empates</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:#ff4d4d;"><%= stats.pp %></div><div class="stat-lbl">Derrotas</div></div>
+        <div class="stat-box"><div class="stat-val"><%= stats.gf %></div><div class="stat-lbl">Goles a favor</div></div>
+        <div class="stat-box"><div class="stat-val"><%= stats.gc %></div><div class="stat-lbl">Goles en contra</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--gold);"><%= stats.pts %></div><div class="stat-lbl">Puntos</div></div>
+        <% if (posicion) { %>
+        <div class="stat-box"><div class="stat-val" style="color:var(--accent);">#<%= posicion %></div><div class="stat-lbl">Posición liga</div></div>
+        <% } %>
+    </div>
+
+    <!-- Info del equipo -->
+    <div class="seccion-titulo"><i class="fas fa-shield-alt"></i> Equipo</div>
+    <div class="equipo-card">
+        <% if (equipo?.logo_url) { %>
+            <img src="<%= equipo.logo_url %>" class="escudo" alt="">
+        <% } else { %>
+            <div class="escudo-ph"><i class="fas fa-shield-alt"></i></div>
+        <% } %>
+        <div class="equipo-info">
+            <div class="equipo-lbl">Equipo actual</div>
+            <div class="equipo-nombre"><%= equipo?.nombre_equipo || jugador.equipo %></div>
+            <% if (equipo?.capitan_username) { %>
+            <div class="equipo-pos">Capitán: <a href="/jugador/<%= equipo.capitan_id %>" style="color:var(--primary);text-decoration:none;"><%= equipo.capitan_username %></a></div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Últimos partidos -->
+    <div class="seccion-titulo"><i class="fas fa-futbol"></i> Historial de partidos</div>
+    <% if (matchesEquipo.length === 0) { %>
+        <div class="no-matches">No hay partidos jugados todavía.</div>
+    <% } else { %>
+    <% matchesEquipo.forEach(m => {
+        const esLocal = m.equipo1 === jugador.equipo;
+        const miGoles = esLocal ? m.goles1 : m.goles2;
+        const rivGoles = esLocal ? m.goles2 : m.goles1;
+        const rival = esLocal ? m.equipo2 : m.equipo1;
+        let res = 'd', resLabel = 'E';
+        if (miGoles > rivGoles) { res = 'w'; resLabel = 'V'; }
+        else if (miGoles < rivGoles) { res = 'l'; resLabel = 'D'; }
+    %>
+    <div class="match-row">
+        <div class="match-jornada">J<%= m.jornada %></div>
+        <div class="match-eq"><%= jugador.equipo %></div>
+        <div class="match-score <%= res === 'w' ? 'score-w' : res === 'l' ? 'score-l' : 'score-d' %>">
+            <%= miGoles %> — <%= rivGoles %>
+        </div>
+        <div class="match-eq right"><%= rival %></div>
+        <div class="match-result-badge badge-<%= res %>"><%= resLabel %></div>
+    </div>
+    <% }) %>
+    <% } %>
+
+    <% } else { %>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;color:#aaa;text-align:center;margin-top:16px;">
+        Este jugador todavía no pertenece a ningún equipo.
+    </div>
+    <% } %>
+
+</div>
+
+<script>
+(function(){
+    var burger = document.getElementById('nav-hamburger');
+    var links  = document.getElementById('nav-links');
+    if (!burger) return;
+    burger.addEventListener('click', function(){ links.classList.toggle('open'); burger.classList.toggle('open'); });
+    links.querySelectorAll('.nav-link').forEach(function(l){ l.addEventListener('click', function(){ links.classList.remove('open'); burger.classList.remove('open'); }); });
+})();
+</script>
+<script src="/js/main.js"></script>
+</body>
+</html>

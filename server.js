@@ -606,6 +606,9 @@ function avanzarTurnoSnake(capitanActual) {
     cache.tiempoRestante = parseInt(tiempo);
 
     iniciarTimer();
+
+    // Notificar al capitán cuyo turno acaba de comenzar
+    axios.post('http://localhost:3001/api/notificar-turno', { capitan: siguiente }).catch(() => {});
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2074,6 +2077,97 @@ app.post('/equipo/escudo', (req, res) => {
         io.emit('equipo-renombrado', { capitan: req.session.user.username });
         res.json({ ok: true, logo_url });
     });
+});
+
+// ══════════════════════════════════════════════════════════════
+//  HISTORIAL DE TORNEOS
+// ══════════════════════════════════════════════════════════════
+app.get('/historial', requireLogin, (req, res) => {
+    try {
+        const torneos = db.prepare(`SELECT * FROM historial_torneos ORDER BY id DESC`).all().map(t => ({
+            ...t,
+            clasificacion: JSON.parse(t.clasificacion || '[]'),
+            partidos:      JSON.parse(t.partidos      || '[]'),
+        }));
+        res.render('historial', { user: req.session.user, torneos });
+    } catch(e) {
+        console.error('[/historial]', e.message);
+        res.render('historial', { user: req.session.user, torneos: [] });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  PERFIL DE JUGADOR
+// ══════════════════════════════════════════════════════════════
+app.get('/jugador/:discord_id', requireLogin, (req, res) => {
+    try {
+        const jugador = db.prepare(`SELECT * FROM players WHERE discord_id=?`).get(req.params.discord_id);
+        if (!jugador) return res.redirect('/torneo');
+
+        const equipo = jugador.equipo
+            ? db.prepare(`SELECT * FROM teams WHERE capitan_username=?`).get(jugador.equipo)
+            : null;
+
+        // Partidos del equipo del jugador
+        const matchesEquipo = jugador.equipo ? db.prepare(`
+            SELECT * FROM matches
+            WHERE (equipo1=? OR equipo2=?) AND estado='finalizado'
+            ORDER BY jornada ASC
+        `).all(jugador.equipo, jugador.equipo) : [];
+
+        // Calcular stats: PJ PG PE PP GF GC
+        let pj=0, pg=0, pe=0, pp=0, gf=0, gc=0;
+        for (const m of matchesEquipo) {
+            const esLocal = m.equipo1 === jugador.equipo;
+            const gLocal  = esLocal ? m.goles1 : m.goles2;
+            const gVisit  = esLocal ? m.goles2 : m.goles1;
+            pj++; gf += gLocal; gc += gVisit;
+            if (gLocal > gVisit) pg++;
+            else if (gLocal === gVisit) pe++;
+            else pp++;
+        }
+        const pts = pg * 3 + pe;
+
+        // Posición en clasificación del equipo
+        const clasi = jugador.equipo
+            ? db.prepare(`SELECT * FROM clasificacion WHERE equipo_nombre=?`).get(jugador.equipo)
+            : null;
+
+        // Posición en clasificación general
+        const posicion = clasi ? (() => {
+            const todos = db.prepare(`SELECT equipo_nombre FROM clasificacion ORDER BY puntos DESC, pg DESC, (gf-gc) DESC`).all();
+            return todos.findIndex(t => t.equipo_nombre === jugador.equipo) + 1;
+        })() : null;
+
+        res.render('jugador', {
+            user: req.session.user,
+            jugador,
+            equipo,
+            matchesEquipo,
+            stats: { pj, pg, pe, pp, gf, gc, pts },
+            clasi,
+            posicion,
+        });
+    } catch(e) {
+        console.error('[/jugador]', e.message);
+        res.redirect('/torneo');
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  ESTADÍSTICAS GLOBALES (JSON — usadas por torneo.ejs)
+// ══════════════════════════════════════════════════════════════
+app.get('/api/stats-globales', requireLogin, (req, res) => {
+    try {
+        const mejorAtaque  = db.prepare(`SELECT equipo_nombre, gf FROM clasificacion ORDER BY gf DESC LIMIT 1`).get();
+        const mejorDefensa = db.prepare(`SELECT equipo_nombre, gc FROM clasificacion ORDER BY gc ASC LIMIT 1`).get();
+        const masVictorias = db.prepare(`SELECT equipo_nombre, pg FROM clasificacion ORDER BY pg DESC LIMIT 1`).get();
+        const masGoles     = db.prepare(`SELECT equipo_nombre, gf FROM clasificacion ORDER BY gf DESC LIMIT 5`).all();
+        const masInvicto   = db.prepare(`SELECT equipo_nombre, (pg+pe) as inv, pp FROM clasificacion ORDER BY pp ASC, (pg+pe) DESC LIMIT 1`).get();
+        const totalGoles   = db.prepare(`SELECT SUM(goles1)+SUM(goles2) as total FROM matches WHERE estado='finalizado'`).get()?.total || 0;
+        const totalPartidos= db.prepare(`SELECT COUNT(*) as c FROM matches WHERE estado='finalizado'`).get()?.c || 0;
+        res.json({ mejorAtaque, mejorDefensa, masVictorias, masGoles, masInvicto, totalGoles, totalPartidos });
+    } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // ══════════════════════════════════════════════════════════════
