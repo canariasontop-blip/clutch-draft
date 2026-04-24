@@ -1832,6 +1832,21 @@ app.post('/admin/recrear-canales-partido', requireLogin, requireAdmin, async (re
 //  API INTERNA — llamadas desde el bot (sin sesión, solo localhost)
 // ══════════════════════════════════════════════════════════════
 
+// Avisos de sistema del bot (errores de sincronización, flags colgados, etc.)
+const systemWarnings = [];
+app.post('/api/bot/system-warning', (req, res) => {
+    const { msg } = req.body;
+    if (!msg) return res.status(400).json({ error: 'msg requerido' });
+    const entry = { msg, ts: new Date().toLocaleTimeString('es-ES') };
+    systemWarnings.unshift(entry);
+    if (systemWarnings.length > 20) systemWarnings.pop();
+    io.emit('system_warning', entry);
+    res.json({ ok: true });
+});
+app.get('/api/admin/system-warnings', requireAdmin, (req, res) => {
+    res.json(systemWarnings);
+});
+
 app.post('/api/bot/inscripciones-abrir', (req, res) => {
     db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('inscripciones_estado','abierto')`).run();
     io.emit('activity', '🟢 Inscripciones abiertas.');

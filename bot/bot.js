@@ -1667,6 +1667,7 @@ async function cerrarJornada(guild, jornada) {
 
 let _generandoJornada   = false; // Guard anti-doble ejecución
 let _generandoJornadaTs = 0;    // Timestamp para detectar flag colgado
+let _lastCronCheck      = 0;    // Timestamp de la última comprobación automática
 
 // Finalizar torneo: guardar historial, anunciar campeón, programar limpieza
 async function finalizarTorneo(guild) {
@@ -1795,7 +1796,7 @@ async function generarFaseKnockout(guild, fase, jornada, jornada_anterior, prevF
     await actualizarCanalClasificacion(guild).catch(() => {});
     await actualizarCanalResultadosPub(guild).catch(() => {});
     await actualizarCanalRondasFinalesPub(guild).catch(() => {});
-    await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => console.warn('[sync] jornada-avanzada falló:', e.message));
+    await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => addSystemWarning(`jornada-avanzada falló: ${e.message}`));
     console.log(`✅ Fase ${fase} generada (jornada ${jornada}): ${partidos.length} partido(s).`);
 }
 
@@ -1849,7 +1850,7 @@ async function generarSiguienteJornada(guild) {
 
             await actualizarCanalClasificacion(guild).catch(() => {});
             await actualizarCanalResultadosPub(guild).catch(() => {});
-            await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => console.warn('[sync] jornada-avanzada falló:', e.message));
+            await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => addSystemWarning(`jornada-avanzada falló: ${e.message}`));
             console.log(`✅ Jornada ${siguiente} generada con ${partidos.length} partido(s).`);
 
         } else if (faseActual === 'final') {
@@ -1971,9 +1972,10 @@ async function anunciarCampeon(guild, campeon, subcampeon, tabla) {
 }
 
 async function comprobarFinTorneo() {
+    _lastCronCheck = Date.now();
     // Safety: si el flag lleva más de 5 min colgado, resetear
     if (_generandoJornada && Date.now() - _generandoJornadaTs > 5 * 60 * 1000) {
-        console.warn('[jornada] Flag _generandoJornada colgado >5min — reseteando');
+        addSystemWarning('Flag _generandoJornada colgado >5min — reseteado automáticamente');
         _generandoJornada = false;
     }
     try {
@@ -1988,8 +1990,8 @@ async function comprobarFinTorneo() {
     } catch(e) { console.error('Error en comprobarFinTorneo:', e.message); }
 }
 
-// Comprobación automática de avance de jornada cada 5 minutos
-cron.schedule('*/5 * * * *', async () => {
+// Comprobación automática de avance de jornada cada minuto
+cron.schedule('* * * * *', async () => {
     await comprobarFinTorneo();
 }, { timezone: 'Europe/Madrid' });
 
@@ -2129,7 +2131,7 @@ async function limpiarDatos() {
         db.prepare("INSERT OR REPLACE INTO settings (key,value) VALUES ('fase_actual','')").run();
         db.prepare("INSERT OR REPLACE INTO settings (key,value) VALUES ('fases_torneo','')").run();
 
-        await axios.post('http://localhost:3000/api/torneo-limpiado').catch(e => console.warn('[sync] torneo-limpiado falló:', e.message));
+        await axios.post('http://localhost:3000/api/torneo-limpiado').catch(e => addSystemWarning(`torneo-limpiado falló: ${e.message}`));
         console.log('✅ Fase 2 completada: datos limpiados y web notificada.');
     } catch(e) { console.error('Error en limpiarDatos:', e.message); }
 }
@@ -2564,6 +2566,17 @@ function buildAdminStatusEmbed() {
         )
         .setFooter({ text: `Clutch Draft Admin · Actualizado ${new Date().toLocaleTimeString('es-ES')}` })
         .setTimestamp();
+}
+
+async function addSystemWarning(msg) {
+    console.warn('[WARN]', msg);
+    axios.post('http://localhost:3000/api/bot/system-warning', { msg }).catch(() => {});
+    if (ADMIN_ID) {
+        try {
+            const admin = await client.users.fetch(ADMIN_ID);
+            await admin.send(`⚠️ **Aviso automático del sistema:**\n\`${msg}\``);
+        } catch(e) { /* ignorar si DM falla */ }
+    }
 }
 
 function buildAdminPanelBlocks() {
@@ -5193,7 +5206,7 @@ client.on('interactionCreate', async (interaction) => {
                 for (const m of pendientesCheck) {
                     const g1 = Math.floor(Math.random() * 5);
                     const g2 = Math.floor(Math.random() * 5);
-                    await axios.post('http://localhost:3000/api/resultado-confirmado', { match_id: m.id, goles1: g1, goles2: g2 }).catch(e => console.warn('[sync] resultado-confirmado falló:', e.message));
+                    await axios.post('http://localhost:3000/api/resultado-confirmado', { match_id: m.id, goles1: g1, goles2: g2 }).catch(e => addSystemWarning(`resultado-confirmado falló: ${e.message}`));
                     simulados++;
                 }
                 await comprobarAvanceJornada(guild).catch(() => {});
@@ -5240,13 +5253,45 @@ client.on('interactionCreate', async (interaction) => {
                 const torneoFin = db.prepare("SELECT value FROM settings WHERE key='torneo_fin_ts'").get()?.value;
                 if (torneoFin) return interaction.editReply({ content: '🏆 El torneo ya ha finalizado.' });
 
-                // Reset flag por si quedó bloqueado
-                _generandoJornada = false;
+                // Mostrar estado actual antes de ejecutar
+                const jornadaAct  = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';
+                const pendJornada = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=? AND estado='pendiente'").get(parseInt(jornadaAct))?.c || 0;
+                const finJornada  = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=? AND estado='finalizado'").get(parseInt(jornadaAct))?.c || 0;
+                const segsDesde   = _lastCronCheck ? Math.floor((Date.now() - _lastCronCheck) / 1000) : null;
+                const proxSecs    = _lastCronCheck ? Math.max(0, 60 - Math.floor((Date.now() - _lastCronCheck) / 1000)) : '?';
 
-                await interaction.editReply({ content: '⚡ Forzando avance de jornada...' });
+                const lines = [
+                    `🤖 Generando jornada ahora: ${_generandoJornada ? '⚠️ **SÍ** — el bot ya está trabajando' : '✅ No'}`,
+                    `📊 Jornada **${jornadaAct}**: ${finJornada} finalizados · ${pendJornada} pendientes`,
+                    segsDesde !== null
+                        ? `🕐 Última comprobación automática: hace **${segsDesde}s** · próxima en ~**${proxSecs}s**`
+                        : `🕐 La comprobación automática aún no se ha ejecutado`,
+                ];
+                if (_generandoJornada) {
+                    lines.push(`\n⚠️ **El bot YA está procesando. Espera unos segundos antes de forzar.**`);
+                } else if (pendJornada === 0) {
+                    lines.push(`\n✅ Todos finalizados — el cron lo haría en ~${proxSecs}s. ¿Quieres adelantarlo?`);
+                } else {
+                    lines.push(`\n❌ Quedan ${pendJornada} partido(s) pendiente(s). Si los fuerzas igualmente, esos partidos quedarán sin resultado.`);
+                }
+
+                await interaction.editReply({
+                    content: `**📊 Estado antes de forzar jornada:**\n\n${lines.join('\n')}\n\n¿Confirmas?`,
+                    components: [new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('admp_forzar_jornada_confirmar').setLabel('⚡ Sí, forzar ahora').setStyle(ButtonStyle.Danger),
+                        new ButtonBuilder().setCustomId('admp_forzar_jornada_cancelar').setLabel('❌ Cancelar').setStyle(ButtonStyle.Secondary),
+                    )]
+                });
+
+            } else if (id === 'admp_forzar_jornada_confirmar') {
+                _generandoJornada = false;
+                await interaction.editReply({ content: '⚡ Forzando avance de jornada...', components: [] });
                 await generarSiguienteJornada(guild);
                 const nuevaJornada = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value;
-                await interaction.editReply({ content: `✅ Avance forzado completado. Jornada actual ahora: **${nuevaJornada}**` });
+                await interaction.editReply({ content: `✅ Avance forzado completado. Jornada actual: **${nuevaJornada}**`, components: [] });
+
+            } else if (id === 'admp_forzar_jornada_cancelar') {
+                await interaction.editReply({ content: '↩️ Operación cancelada.', components: [] });
 
             } else if (id === 'admp_ajustar_jornada') {
                 const jornadaActualAhora = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';

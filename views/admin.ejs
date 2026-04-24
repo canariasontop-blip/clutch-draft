@@ -137,6 +137,12 @@
         }
         .log-entry { border-left:2px solid var(--primary); padding-left:8px; margin-bottom:4px; }
         .log-entry span { color:#333; }
+        .log-entry.warn { border-color:#ff4d4d; color:#ff9999; }
+        .log-entry.warn span { color:#ff4d4d; }
+        .log-entry.ok { border-color:#00ffcc; color:#aaffee; }
+        #sys-warn-banner { display:none; background:rgba(255,77,77,0.15); border:1px solid #ff4d4d;
+            border-radius:10px; padding:12px 18px; margin-bottom:16px; color:#ff9999; font-size:0.85rem; }
+        #sys-warn-banner strong { color:#ff4d4d; }
 
         /* Tablas */
         table { width:100%; border-collapse:collapse; }
@@ -231,6 +237,11 @@
     <div class="page-header">
         <h1><i class="fas fa-shield-alt"></i> PANEL DE CONTROL</h1>
         <p>Control total del sistema Clutch Draft</p>
+    </div>
+
+    <!-- Banner de avisos del sistema -->
+    <div id="sys-warn-banner">
+        <strong>⚠️ Aviso del sistema:</strong> <span id="sys-warn-text"></span>
     </div>
 
     <!-- Stats -->
@@ -1555,6 +1566,36 @@
 <script>
 (function(){
     const socket = io();
+
+    function addLog(text, type) {
+        const box = document.getElementById('log-box');
+        if (!box) return;
+        const d = document.createElement('div');
+        d.className = 'log-entry' + (type ? ' ' + type : '');
+        const now = new Date().toLocaleTimeString('es-ES');
+        d.innerHTML = '<span>[' + now + ']</span> ' + text;
+        box.prepend(d);
+        while (box.children.length > 50) box.removeChild(box.lastChild);
+    }
+
+    socket.on('activity', function(msg) { addLog(msg, 'ok'); });
+
+    socket.on('system_warning', function(data) {
+        addLog('⚠️ ' + data.msg, 'warn');
+        const banner = document.getElementById('sys-warn-banner');
+        const txt    = document.getElementById('sys-warn-text');
+        if (banner && txt) {
+            txt.textContent = data.msg + ' [' + data.ts + ']';
+            banner.style.display = 'block';
+            setTimeout(function() { banner.style.display = 'none'; }, 60000);
+        }
+    });
+
+    // Cargar avisos previos al abrir la página
+    fetch('/api/admin/system-warnings').then(function(r){ return r.json(); }).then(function(list){
+        list.forEach(function(w){ addLog('⚠️ ' + w.msg + ' [' + w.ts + ']', 'warn'); });
+    }).catch(function(){});
+
     socket.on('turno_saltado', function(data) {
         document.getElementById('alerta-turno-texto').textContent =
             'El turno de ' + data.capitan + ' expiró. Usa "Forzar turno" si fue un error y quieres volver a él.';
