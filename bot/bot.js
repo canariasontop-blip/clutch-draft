@@ -790,13 +790,15 @@ async function enviarDMBienvenidaCapitan(member) {
             .setColor(0x00ffcc)
             .setDescription('¡Enhorabuena! Ya eres **Capitán** en el Clutch Draft.\n\nDesde la web puedes personalizar todo tu equipo:')
             .addFields(
-                { name: '🌐 Acceso', value: '**[clutch-draft.duckdns.org/draft](https://clutch-draft.duckdns.org/draft)**\nInicia sesión con Discord.', inline: false },
-                { name: '✏️ Nombre del equipo', value: 'Cambia el nombre de tu equipo desde el panel de capitán.', inline: true },
-                { name: '🛡️ Escudo', value: 'Sube la imagen que quieras como logo de tu equipo.', inline: true },
-                { name: '⚙️ Formación', value: 'Elige entre **3-1-4-2** y **3-5-2**.\n⚠️ Solo puedes cambiarla mientras el draft está **cerrado**.', inline: false }
+                { name: '✏️ Nombre del equipo', value: 'Cambia el nombre desde el panel de capitán.', inline: true },
+                { name: '🛡️ Escudo', value: 'Sube la imagen que quieras como logo.', inline: true },
+                { name: '⚙️ Formación', value: 'Elige entre **3-1-4-2** y **3-5-2**.\n⚠️ Solo mientras el draft está **cerrado**.', inline: false }
             )
             .setFooter({ text: 'Clutch Draft · Panel de capitán' });
-        await member.send({ embeds: [embedWeb] });
+        const rowWeb = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setLabel('🛠️ Mi equipo').setURL('https://clutch-draft.duckdns.org/draft').setStyle(ButtonStyle.Link)
+        );
+        await member.send({ embeds: [embedWeb], components: [rowWeb] });
 
         // ── 2. Cómo seguir el torneo ──────────────────────────────
         const embedTorneo = new EmbedBuilder()
@@ -806,10 +808,10 @@ async function enviarDMBienvenidaCapitan(member) {
                 {
                     name: '🌐 Web',
                     value: [
-                        '• **[Inicio](https://clutch-draft.duckdns.org/hub)** — estado general',
-                        '• **[Draft](https://clutch-draft.duckdns.org/draft)** — tu equipo y fichajes en directo',
-                        '• **[Clasificación](https://clutch-draft.duckdns.org/clasificacion)** — tabla actualizada',
-                        '• **[Directo](https://clutch-draft.duckdns.org/directo)** — streams en directo',
+                        '• **Inicio** — estado general del draft',
+                        '• **Draft** — tu equipo y fichajes en directo',
+                        '• **Clasificación** — tabla actualizada',
+                        '• **Directo** — streams en directo',
                     ].join('\n'),
                     inline: false,
                 },
@@ -819,13 +821,19 @@ async function enviarDMBienvenidaCapitan(member) {
                         '• `📊-clasificacion` — tabla tras cada jornada',
                         '• `📅-calendario` — partidos de cada jornada',
                         '• `📢-anuncios` — novedades del torneo',
-                        '• Tu **canal privado de partido** — se crea automáticamente antes de cada match',
+                        '• Tu **canal privado de partido** — se crea antes de cada match',
                     ].join('\n'),
                     inline: false,
                 }
             )
             .setFooter({ text: 'Clutch Draft · Sigue todo el torneo' });
-        await member.send({ embeds: [embedTorneo] });
+        const rowTorneo = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setLabel('🏠 Inicio').setURL('https://clutch-draft.duckdns.org/hub').setStyle(ButtonStyle.Link),
+            new ButtonBuilder().setLabel('⚽ Draft').setURL('https://clutch-draft.duckdns.org/draft').setStyle(ButtonStyle.Link),
+            new ButtonBuilder().setLabel('📊 Clasificación').setURL('https://clutch-draft.duckdns.org/clasificacion').setStyle(ButtonStyle.Link),
+            new ButtonBuilder().setLabel('📺 Directo').setURL('https://clutch-draft.duckdns.org/directo').setStyle(ButtonStyle.Link),
+        );
+        await member.send({ embeds: [embedTorneo], components: [rowTorneo] });
 
         // ── 3. Normativa resumida + imagen perks vetados ──────────
         const embedNorma = new EmbedBuilder()
