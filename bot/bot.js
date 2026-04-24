@@ -780,6 +780,82 @@ async function lanzarCapitaniaDoble(guild) {
     return { ok: true };
 }
 
+async function ejecutarRuletaCapitanes(guild, numSlots) {
+    const candidatos = db.prepare(`SELECT * FROM candidatos_capitan WHERE confirmado=0`).all();
+    if (candidatos.length === 0) return { ok: false, error: 'No hay candidatos en la ruleta.' };
+
+    const shuffled  = [...candidatos].sort(() => Math.random() - 0.5);
+    const ganadores = shuffled.slice(0, Math.min(numSlots, shuffled.length));
+    const perdedores= shuffled.slice(ganadores.length);
+
+    for (const cap of ganadores) {
+        try {
+            const member = await guild.members.fetch(cap.discord_id).catch(() => null);
+            db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')`).run(cap.discord_id, cap.nombre);
+            db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(cap.discord_id, cap.nombre);
+            db.prepare(`UPDATE candidatos_capitan SET confirmado=1 WHERE discord_id=?`).run(cap.discord_id);
+            if (member) {
+                await member.roles.add(ROL_CAPITAN).catch(() => {});
+                await member.send('🎡 **¡La Ruleta de Capitanes te ha elegido!** Ya tienes el rol de Capitán. ¡Mucha suerte en el draft!').catch(() => {});
+            }
+        } catch(e) { console.error('Error procesando ganador ruleta:', cap.discord_id, e.message); }
+    }
+
+    for (const cap of perdedores) {
+        try {
+            const member = await guild.members.fetch(cap.discord_id).catch(() => null);
+            if (member) await member.send('🎡 La Ruleta de Capitanes ha finalizado. Esta vez no fuiste seleccionado. ¡Mucha suerte la próxima!').catch(() => {});
+        } catch(e) {}
+    }
+
+    try {
+        const canalAnuncios = await guild.channels.fetch(CANAL_ANUNCIOS);
+        const listaGanadores = ganadores.map(c => `👑 **${c.nombre}**`).join('\n') || '*Nadie*';
+        const embed = new EmbedBuilder()
+            .setTitle('🎡 RULETA DE CAPITANES — RESULTADO')
+            .setColor(0xa066ff)
+            .setDescription(`La ruleta ha seleccionado **${ganadores.length}** capitán(es) de **${candidatos.length}** candidatos.`)
+            .addFields({ name: '🏆 Capitanes seleccionados', value: listaGanadores, inline: false })
+            .setTimestamp();
+        if (perdedores.length) embed.addFields({ name: '❌ No seleccionados', value: perdedores.map(c => c.nombre).join(', '), inline: false });
+        await canalAnuncios.send({ embeds: [embed] });
+    } catch(e) { console.error('Error anunciando ruleta:', e.message); }
+
+    return { ok: true, ganadores: ganadores.map(c => c.nombre), perdedores: perdedores.map(c => c.nombre) };
+}
+
+async function ejecutarTodosCapitanes(guild) {
+    const candidatos = db.prepare(`SELECT * FROM candidatos_capitan WHERE confirmado=0`).all();
+    if (candidatos.length === 0) return { ok: false, error: 'No hay candidatos.' };
+
+    for (const cap of candidatos) {
+        try {
+            const member = await guild.members.fetch(cap.discord_id).catch(() => null);
+            db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')`).run(cap.discord_id, cap.nombre);
+            db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(cap.discord_id, cap.nombre);
+            db.prepare(`UPDATE candidatos_capitan SET confirmado=1 WHERE discord_id=?`).run(cap.discord_id);
+            if (member) {
+                await member.roles.add(ROL_CAPITAN).catch(() => {});
+                await member.send('👑 ¡Todos los candidatos han sido aceptados! Ya tienes el rol de Capitán. ¡Mucha suerte en el draft!').catch(() => {});
+            }
+        } catch(e) { console.error('Error procesando capitán (todos):', cap.discord_id, e.message); }
+    }
+
+    try {
+        const canalAnuncios = await guild.channels.fetch(CANAL_ANUNCIOS);
+        const lista = candidatos.map(c => `👑 **${c.nombre}**`).join('\n') || '*Nadie*';
+        const embed = new EmbedBuilder()
+            .setTitle('👑 CAPITANES CONFIRMADOS')
+            .setColor(0x00ff88)
+            .setDescription(`Todos los candidatos han sido aceptados como capitanes.`)
+            .addFields({ name: `👥 Capitanes (${candidatos.length})`, value: lista, inline: false })
+            .setTimestamp();
+        await canalAnuncios.send({ embeds: [embed] });
+    } catch(e) { console.error('Error anunciando todos capitanes:', e.message); }
+
+    return { ok: true, total: candidatos.length };
+}
+
 async function lanzarEncuestaCapitan(canal, slotsNecesarios) {
     candidatosCapitan.clear();
     const row = new ActionRowBuilder().addComponents(
@@ -2515,24 +2591,51 @@ function buildAdminPanelBlocks() {
         ),
     ];
 
-    // Bloque 2b — Capitanes Draft Gratuito
+    // Bloque 2b — Gestión de Capitanes (Gratuito / Pago overflow)
     const draftTipo        = db.prepare(`SELECT value FROM settings WHERE key='draft_tipo'`).get()?.value || '';
-    const numEquiposManual = db.prepare(`SELECT value FROM settings WHERE key='num_equipos_manual'`).get()?.value || '';
+    const numEquiposManual = parseInt(db.prepare(`SELECT value FROM settings WHERE key='num_equipos_manual'`).get()?.value || '0');
     const formatoManual    = db.prepare(`SELECT value FROM settings WHERE key='formato_manual'`).get()?.value || '';
-    const capsPorEquipo    = db.prepare(`SELECT value FROM settings WHERE key='caps_por_equipo'`).get()?.value || '1';
+    const capsPorEquipo    = parseInt(db.prepare(`SELECT value FROM settings WHERE key='caps_por_equipo'`).get()?.value || '1');
     const nCandidatos      = db.prepare(`SELECT COUNT(*) as c FROM candidatos_capitan WHERE confirmado=0`).get()?.c || 0;
     const nConfirmados     = db.prepare(`SELECT COUNT(*) as c FROM candidatos_capitan WHERE confirmado=1`).get()?.c || 0;
-    const b2bEmbed = new EmbedBuilder().setTitle('🆓 DRAFT GRATUITO — CAPITANES').setColor(0xa066ff)
+    const nEquiposActuales = db.prepare(`SELECT COUNT(*) as c FROM teams`).get()?.c || 0;
+    const equiposObj       = numEquiposManual > 0 ? numEquiposManual : calcularEquiposMaximos();
+    const slotsCapitanes   = equiposObj * capsPorEquipo;
+    const slotsLibres      = Math.max(0, slotsCapitanes - nEquiposActuales);
+
+    let situacionLinea, colorBloque;
+    if (nCandidatos === 0) {
+        situacionLinea = '❓ Sin candidatos todavía';
+        colorBloque = 0x888888;
+    } else if (nCandidatos <= slotsLibres) {
+        situacionLinea = `✅ Todos caben (${nCandidatos} cands · ${slotsLibres} plazas) → recomendado: **Todos capitanes**`;
+        colorBloque = 0x00ff88;
+    } else if (capsPorEquipo === 1 && nCandidatos <= slotsLibres * 2) {
+        situacionLinea = `🟡 Más cands que plazas, caben al doble (${nCandidatos} vs ${slotsLibres}) → recomendado: **Cap doble**`;
+        colorBloque = 0xffcc00;
+    } else {
+        situacionLinea = `🔴 Exceso de candidatos (${nCandidatos} vs ${slotsLibres} plazas) → recomendado: **Ruleta**`;
+        colorBloque = 0xff4d4d;
+    }
+
+    const b2bEmbed = new EmbedBuilder().setTitle('👑 GESTIÓN DE CAPITANES').setColor(colorBloque)
         .setDescription(
-            `Tipo de draft actual: **${draftTipo || 'no definido'}**\n` +
-            `Candidatos: **${nCandidatos}** | Confirmados: **${nConfirmados}**\n` +
-            `Equipos: **${numEquiposManual || 'auto'}** | Formato: **${formatoManual || 'auto'}** | Caps/equipo: **${capsPorEquipo}**`
+            `Tipo de draft: **${draftTipo || 'no definido'}**\n` +
+            `Candidatos: **${nCandidatos}** | Confirmados: **${nConfirmados}** | Equipos actuales: **${nEquiposActuales}**\n` +
+            `Obj. equipos: **${equiposObj}** | Caps/equipo: **${capsPorEquipo}** | Plazas libres: **${slotsLibres}**\n` +
+            `Formato: **${formatoManual || 'auto'}**\n\n` +
+            `📊 ${situacionLinea}`
         );
     const b2brows = [
         new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('admp_cap_gratis_forzar').setLabel('👑 Forzar capitán').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('admp_cap_gratis_forzar').setLabel('👑 Forzar candidato').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId('admp_cap_gratis_quitar').setLabel('🗑️ Quitar candidato').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId('admp_cap_gratis_config').setLabel('⚙️ Config equipos').setStyle(ButtonStyle.Secondary),
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_ruleta_todos').setLabel('👥 Todos capitanes').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('admp_ruleta_doble').setLabel('👥👥 Cap doble + todos').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('admp_ruleta_ejecutar').setLabel('🎡 Ejecutar Ruleta').setStyle(ButtonStyle.Danger),
         ),
     ];
 
@@ -4614,6 +4717,52 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
+        // ── Ruleta ejecutar (pide confirmación antes de defer) ────
+        if (id === 'admp_ruleta_ejecutar') {
+            const _numEq  = parseInt(db.prepare(`SELECT value FROM settings WHERE key='num_equipos_manual'`).get()?.value || '0');
+            const _caps   = parseInt(db.prepare(`SELECT value FROM settings WHERE key='caps_por_equipo'`).get()?.value || '1');
+            const _nActual= db.prepare(`SELECT COUNT(*) as c FROM teams`).get()?.c || 0;
+            const _objEq  = _numEq > 0 ? _numEq : calcularEquiposMaximos();
+            const _slots  = Math.max(0, _objEq * _caps - _nActual);
+            const _nCands = db.prepare(`SELECT COUNT(*) as c FROM candidatos_capitan WHERE confirmado=0`).get()?.c || 0;
+            const ganadoresN = Math.min(_slots, _nCands);
+            const perdedoresN= _nCands - ganadoresN;
+            await interaction.reply({
+                content:
+                    `🎡 **¿Confirmas ejecutar la Ruleta de Capitanes?**\n\n` +
+                    `📊 Candidatos: **${_nCands}** | Plazas libres: **${_slots}**\n` +
+                    (perdedoresN > 0
+                        ? `⚡ Se seleccionarán **${ganadoresN}** ganadores y **${perdedoresN}** quedarán eliminados.`
+                        : `ℹ️ Todos los **${_nCands}** candidatos serán capitanes (no hay exceso).`),
+                components: [new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId(`admp_ruleta_confirmar_${_slots}`).setLabel('🎡 Sí, ejecutar ruleta').setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder().setCustomId('admp_ruleta_cancelar').setLabel('❌ Cancelar').setStyle(ButtonStyle.Secondary),
+                )],
+                ephemeral: true
+            });
+            return;
+        }
+
+        if (id.startsWith('admp_ruleta_confirmar_')) {
+            await interaction.deferReply({ ephemeral: true });
+            const numSlots = parseInt(id.replace('admp_ruleta_confirmar_', '')) || 0;
+            const resultado = await ejecutarRuletaCapitanes(guild, numSlots);
+            if (resultado.ok) {
+                const msgGan = resultado.ganadores.length ? resultado.ganadores.join(', ') : 'Nadie';
+                const msgPer = resultado.perdedores.length ? `\nEliminados: ${resultado.perdedores.join(', ')}` : '';
+                await interaction.editReply({ content: `✅ Ruleta ejecutada.\n👑 Ganadores: **${msgGan}**${msgPer}` });
+            } else {
+                await interaction.editReply({ content: `❌ ${resultado.error}` });
+            }
+            await actualizarPanelDiscord().catch(() => {});
+            return;
+        }
+
+        if (id === 'admp_ruleta_cancelar') {
+            await interaction.update({ content: '❌ Ruleta cancelada.', components: [] });
+            return;
+        }
+
         await interaction.deferReply({ ephemeral: true });
 
         try {
@@ -4688,6 +4837,20 @@ client.on('interactionCreate', async (interaction) => {
                 const resultado = await lanzarCapitaniaDoble(guild);
                 if (resultado.ok) await interaction.editReply({ content: '✅ Panel de capitanía doble publicado en 💳-pagos.' });
                 else              await interaction.editReply({ content: `❌ ${resultado.error}` });
+
+            // ── Ruleta opciones ────────────────────────────────────
+            } else if (id === 'admp_ruleta_todos') {
+                const resultado = await ejecutarTodosCapitanes(guild);
+                if (resultado.ok) await interaction.editReply({ content: `✅ **${resultado.total}** candidatos son ahora capitanes. Anunciado en canales.` });
+                else              await interaction.editReply({ content: `❌ ${resultado.error}` });
+                await actualizarPanelDiscord().catch(() => {});
+
+            } else if (id === 'admp_ruleta_doble') {
+                db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('caps_por_equipo','2')`).run();
+                const resultado = await ejecutarTodosCapitanes(guild);
+                if (resultado.ok) await interaction.editReply({ content: `✅ Capitanía doble activada. **${resultado.total}** candidatos son ahora capitanes.` });
+                else              await interaction.editReply({ content: `❌ ${resultado.error}` });
+                await actualizarPanelDiscord().catch(() => {});
 
             } else if (id === 'admp_pago_10' || id === 'admp_pago_15' || id === 'admp_pago_20') {
                 const precio       = id.split('_')[2];
