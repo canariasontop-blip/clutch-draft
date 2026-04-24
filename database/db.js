@@ -135,6 +135,18 @@ db.exec(`
     fecha       TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS player_match_stats (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    match_id         INTEGER NOT NULL,
+    discord_id       TEXT NOT NULL,
+    equipo           TEXT NOT NULL,
+    goles            INTEGER DEFAULT 0,
+    asistencias      INTEGER DEFAULT 0,
+    porterias_a_cero INTEGER DEFAULT 0,
+    reported_by      TEXT NOT NULL,
+    UNIQUE(match_id, discord_id)
+  );
+
 `);
 
 // ── VALORES INICIALES ──────────────────────────────────────────
@@ -185,6 +197,10 @@ initDefaults();
 
 // Migración historial_torneos: añadir columna partidos
 try { db.prepare(`ALTER TABLE historial_torneos ADD COLUMN partidos TEXT DEFAULT '[]'`).run(); } catch { /* ya existe */ }
+
+// Migraciones estadísticas de partido
+try { db.prepare(`ALTER TABLE matches ADD COLUMN stats_equipo1 INTEGER DEFAULT 0`).run(); } catch { /* ya existe */ }
+try { db.prepare(`ALTER TABLE matches ADD COLUMN stats_equipo2 INTEGER DEFAULT 0`).run(); } catch { /* ya existe */ }
 
 // Migraciones twitch_tracked (columnas nuevas en instalaciones previas)
 for (const [col, def] of [

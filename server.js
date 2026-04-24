@@ -2171,6 +2171,165 @@ app.get('/api/stats-globales', requireLogin, (req, res) => {
 });
 
 // ══════════════════════════════════════════════════════════════
+//  ESTADÍSTICAS DE PARTIDO
+// ══════════════════════════════════════════════════════════════
+
+function getEquipoDeUsuario(userId, match) {
+    const isAdmin = userId === process.env.ADMIN_ID || !!db.prepare('SELECT id FROM admins WHERE discord_id=?').get(userId);
+    if (isAdmin) return { miEquipo: match.equipo1, esAdmin: true };
+
+    const cap1 = db.prepare("SELECT * FROM teams WHERE capitan_username=?").get(match.equipo1);
+    const cap2 = db.prepare("SELECT * FROM teams WHERE capitan_username=?").get(match.equipo2);
+    if (cap1?.capitan_id === userId || cap1?.capitan2_id === userId) return { miEquipo: match.equipo1, esAdmin: false };
+    if (cap2?.capitan_id === userId || cap2?.capitan2_id === userId) return { miEquipo: match.equipo2, esAdmin: false };
+    const cocap1 = cap1 && db.prepare("SELECT 1 FROM cocapitanes WHERE capitan_id=? AND cocapitan_id=?").get(cap1.capitan_id, userId);
+    const cocap2 = cap2 && db.prepare("SELECT 1 FROM cocapitanes WHERE capitan_id=? AND cocapitan_id=?").get(cap2.capitan_id, userId);
+    if (cocap1) return { miEquipo: match.equipo1, esAdmin: false };
+    if (cocap2) return { miEquipo: match.equipo2, esAdmin: false };
+    return null;
+}
+
+app.get('/partido/:match_id/estadisticas', requireLogin, (req, res) => {
+    try {
+        const matchId = req.params.match_id;
+        const userId = req.session.user.id;
+        const match = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!match || match.estado !== 'finalizado') return res.redirect('/torneo');
+
+        const auth = getEquipoDeUsuario(userId, match);
+        if (!auth) return res.redirect('/torneo');
+
+        const miEquipo = (auth.esAdmin && req.query.equipo) ? req.query.equipo : auth.miEquipo;
+        const esEquipo1 = miEquipo === match.equipo1;
+        const yaEnviado = esEquipo1 ? !!match.stats_equipo1 : !!match.stats_equipo2;
+        const otroEnviado = esEquipo1 ? !!match.stats_equipo2 : !!match.stats_equipo1;
+
+        const jugadores = db.prepare("SELECT * FROM players WHERE equipo=? ORDER BY CASE posicion WHEN 'POR' THEN 1 WHEN 'DFC' THEN 2 WHEN 'MC' THEN 3 WHEN 'CARR' THEN 4 WHEN 'DC' THEN 5 ELSE 6 END, nombre").all(miEquipo);
+
+        const statsExistentes = {};
+        const statsRows = db.prepare("SELECT * FROM player_match_stats WHERE match_id=? AND equipo=?").all(matchId, miEquipo);
+        statsRows.forEach(r => { statsExistentes[r.discord_id] = r; });
+
+        const golesRecibidos = esEquipo1 ? match.goles2 : match.goles1;
+
+        res.render('estadisticas-partido', {
+            user: req.session.user,
+            match,
+            miEquipo,
+            esEquipo1,
+            yaEnviado,
+            otroEnviado,
+            jugadores,
+            statsExistentes,
+            golesRecibidos,
+            mensaje: req.query.ok ? 'ok' : (req.query.ya ? 'ya' : null),
+            esAdmin: auth.esAdmin,
+        });
+    } catch(e) {
+        console.error('[/partido/estadisticas GET]', e.message);
+        res.redirect('/torneo');
+    }
+});
+
+app.post('/partido/:match_id/estadisticas', requireLogin, (req, res) => {
+    try {
+        const matchId = req.params.match_id;
+        const userId = req.session.user.id;
+        const match = db.prepare('SELECT * FROM matches WHERE id=?').get(matchId);
+        if (!match || match.estado !== 'finalizado') return res.redirect('/torneo');
+
+        const auth = getEquipoDeUsuario(userId, match);
+        if (!auth) return res.redirect('/torneo');
+
+        const miEquipo = auth.miEquipo;
+        const esEquipo1 = miEquipo === match.equipo1;
+
+        const jugadores = db.prepare("SELECT * FROM players WHERE equipo=?").all(miEquipo);
+        const golesRecibidos = esEquipo1 ? match.goles2 : match.goles1;
+        const porteriaCero = golesRecibidos === 0 ? 1 : 0;
+
+        const stmt = db.prepare(`
+            INSERT INTO player_match_stats (match_id, discord_id, equipo, goles, asistencias, porterias_a_cero, reported_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(match_id, discord_id) DO UPDATE SET
+                goles=excluded.goles, asistencias=excluded.asistencias,
+                porterias_a_cero=excluded.porterias_a_cero,
+                reported_by=excluded.reported_by
+        `);
+
+        db.transaction(() => {
+            for (const j of jugadores) {
+                const goles = Math.max(0, parseInt(req.body[`goles_${j.discord_id}`] || '0') || 0);
+                const asist = Math.max(0, parseInt(req.body[`asist_${j.discord_id}`] || '0') || 0);
+                const paCero = ['DFC','POR'].includes(j.posicion) ? porteriaCero : 0;
+                stmt.run(matchId, j.discord_id, miEquipo, goles, asist, paCero, userId);
+            }
+            const col = esEquipo1 ? 'stats_equipo1' : 'stats_equipo2';
+            db.prepare(`UPDATE matches SET ${col}=1 WHERE id=?`).run(matchId);
+        })();
+
+        io.emit('activity', `📊 ${req.session.user.username} registró estadísticas de ${miEquipo} (partido ${matchId})`);
+
+        res.redirect(`/partido/${matchId}/estadisticas?ok=1`);
+    } catch(e) {
+        console.error('[/partido/estadisticas POST]', e.message);
+        res.redirect('/torneo');
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  GOLEADORES — Clasificación individual por posición
+// ══════════════════════════════════════════════════════════════
+app.get('/goleadores', requireLogin, (req, res) => {
+    try {
+        const torneoActivo = !!db.prepare("SELECT value FROM settings WHERE key='torneo_generado'").get()?.value;
+
+        const queryBase = `
+            SELECT
+                p.discord_id, p.nombre, p.posicion, p.eafc_id, p.foto,
+                COALESCE(NULLIF(t.nombre_equipo,''), p.equipo) as equipo_display,
+                t.logo_url,
+                SUM(s.goles) as goles,
+                SUM(s.asistencias) as asistencias,
+                SUM(s.porterias_a_cero) as porterias_a_cero,
+                COUNT(DISTINCT s.match_id) as partidos
+            FROM player_match_stats s
+            JOIN players p ON p.discord_id = s.discord_id
+            LEFT JOIN teams t ON t.capitan_username = p.equipo
+        `;
+
+        const statsTorneo = torneoActivo ? db.prepare(queryBase + `
+            JOIN matches m ON m.id = s.match_id
+            WHERE m.estado = 'finalizado'
+            GROUP BY s.discord_id
+            ORDER BY goles DESC, asistencias DESC, porterias_a_cero DESC
+        `).all() : [];
+
+        const statsGlobal = db.prepare(queryBase + `
+            GROUP BY s.discord_id
+            ORDER BY goles DESC, asistencias DESC, porterias_a_cero DESC
+        `).all();
+
+        const POSICIONES = ['DC','CARR','MC','DFC','POR'];
+        const agrupar = (arr) => {
+            const result = {};
+            for (const pos of POSICIONES) result[pos] = arr.filter(p => p.posicion === pos);
+            return result;
+        };
+
+        res.render('goleadores', {
+            user: req.session.user,
+            torneo:  agrupar(statsTorneo),
+            global:  agrupar(statsGlobal),
+            torneoActivo,
+        });
+    } catch(e) {
+        console.error('[/goleadores]', e.message);
+        res.render('goleadores', { user: req.session.user, torneo: {}, global: {}, torneoActivo: false });
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
 //  ARRANQUE
 // ══════════════════════════════════════════════════════════════
 const PORT = process.env.PORT || 3000;

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#03030a">
+    <title>Clutch Draft — Goleadores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
+
+        /* VIDEO FONDO */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.75);}
+
+        /* NAV */
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;background:rgba(3,3,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+        .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:4px;color:var(--primary);}
+        .nav-links{display:flex;gap:0;}
+        .nav-link{padding:8px 14px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;text-decoration:none;transition:.2s;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);}
+        .nav-link.admin-lnk{color:#f0c040;}
+        .nav-user{display:flex;align-items:center;gap:8px;}
+        .nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+        .nav-username{font-size:.75rem;color:#aaa;}
+        .logout-btn{color:#ff4d4d;font-size:.75rem;padding:6px 10px;border-radius:6px;text-decoration:none;}
+        .nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+        .nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:.3s;}
+        @media(max-width:768px){
+            .nav-links{display:none;position:fixed;top:58px;left:0;right:0;background:rgba(3,3,10,0.98);flex-direction:column;padding:12px 0;z-index:99;}
+            .nav-links.open{display:flex;}
+            .nav-hamburger{display:flex;}
+            .nav-username{display:none;}
+        }
+
+        /* LAYOUT */
+        .container{max-width:1100px;margin:0 auto;padding:88px 24px 80px;position:relative;z-index:1;}
+        .page-eyebrow{font-size:.65rem;color:var(--primary);letter-spacing:5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+        .page-title{font-family:var(--font-display);font-size:clamp(2.5rem,6vw,4rem);letter-spacing:2px;margin-bottom:32px;}
+
+        /* TABS TORNEO/GLOBAL */
+        .main-tabs{display:flex;gap:4px;margin-bottom:28px;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;width:fit-content;}
+        .main-tab{padding:8px 22px;border-radius:9px;font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#aaa;cursor:pointer;border:none;background:transparent;transition:.2s;}
+        .main-tab.active{background:var(--card);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.4);}
+
+        /* TABS POR POSICIÓN */
+        .pos-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+        .pos-tab{padding:6px 16px;border-radius:20px;font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;transition:.2s;}
+        .pos-tab:hover{border-color:rgba(255,255,255,.2);}
+        .pos-tab.active-DC,.pos-tab.active-CARR{background:rgba(0,255,204,.12);color:#00ffcc;border-color:rgba(0,255,204,.3);}
+        .pos-tab.active-MC{background:rgba(160,102,255,.12);color:#a066ff;border-color:rgba(160,102,255,.3);}
+        .pos-tab.active-DFC{background:rgba(255,77,77,.12);color:#ff4d4d;border-color:rgba(255,77,77,.3);}
+        .pos-tab.active-POR{background:rgba(51,153,255,.12);color:#3399ff;border-color:rgba(51,153,255,.3);}
+        .pos-tab-DC,.pos-tab-CARR{color:#00ffcc;}
+        .pos-tab-MC{color:#a066ff;}
+        .pos-tab-DFC{color:#ff4d4d;}
+        .pos-tab-POR{color:#3399ff;}
+
+        /* TOP 5 CARD */
+        .top5-card{background:var(--card);border:1px solid rgba(240,192,64,.25);border-radius:16px;padding:20px 24px;margin-bottom:28px;}
+        .top5-title{font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:var(--gold);margin-bottom:16px;}
+        .top5-list{display:flex;flex-direction:column;gap:8px;}
+        .top5-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);}
+        .top5-row:last-child{border-bottom:none;}
+        .top5-rank{font-family:var(--font-display);font-size:1.6rem;color:#444;min-width:32px;}
+        .top5-rank.gold{color:var(--gold);}
+        .top5-rank.silver{color:#c0c0c0;}
+        .top5-rank.bronze{color:#cd7f32;}
+        .top5-info{flex:1;}
+        .top5-nombre{font-weight:700;font-size:.95rem;}
+        .top5-equipo{font-size:.7rem;color:#aaa;}
+        .top5-goles{font-family:var(--font-display);font-size:1.4rem;color:var(--primary);}
+        .top5-pos-badge{padding:2px 8px;border-radius:12px;font-size:.6rem;font-weight:700;letter-spacing:1px;}
+        .badge-DC{background:rgba(0,255,204,.15);color:#00ffcc;}
+        .badge-CARR{background:rgba(255,204,0,.15);color:#ffcc00;}
+        .badge-MC{background:rgba(160,102,255,.15);color:#a066ff;}
+        .badge-DFC{background:rgba(255,77,77,.15);color:#ff4d4d;}
+        .badge-POR{background:rgba(51,153,255,.15);color:#3399ff;}
+
+        /* TABLA ESTADÍSTICAS */
+        .tabla-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+        .tabla-wrap{overflow-x:auto;}
+        .stats-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+        .stats-table th{font-size:.6rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;padding:12px 14px;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;}
+        .stats-table th.left{text-align:left;}
+        .stats-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;color:#ccc;}
+        .stats-table td.left{text-align:left;font-weight:600;color:#fff;}
+        .stats-table tr:last-child td{border-bottom:none;}
+        .stats-table tr:hover td{background:rgba(255,255,255,.02);}
+        .stats-table .rank-cell{font-family:var(--font-display);font-size:1.1rem;color:#555;}
+        .stats-table .rank-1{color:var(--gold);}
+        .stats-table .rank-2{color:#c0c0c0;}
+        .stats-table .rank-3{color:#cd7f32;}
+        .num-primary{color:var(--primary);font-weight:700;}
+        .num-accent{color:var(--accent);font-weight:700;}
+        .num-blue{color:#3399ff;font-weight:700;}
+
+        .player-cell{display:flex;align-items:center;gap:10px;}
+        .player-avatar-sm{width:32px;height:32px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:#555;font-size:.75rem;flex-shrink:0;}
+        .player-avatar-sm img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+
+        .equipo-cell{display:flex;align-items:center;gap:6px;}
+        .equipo-logo-sm{width:20px;height:20px;border-radius:4px;object-fit:cover;}
+
+        .empty-msg{text-align:center;padding:60px 24px;color:#555;}
+        .empty-msg i{font-size:2.5rem;display:block;margin-bottom:12px;color:#333;}
+
+        /* PANEL VISIBILITY */
+        .main-panel{display:none;}
+        .main-panel.active{display:block;}
+        .pos-panel{display:none;}
+        .pos-panel.active{display:block;}
+    </style>
+</head>
+<body>
+
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/bg.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/historial" class="nav-link">Historial</a>
+        <a href="/goleadores" class="nav-link active">Goleadores</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-eyebrow">Clutch Draft · Estadísticas</div>
+    <div class="page-title">CLASIFICACIÓN DE JUGADORES</div>
+
+    <!-- TABS TORNEO / GLOBAL -->
+    <div class="main-tabs">
+        <% if (torneoActivo) { %>
+        <button class="main-tab active" data-panel="torneo">Torneo actual</button>
+        <% } %>
+        <button class="main-tab <%= torneoActivo ? '' : 'active' %>" data-panel="global">Global histórico</button>
+    </div>
+
+    <%
+    function renderSection(data, panelId) {
+        const posiciones = ['DC','CARR','MC','DFC','POR'];
+        const allPlayers = posiciones.flatMap(pos => (data[pos] || []));
+        const top5 = [...allPlayers].sort((a,b) => (b.goles||0)-(a.goles||0)).slice(0,5);
+    %>
+    <div class="main-panel <%= panelId === 'torneo' ? (torneoActivo ? 'active' : '') : (!torneoActivo ? 'active' : '') %>" id="panel-<%= panelId %>">
+
+        <!-- TOP 5 GOLEADORES -->
+        <% if (top5.length > 0 && top5[0].goles > 0) { %>
+        <div class="top5-card">
+            <div class="top5-title">⚽ TOP 5 GOLEADORES</div>
+            <div class="top5-list">
+                <% top5.forEach(function(p, i) { %>
+                <% if (!p.goles) return; %>
+                <div class="top5-row">
+                    <div class="top5-rank <%= i===0?'gold':i===1?'silver':i===2?'bronze':'' %>"><%= i+1 %></div>
+                    <div class="top5-info">
+                        <div class="top5-nombre">
+                            <%= p.nombre %>
+                            <span class="top5-pos-badge badge-<%= p.posicion %>"><%= p.posicion %></span>
+                        </div>
+                        <div class="top5-equipo"><%= p.equipo_display || p.equipo %></div>
+                    </div>
+                    <div class="top5-goles"><%= p.goles %> <span style="font-size:.7rem;color:#aaa;">goles</span></div>
+                </div>
+                <% }); %>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- TABS POR POSICIÓN -->
+        <div class="pos-tabs" id="pos-tabs-<%= panelId %>">
+            <button class="pos-tab pos-tab-DC active-DC active" data-pos="DC" data-panel="<%= panelId %>">DC</button>
+            <button class="pos-tab pos-tab-CARR" data-pos="CARR" data-panel="<%= panelId %>">CARR</button>
+            <button class="pos-tab pos-tab-MC" data-pos="MC" data-panel="<%= panelId %>">MC</button>
+            <button class="pos-tab pos-tab-DFC" data-pos="DFC" data-panel="<%= panelId %>">DFC</button>
+            <button class="pos-tab pos-tab-POR" data-pos="POR" data-panel="<%= panelId %>">POR</button>
+        </div>
+
+        <!-- PANEL DC -->
+        <div class="pos-panel active" id="pos-<%= panelId %>-DC">
+            <div class="tabla-card">
+                <% if (!data.DC || data.DC.length === 0) { %>
+                <div class="empty-msg"><i class="fas fa-futbol"></i>Todavía no hay estadísticas de delanteros</div>
+                <% } else { %>
+                <div class="tabla-wrap">
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th class="left" style="width:32px;">#</th>
+                            <th class="left">Jugador</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th>
+                            <th>Goles</th>
+                            <th>Asistencias</th>
+                        </tr></thead>
+                        <tbody>
+                        <% data.DC.forEach(function(p, i) { %>
+                        <tr>
+                            <td class="rank-cell <%= i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'' %>"><%= i+1 %></td>
+                            <td class="left">
+                                <div class="player-cell">
+                                    <div class="player-avatar-sm"><% if(p.foto){ %><img src="<%= p.foto %>" alt=""><% } else { %><i class="fas fa-user"></i><% } %></div>
+                                    <%= p.nombre %>
+                                </div>
+                            </td>
+                            <td class="left">
+                                <div class="equipo-cell">
+                                    <% if(p.logo_url){ %><img src="<%= p.logo_url %>" class="equipo-logo-sm" alt=""><% } %>
+                                    <%= p.equipo_display || p.equipo %>
+                                </div>
+                            </td>
+                            <td><%= p.partidos || 0 %></td>
+                            <td class="num-primary"><%= p.goles || 0 %></td>
+                            <td class="num-accent"><%= p.asistencias || 0 %></td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- PANEL CARR -->
+        <div class="pos-panel" id="pos-<%= panelId %>-CARR">
+            <div class="tabla-card">
+                <% if (!data.CARR || data.CARR.length === 0) { %>
+                <div class="empty-msg"><i class="fas fa-running"></i>Todavía no hay estadísticas de carrileros</div>
+                <% } else { %>
+                <div class="tabla-wrap">
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th class="left" style="width:32px;">#</th>
+                            <th class="left">Jugador</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th>
+                            <th>Goles</th>
+                            <th>Asistencias</th>
+                        </tr></thead>
+                        <tbody>
+                        <% data.CARR.forEach(function(p, i) { %>
+                        <tr>
+                            <td class="rank-cell <%= i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'' %>"><%= i+1 %></td>
+                            <td class="left"><div class="player-cell"><div class="player-avatar-sm"><% if(p.foto){ %><img src="<%= p.foto %>" alt=""><% } else { %><i class="fas fa-user"></i><% } %></div><%= p.nombre %></div></td>
+                            <td class="left"><div class="equipo-cell"><% if(p.logo_url){ %><img src="<%= p.logo_url %>" class="equipo-logo-sm" alt=""><% } %><%= p.equipo_display || p.equipo %></div></td>
+                            <td><%= p.partidos || 0 %></td>
+                            <td class="num-primary"><%= p.goles || 0 %></td>
+                            <td class="num-accent"><%= p.asistencias || 0 %></td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- PANEL MC -->
+        <div class="pos-panel" id="pos-<%= panelId %>-MC">
+            <div class="tabla-card">
+                <% if (!data.MC || data.MC.length === 0) { %>
+                <div class="empty-msg"><i class="fas fa-exchange-alt"></i>Todavía no hay estadísticas de mediocentros</div>
+                <% } else { %>
+                <div class="tabla-wrap">
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th class="left" style="width:32px;">#</th>
+                            <th class="left">Jugador</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th>
+                            <th>Goles</th>
+                            <th>Asistencias</th>
+                            <th>P. a cero</th>
+                        </tr></thead>
+                        <tbody>
+                        <% data.MC.forEach(function(p, i) { %>
+                        <tr>
+                            <td class="rank-cell <%= i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'' %>"><%= i+1 %></td>
+                            <td class="left"><div class="player-cell"><div class="player-avatar-sm"><% if(p.foto){ %><img src="<%= p.foto %>" alt=""><% } else { %><i class="fas fa-user"></i><% } %></div><%= p.nombre %></div></td>
+                            <td class="left"><div class="equipo-cell"><% if(p.logo_url){ %><img src="<%= p.logo_url %>" class="equipo-logo-sm" alt=""><% } %><%= p.equipo_display || p.equipo %></div></td>
+                            <td><%= p.partidos || 0 %></td>
+                            <td class="num-primary"><%= p.goles || 0 %></td>
+                            <td class="num-accent"><%= p.asistencias || 0 %></td>
+                            <td class="num-blue"><%= p.porterias_a_cero || 0 %></td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- PANEL DFC -->
+        <div class="pos-panel" id="pos-<%= panelId %>-DFC">
+            <div class="tabla-card">
+                <% if (!data.DFC || data.DFC.length === 0) { %>
+                <div class="empty-msg"><i class="fas fa-shield-alt"></i>Todavía no hay estadísticas de defensas</div>
+                <% } else { %>
+                <div class="tabla-wrap">
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th class="left" style="width:32px;">#</th>
+                            <th class="left">Jugador</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th>
+                            <th>P. a cero</th>
+                            <th>Goles</th>
+                            <th>Asistencias</th>
+                        </tr></thead>
+                        <tbody>
+                        <% data.DFC.sort(function(a,b){return(b.porterias_a_cero||0)-(a.porterias_a_cero||0);}).forEach(function(p, i) { %>
+                        <tr>
+                            <td class="rank-cell <%= i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'' %>"><%= i+1 %></td>
+                            <td class="left"><div class="player-cell"><div class="player-avatar-sm"><% if(p.foto){ %><img src="<%= p.foto %>" alt=""><% } else { %><i class="fas fa-user"></i><% } %></div><%= p.nombre %></div></td>
+                            <td class="left"><div class="equipo-cell"><% if(p.logo_url){ %><img src="<%= p.logo_url %>" class="equipo-logo-sm" alt=""><% } %><%= p.equipo_display || p.equipo %></div></td>
+                            <td><%= p.partidos || 0 %></td>
+                            <td class="num-blue"><%= p.porterias_a_cero || 0 %></td>
+                            <td class="num-primary"><%= p.goles || 0 %></td>
+                            <td class="num-accent"><%= p.asistencias || 0 %></td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- PANEL POR -->
+        <div class="pos-panel" id="pos-<%= panelId %>-POR">
+            <div class="tabla-card">
+                <% if (!data.POR || data.POR.length === 0) { %>
+                <div class="empty-msg"><i class="fas fa-hand-paper"></i>Todavía no hay estadísticas de porteros</div>
+                <% } else { %>
+                <div class="tabla-wrap">
+                    <table class="stats-table">
+                        <thead><tr>
+                            <th class="left" style="width:32px;">#</th>
+                            <th class="left">Jugador</th>
+                            <th class="left">Equipo</th>
+                            <th>PJ</th>
+                            <th>P. a cero</th>
+                        </tr></thead>
+                        <tbody>
+                        <% data.POR.sort(function(a,b){return(b.porterias_a_cero||0)-(a.porterias_a_cero||0);}).forEach(function(p, i) { %>
+                        <tr>
+                            <td class="rank-cell <%= i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'' %>"><%= i+1 %></td>
+                            <td class="left"><div class="player-cell"><div class="player-avatar-sm"><% if(p.foto){ %><img src="<%= p.foto %>" alt=""><% } else { %><i class="fas fa-user"></i><% } %></div><%= p.nombre %></div></td>
+                            <td class="left"><div class="equipo-cell"><% if(p.logo_url){ %><img src="<%= p.logo_url %>" class="equipo-logo-sm" alt=""><% } %><%= p.equipo_display || p.equipo %></div></td>
+                            <td><%= p.partidos || 0 %></td>
+                            <td class="num-blue"><%= p.porterias_a_cero || 0 %></td>
+                        </tr>
+                        <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+    <% } %>
+
+    <% if (torneoActivo) { renderSection(torneo, 'torneo'); } %>
+    <% renderSection(global, 'global'); %>
+
+</div>
+
+<script>
+(function(){
+    // Nav hamburger
+    var burger = document.getElementById('nav-hamburger');
+    var links  = document.getElementById('nav-links');
+    if (burger) {
+        burger.addEventListener('click', function(){ links.classList.toggle('open'); burger.classList.toggle('open'); });
+        links.querySelectorAll('.nav-link').forEach(function(l){ l.addEventListener('click', function(){ links.classList.remove('open'); burger.classList.remove('open'); }); });
+    }
+
+    // Main tabs (torneo/global)
+    document.querySelectorAll('.main-tab').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            document.querySelectorAll('.main-tab').forEach(function(b){ b.classList.remove('active'); });
+            document.querySelectorAll('.main-panel').forEach(function(p){ p.classList.remove('active'); });
+            btn.classList.add('active');
+            var panel = document.getElementById('panel-' + btn.dataset.panel);
+            if (panel) panel.classList.add('active');
+        });
+    });
+
+    // Pos tabs
+    document.querySelectorAll('.pos-tab').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var panelId = btn.dataset.panel;
+            var pos = btn.dataset.pos;
+            // Desactivar todos en este panel
+            document.querySelectorAll('#pos-tabs-' + panelId + ' .pos-tab').forEach(function(b){
+                b.className = b.className.replace(/active-\w+/g, '').trim();
+            });
+            // Ocultar todos los pos-panels de este main panel
+            ['DC','CARR','MC','DFC','POR'].forEach(function(p){
+                var el = document.getElementById('pos-' + panelId + '-' + p);
+                if (el) el.classList.remove('active');
+            });
+            // Activar el seleccionado
+            btn.classList.add('active-' + pos);
+            var target = document.getElementById('pos-' + panelId + '-' + pos);
+            if (target) target.classList.add('active');
+        });
+    });
+})();
+</script>
+</body>
+</html>

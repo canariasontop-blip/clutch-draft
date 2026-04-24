@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#03030a">
+    <title>Clutch Draft — Estadísticas del partido</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{--primary:#00ffcc;--accent:#a066ff;--gold:#f0c040;--bg:#03030a;--card:#0b0b14;--border:rgba(255,255,255,0.06);--font-display:'Bebas Neue',sans-serif;--font-body:'Rajdhani',sans-serif;}
+        body{font-family:var(--font-body);background:var(--bg);color:#fff;min-height:100vh;}
+
+        /* VIDEO FONDO */
+        #bg-video-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        #bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.18;}
+        #bg-overlay{position:absolute;inset:0;background:rgba(3,3,10,0.75);}
+
+        /* NAV */
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;background:rgba(3,3,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+        .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:4px;color:var(--primary);}
+        .nav-links{display:flex;gap:0;}
+        .nav-link{padding:8px 14px;font-size:.75rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;text-decoration:none;transition:.2s;}
+        .nav-link:hover,.nav-link.active{color:var(--primary);}
+        .nav-link.admin-lnk{color:#f0c040;}
+        .nav-user{display:flex;align-items:center;gap:8px;}
+        .nav-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+        .nav-username{font-size:.75rem;color:#aaa;}
+        .logout-btn{color:#ff4d4d;font-size:.75rem;padding:6px 10px;border-radius:6px;text-decoration:none;}
+        .nav-hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
+        .nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:.3s;}
+        @media(max-width:768px){
+            .nav-links{display:none;position:fixed;top:58px;left:0;right:0;background:rgba(3,3,10,0.98);flex-direction:column;padding:12px 0;z-index:99;}
+            .nav-links.open{display:flex;}
+            .nav-hamburger{display:flex;}
+            .nav-username{display:none;}
+        }
+
+        /* LAYOUT */
+        .container{max-width:800px;margin:0 auto;padding:88px 24px 80px;position:relative;z-index:1;}
+        .page-eyebrow{font-size:.65rem;color:var(--primary);letter-spacing:5px;text-transform:uppercase;font-weight:700;margin-bottom:8px;}
+        .page-title{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.2rem);letter-spacing:2px;margin-bottom:6px;}
+        .page-sub{font-size:.85rem;color:#aaa;margin-bottom:32px;}
+
+        /* ESTADO STATS CARD */
+        .estado-stats{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;}
+        .estado-item{flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:10px;}
+        .estado-item.ok{border-color:rgba(0,255,204,0.3);background:rgba(0,255,204,0.06);}
+        .estado-item.pend{border-color:rgba(255,204,0,0.3);background:rgba(255,204,0,0.06);}
+        .estado-icon{font-size:1.2rem;}
+        .estado-label{font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;}
+        .estado-equipo{font-weight:700;font-size:.9rem;}
+
+        /* ALERTA MENSAJE */
+        .alert{padding:14px 20px;border-radius:12px;margin-bottom:24px;font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:10px;}
+        .alert-ok{background:rgba(0,255,204,0.08);border:1px solid rgba(0,255,204,0.25);color:var(--primary);}
+        .alert-warn{background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.25);color:var(--gold);}
+        .alert-info{background:rgba(160,102,255,0.08);border:1px solid rgba(160,102,255,0.25);color:var(--accent);}
+
+        /* FORMULARIO */
+        .form-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:20px;}
+        .form-card-header{padding:16px 22px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.03);display:flex;align-items:center;gap:10px;}
+        .pos-badge{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+        .pos-DC{background:rgba(0,255,204,.15);color:#00ffcc;border:1px solid rgba(0,255,204,.3);}
+        .pos-CARR{background:rgba(255,204,0,.15);color:#ffcc00;border:1px solid rgba(255,204,0,.3);}
+        .pos-MC{background:rgba(160,102,255,.15);color:#a066ff;border:1px solid rgba(160,102,255,.3);}
+        .pos-DFC{background:rgba(255,77,77,.15);color:#ff4d4d;border:1px solid rgba(255,77,77,.3);}
+        .pos-POR{background:rgba(51,153,255,.15);color:#3399ff;border:1px solid rgba(51,153,255,.3);}
+
+        .jugadores-list{padding:0;}
+        .jugador-row{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border);}
+        .jugador-row:last-child{border-bottom:none;}
+        .jugador-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:#555;font-size:.85rem;flex-shrink:0;}
+        .jugador-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+        .jugador-info{flex:1;min-width:0;}
+        .jugador-nombre{font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .jugador-pos{font-size:.65rem;color:#aaa;}
+        .jugador-inputs{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+        .input-group{display:flex;flex-direction:column;align-items:center;gap:4px;}
+        .input-label{font-size:.6rem;color:#888;text-transform:uppercase;letter-spacing:1px;}
+        .stat-input{width:52px;text-align:center;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;color:#fff;font-family:var(--font-body);font-size:.95rem;font-weight:700;padding:7px 4px;transition:.2s;}
+        .stat-input:focus{outline:none;border-color:var(--primary);background:rgba(0,255,204,0.06);}
+        .porteria-badge{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:20px;}
+        .porteria-ok{background:rgba(0,255,204,.12);color:#00ffcc;border:1px solid rgba(0,255,204,.25);}
+        .porteria-no{background:rgba(255,77,77,.12);color:#ff4d4d;border:1px solid rgba(255,77,77,.25);}
+
+        .btn-submit{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),#7040cc);border:none;border-radius:12px;color:#fff;font-family:var(--font-display);font-size:1.2rem;letter-spacing:2px;cursor:pointer;transition:.2s;margin-top:16px;}
+        .btn-submit:hover{opacity:.85;transform:translateY(-2px);}
+
+        /* MODO LECTURA */
+        .stats-table-wrap{overflow-x:auto;}
+        .stats-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+        .stats-table th{font-size:.6rem;color:#aaa;text-transform:uppercase;letter-spacing:2px;padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
+        .stats-table th.left{text-align:left;}
+        .stats-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;color:#ccc;}
+        .stats-table td.left{text-align:left;font-weight:600;color:#fff;}
+        .stats-table tr:last-child td{border-bottom:none;}
+        .stats-table tr:hover td{background:rgba(255,255,255,.02);}
+        .num-highlight{color:var(--primary);font-weight:700;}
+
+        .section-title{font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:14px;}
+
+        @media(max-width:560px){
+            .jugador-row{flex-wrap:wrap;}
+            .jugador-inputs{width:100%;justify-content:flex-end;}
+        }
+    </style>
+</head>
+<body>
+
+<div id="bg-video-wrap">
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="/video/bg.mp4" type="video/mp4">
+    </video>
+    <div id="bg-overlay"></div>
+</div>
+
+<nav>
+    <div class="nav-logo">CLUTCH</div>
+    <button class="nav-hamburger" id="nav-hamburger"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="nav-links">
+        <a href="/hub" class="nav-link">Hub</a>
+        <a href="/draft" class="nav-link">Draft</a>
+        <a href="/torneo" class="nav-link">Torneo</a>
+        <a href="/historial" class="nav-link">Historial</a>
+        <a href="/goleadores" class="nav-link">Goleadores</a>
+        <a href="/directo" class="nav-link">Directo</a>
+        <a href="/normas" class="nav-link">Normas</a>
+        <a href="/inscripciones" class="nav-link">Inscripciones</a>
+        <% if (user.esAdmin) { %><a href="/admin" class="nav-link admin-lnk">Admin</a><% } %>
+    </div>
+    <div class="nav-user">
+        <img src="<%= user.avatar %>" class="nav-avatar" alt="">
+        <span class="nav-username"><%= user.username %></span>
+        <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-eyebrow">Clutch Draft · Jornada <%= match.jornada %></div>
+    <div class="page-title">ESTADÍSTICAS DEL PARTIDO</div>
+    <div class="page-sub"><%= match.equipo1 %> vs <%= match.equipo2 %> &nbsp;|&nbsp; <strong style="color:#fff;"><%= match.goles1 %> - <%= match.goles2 %></strong></div>
+
+    <!-- Estado de stats por equipo -->
+    <div class="estado-stats">
+        <div class="estado-item <%= match.stats_equipo1 ? 'ok' : 'pend' %>">
+            <span class="estado-icon"><%= match.stats_equipo1 ? '✅' : '⏳' %></span>
+            <div>
+                <div class="estado-label"><%= match.equipo1 %></div>
+                <div class="estado-equipo"><%= match.stats_equipo1 ? 'Estadísticas enviadas' : 'Pendiente' %></div>
+            </div>
+        </div>
+        <div class="estado-item <%= match.stats_equipo2 ? 'ok' : 'pend' %>">
+            <span class="estado-icon"><%= match.stats_equipo2 ? '✅' : '⏳' %></span>
+            <div>
+                <div class="estado-label"><%= match.equipo2 %></div>
+                <div class="estado-equipo"><%= match.stats_equipo2 ? 'Estadísticas enviadas' : 'Pendiente' %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes de estado -->
+    <% if (mensaje === 'ok') { %>
+    <div class="alert alert-ok"><i class="fas fa-check-circle"></i> ¡Estadísticas enviadas correctamente!</div>
+    <% } %>
+    <% if (yaEnviado && !otroEnviado) { %>
+    <div class="alert alert-warn"><i class="fas fa-clock"></i> Ya enviaste las estadísticas de tu equipo. Esperando al otro equipo...</div>
+    <% } %>
+    <% if (yaEnviado && otroEnviado) { %>
+    <div class="alert alert-ok"><i class="fas fa-star"></i> ¡Estadísticas completas! Ambos equipos han enviado sus datos.</div>
+    <% } %>
+
+    <%
+    // Agrupar jugadores por posición
+    const orden = ['POR','DFC','MC','CARR','DC'];
+    const coloresPosicion = { DC:'DC', CARR:'CARR', MC:'MC', DFC:'DFC', POR:'POR' };
+    const jugadoresPorPos = {};
+    for (const pos of orden) jugadoresPorPos[pos] = jugadores.filter(j => j.posicion === pos);
+    %>
+
+    <% if (yaEnviado) { %>
+    <!-- MODO LECTURA -->
+    <div class="section-title">TUS ESTADÍSTICAS (<%= miEquipo %>)</div>
+    <div class="form-card">
+        <div class="stats-table-wrap">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th class="left">Jugador</th>
+                        <th>Pos</th>
+                        <th>Goles</th>
+                        <th>Asistencias</th>
+                        <th>P. a cero</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (const j of jugadores) { %>
+                    <% const st = statsExistentes[j.discord_id] || {}; %>
+                    <tr>
+                        <td class="left"><%= j.nombre %></td>
+                        <td><span class="pos-badge pos-<%= j.posicion %>"><%= j.posicion %></span></td>
+                        <td class="<%= (st.goles||0) > 0 ? 'num-highlight' : '' %>"><%= st.goles || 0 %></td>
+                        <td class="<%= (st.asistencias||0) > 0 ? 'num-highlight' : '' %>"><%= st.asistencias || 0 %></td>
+                        <td><%= ['DFC','POR'].includes(j.posicion) ? (st.porterias_a_cero ? '✅' : '—') : '—' %></td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <% } else { %>
+    <!-- FORMULARIO -->
+    <form method="POST" action="/partido/<%= match.id %>/estadisticas">
+        <% for (const pos of orden) { %>
+        <% if (jugadoresPorPos[pos].length === 0) continue; %>
+        <div class="form-card" style="margin-bottom:16px;">
+            <div class="form-card-header">
+                <span class="pos-badge pos-<%= pos %>"><%= pos %></span>
+                <span style="font-weight:700;font-size:.9rem;color:#ccc;"><%= pos === 'POR' ? 'Portero' : pos === 'DFC' ? 'Defensas' : pos === 'MC' ? 'Mediocentros' : pos === 'CARR' ? 'Carrileros' : 'Delanteros' %></span>
+                <% if (['DFC','POR'].includes(pos)) { %>
+                <span style="margin-left:auto;font-size:.7rem;color:#aaa;">Portería a cero: automática</span>
+                <% } %>
+            </div>
+            <div class="jugadores-list">
+                <% for (const j of jugadoresPorPos[pos]) { %>
+                <div class="jugador-row">
+                    <div class="jugador-avatar">
+                        <% if (j.foto) { %>
+                        <img src="<%= j.foto %>" alt="<%= j.nombre %>">
+                        <% } else { %>
+                        <i class="fas fa-user"></i>
+                        <% } %>
+                    </div>
+                    <div class="jugador-info">
+                        <div class="jugador-nombre"><%= j.nombre %></div>
+                        <div class="jugador-pos"><%= j.eafc_id ? j.eafc_id : j.posicion %></div>
+                    </div>
+                    <div class="jugador-inputs">
+                        <% if (['DFC','POR'].includes(pos)) { %>
+                        <% if (golesRecibidos === 0) { %>
+                        <span class="porteria-badge porteria-ok">🛡️ Portería a cero</span>
+                        <% } else { %>
+                        <span class="porteria-badge porteria-no">❌ Gol encajado</span>
+                        <% } %>
+                        <% } %>
+                        <div class="input-group">
+                            <span class="input-label">Goles</span>
+                            <input type="number" name="goles_<%= j.discord_id %>" class="stat-input" min="0" max="20" value="0">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-label">Asist</span>
+                            <input type="number" name="asist_<%= j.discord_id %>" class="stat-input" min="0" max="20" value="0">
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+        <button type="submit" class="btn-submit">ENVIAR ESTADÍSTICAS</button>
+    </form>
+    <% } %>
+</div>
+
+<script>
+(function(){
+    var burger = document.getElementById('nav-hamburger');
+    var links  = document.getElementById('nav-links');
+    if (!burger) return;
+    burger.addEventListener('click', function(){ links.classList.toggle('open'); burger.classList.toggle('open'); });
+    links.querySelectorAll('.nav-link').forEach(function(l){ l.addEventListener('click', function(){ links.classList.remove('open'); burger.classList.remove('open'); }); });
+})();
+</script>
+</body>
+</html>

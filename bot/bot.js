@@ -100,6 +100,7 @@ const CATEGORIA_DRAFT     = '1489289040992927815';
 const canalesPartido       = {}; // matchId → channelId
 const reportesPendientes   = {}; // matchId → { cap1: {g1,g2}, cap2: {g1,g2} }
 const recordatoriosEnviados= new Set(); // matchId ya notificado por tardanza >24h
+const recordatoriosStats   = new Set(); // matchId ya notificado por stats pendientes
 const votosPrecios         = { '10': new Set(), '15': new Set(), '20': new Set() };
 const candidatosCapitan    = new Set();
 let msgVotoPrecio  = null;
@@ -2130,7 +2131,13 @@ async function comprobarFinTorneo() {
         const torneoGenerado = db.prepare("SELECT value FROM settings WHERE key='torneo_generado'").get()?.value;
         if (!torneoGenerado) return;
         const jornadaActual = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
-        const pendientes    = db.prepare("SELECT COUNT(*) as c FROM matches WHERE jornada=? AND estado='pendiente'").get(jornadaActual)?.c || 0;
+        const pendientes = db.prepare(`
+            SELECT COUNT(*) as c FROM matches
+            WHERE jornada=? AND (
+                estado='pendiente' OR
+                (estado='finalizado' AND (stats_equipo1=0 OR stats_equipo2=0))
+            )
+        `).get(jornadaActual)?.c || 0;
         if (pendientes === 0) {
             const guild = client.guilds.cache.first();
             if (guild) await generarSiguienteJornada(guild);
@@ -2160,6 +2167,50 @@ async function comprobarFinTorneo() {
                     const u = await client.users.fetch(capRow.capitan_id);
                     await u.send({ embeds: [embedRec] });
                 } catch(e) { /* DMs bloqueados */ }
+            }
+        }
+        // Recordatorio para matches con stats pendientes > 4 horas
+        const statsPendientes = db.prepare(`
+            SELECT * FROM matches
+            WHERE estado='finalizado'
+            AND (stats_equipo1=0 OR stats_equipo2=0)
+            AND fecha < datetime('now','-4 hours')
+        `).all();
+        for (const m of statsPendientes) {
+            const key = `${m.id}-${m.stats_equipo1}-${m.stats_equipo2}`;
+            if (recordatoriosStats.has(key)) continue;
+            recordatoriosStats.add(key);
+            if (!m.stats_equipo1) {
+                const cap = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(m.equipo1);
+                if (cap?.capitan_id) {
+                    try {
+                        const u = await client.users.fetch(cap.capitan_id);
+                        await u.send({ embeds: [new EmbedBuilder()
+                            .setTitle('⏰ Recuerda registrar las estadísticas')
+                            .setColor(0xff9900)
+                            .setDescription(`El partido **${m.equipo1} vs ${m.equipo2}** tiene el resultado confirmado pero faltan tus estadísticas.\n\nLa jornada no puede avanzar hasta que las registres.`)
+                            .setTimestamp()
+                        ], components: [new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setLabel('📊 Registrar ahora').setURL(webUrl(`/partido/${m.id}/estadisticas`)).setStyle(ButtonStyle.Link)
+                        )]});
+                    } catch(e) {}
+                }
+            }
+            if (!m.stats_equipo2) {
+                const cap = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(m.equipo2);
+                if (cap?.capitan_id) {
+                    try {
+                        const u = await client.users.fetch(cap.capitan_id);
+                        await u.send({ embeds: [new EmbedBuilder()
+                            .setTitle('⏰ Recuerda registrar las estadísticas')
+                            .setColor(0xff9900)
+                            .setDescription(`El partido **${m.equipo1} vs ${m.equipo2}** tiene el resultado confirmado pero faltan tus estadísticas.\n\nLa jornada no puede avanzar hasta que las registres.`)
+                            .setTimestamp()
+                        ], components: [new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setLabel('📊 Registrar ahora').setURL(webUrl(`/partido/${m.id}/estadisticas`)).setStyle(ButtonStyle.Link)
+                        )]});
+                    } catch(e) {}
+                }
             }
         }
     } catch(e) { console.error('Error en comprobarFinTorneo:', e.message); }
@@ -2198,6 +2249,7 @@ async function limpiarDiscord(guild) {
 
         for (const k of Object.keys(canalesPartido))     delete canalesPartido[k];
         for (const k of Object.keys(reportesPendientes)) delete reportesPendientes[k];
+        for (const k of [...recordatoriosStats])          recordatoriosStats.delete(k);
 
         // Borrar canales de voz
         await borrarCanalesVoz();
@@ -4593,6 +4645,37 @@ client.on('interactionCreate', async (interaction) => {
                     .setTimestamp()
                 ]});
             } catch(e) { /* canal puede no existir */ }
+            // Solicitar estadísticas
+            try {
+                const cap1DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo1);
+                const cap2DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo2);
+                const menciones = [cap1DataS?.capitan_id, cap2DataS?.capitan_id].filter(Boolean).map(id => `<@${id}>`).join(' ');
+                const chStats = await client.channels.fetch(match.canal_discord);
+                const rowStats = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setLabel('📊 Registrar estadísticas de mi equipo')
+                        .setURL(webUrl(`/partido/${matchId}/estadisticas`))
+                        .setStyle(ButtonStyle.Link)
+                );
+                await chStats.send({
+                    content: menciones,
+                    embeds: [new EmbedBuilder()
+                        .setTitle('📊 Registrar estadísticas — Obligatorio')
+                        .setColor(0xa066ff)
+                        .setDescription(
+                            '**Cada capitán debe registrar los goles y asistencias de sus jugadores** antes de que la jornada pueda avanzar.\n\n' +
+                            '> **1.** Pulsa el botón de abajo\n' +
+                            '> **2.** Accede con tu cuenta de Discord\n' +
+                            '> **3.** Introduce los goles y asistencias de cada jugador de tu equipo\n\n' +
+                            '🛡️ Los **porteros y defensas** no necesitan goles — sus porterías a cero se calculan automáticamente.\n' +
+                            '⚠️ La jornada **no avanzará** hasta que ambos equipos hayan enviado sus estadísticas.'
+                        )
+                        .setFooter({ text: 'Clutch Draft · Estadísticas de partido' })
+                        .setTimestamp()
+                    ],
+                    components: [rowStats]
+                });
+            } catch(e) { /* canal puede no existir */ }
         }
         const guildConf = client.guilds.cache.first();
         if (guildConf) {
@@ -4677,6 +4760,37 @@ client.on('interactionCreate', async (interaction) => {
                         .setTimestamp()
                     ]});
                 } catch(e) { /* canal puede no existir */ }
+                // Solicitar estadísticas
+                try {
+                    const cap1DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo1);
+                    const cap2DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo2);
+                    const menciones = [cap1DataS?.capitan_id, cap2DataS?.capitan_id].filter(Boolean).map(id => `<@${id}>`).join(' ');
+                    const chStats = await client.channels.fetch(match.canal_discord);
+                    const rowStats = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setLabel('📊 Registrar estadísticas de mi equipo')
+                            .setURL(webUrl(`/partido/${matchId}/estadisticas`))
+                            .setStyle(ButtonStyle.Link)
+                    );
+                    await chStats.send({
+                        content: menciones,
+                        embeds: [new EmbedBuilder()
+                            .setTitle('📊 Registrar estadísticas — Obligatorio')
+                            .setColor(0xa066ff)
+                            .setDescription(
+                                '**Cada capitán debe registrar los goles y asistencias de sus jugadores** antes de que la jornada pueda avanzar.\n\n' +
+                                '> **1.** Pulsa el botón de abajo\n' +
+                                '> **2.** Accede con tu cuenta de Discord\n' +
+                                '> **3.** Introduce los goles y asistencias de cada jugador de tu equipo\n\n' +
+                                '🛡️ Los **porteros y defensas** no necesitan goles — sus porterías a cero se calculan automáticamente.\n' +
+                                '⚠️ La jornada **no avanzará** hasta que ambos equipos hayan enviado sus estadísticas.'
+                            )
+                            .setFooter({ text: 'Clutch Draft · Estadísticas de partido' })
+                            .setTimestamp()
+                        ],
+                        components: [rowStats]
+                    });
+                } catch(e) { /* canal puede no existir */ }
             }
             const guildAdmin = client.guilds.cache.first();
             if (guildAdmin) {
@@ -4734,6 +4848,37 @@ client.on('interactionCreate', async (interaction) => {
                             .setTimestamp()
                         ]});
                     } catch(e) { /* canal puede estar borrado */ }
+                    // Solicitar estadísticas
+                    try {
+                        const cap1DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo1);
+                        const cap2DataS = db.prepare("SELECT capitan_id FROM teams WHERE capitan_username=?").get(match.equipo2);
+                        const menciones = [cap1DataS?.capitan_id, cap2DataS?.capitan_id].filter(Boolean).map(id => `<@${id}>`).join(' ');
+                        const chStats = await client.channels.fetch(match.canal_discord);
+                        const rowStats = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder()
+                                .setLabel('📊 Registrar estadísticas de mi equipo')
+                                .setURL(webUrl(`/partido/${matchId}/estadisticas`))
+                                .setStyle(ButtonStyle.Link)
+                        );
+                        await chStats.send({
+                            content: menciones,
+                            embeds: [new EmbedBuilder()
+                                .setTitle('📊 Registrar estadísticas — Obligatorio')
+                                .setColor(0xa066ff)
+                                .setDescription(
+                                    '**Cada capitán debe registrar los goles y asistencias de sus jugadores** antes de que la jornada pueda avanzar.\n\n' +
+                                    '> **1.** Pulsa el botón de abajo\n' +
+                                    '> **2.** Accede con tu cuenta de Discord\n' +
+                                    '> **3.** Introduce los goles y asistencias de cada jugador de tu equipo\n\n' +
+                                    '🛡️ Los **porteros y defensas** no necesitan goles — sus porterías a cero se calculan automáticamente.\n' +
+                                    '⚠️ La jornada **no avanzará** hasta que ambos equipos hayan enviado sus estadísticas.'
+                                )
+                                .setFooter({ text: 'Clutch Draft · Estadísticas de partido' })
+                                .setTimestamp()
+                            ],
+                            components: [rowStats]
+                        });
+                    } catch(e) { /* canal puede no existir */ }
                 }
                 const guild = client.guilds.cache.first();
                 if (guild) {
