@@ -371,6 +371,10 @@ async function crearCanalesPreDraft(guild) {
             console.log(`✅ Canal pre-draft creado: ${def.nombre}`);
         } catch(e) {
             console.error(`Error creando canal ${def.nombre}:`, e.message);
+            try {
+                const adminUser = await client.users.fetch(ADMIN_ID);
+                await adminUser.send(`❌ **Error creando canal \`${def.nombre}\`**: ${e.message}\n\nComprueba que la categoría del draft existe en Discord o que el bot tiene permisos para crear canales.`);
+            } catch { /* ignorar si no puede DM */ }
         }
     }
     return resultado;
@@ -3365,18 +3369,29 @@ client.on('messageCreate', async (message) => {
                 await message.reply('✅ Inscripciones **abiertas** y panel publicado en <#' + CANAL_INSCRIPCIONES + '>.');
             } else if (par === 'cerrar') {
                 await cerrarInscripciones();
-                await message.reply('✅ Inscripciones cerradas. Votación de precio iniciada en anuncios.');
+                await message.reply('✅ Inscripciones cerradas. Canales privados y votación de precio iniciada (solo visibles para jugadores inscritos y admins).');
             } else {
                 await message.reply('Uso: `!admin inscripciones [abrir|cerrar]`');
             }
 
         // ── !admin votacion [iniciar|cerrar] ─────────────────
         } else if (sub === 'votacion') {
-            if (!canal) return message.reply('❌ Canal de anuncios no encontrado.');
             if (par === 'iniciar') {
-                await lanzarVotacionPrecio(canal);
-                await message.reply('✅ Votación de precio iniciada en anuncios (20 min).');
+                // Buscar o crear el canal privado de votación
+                let canalVot = null;
+                const votId = db.prepare("SELECT value FROM settings WHERE key='canal_votacion_precio'").get()?.value;
+                if (votId) {
+                    try { canalVot = await guild.channels.fetch(votId); } catch(e) { /* eliminado, crear nuevo */ }
+                }
+                if (!canalVot) {
+                    const canales = await crearCanalesPreDraft(guild);
+                    canalVot = canales.canal_votacion_precio;
+                }
+                if (!canalVot) return message.reply('❌ No se pudo crear el canal de votación. Comprueba que la categoría de draft existe en Discord.');
+                await lanzarVotacionPrecio(canalVot);
+                await message.reply(`✅ Votación de precio iniciada en <#${canalVot.id}>.`);
             } else if (par === 'cerrar') {
+                if (!canal) return message.reply('❌ Canal de anuncios no encontrado.');
                 await cerrarVotacionPrecio(canal);
                 await message.reply('✅ Votación cerrada. Resultado y panel de pago publicados.');
             } else {
