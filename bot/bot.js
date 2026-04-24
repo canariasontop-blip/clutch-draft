@@ -3433,6 +3433,42 @@ client.on('messageCreate', async (message) => {
             await lanzarPanelPago(canal, precio);
             await message.reply(`✅ Panel de pago lanzado en anuncios (${precio}€).`);
 
+        // ── !admin ir-a-jornada <N> ──────────────────────────
+        // Borra todos los partidos desde jornada N en adelante, revierte clasificación
+        // y deja el torneo listo para crear los partidos de jornada N manualmente
+        } else if (sub === 'ir-a-jornada') {
+            const jornadaDestino = parseInt(par);
+            if (!jornadaDestino || jornadaDestino < 1) {
+                return message.reply('Uso: `!admin ir-a-jornada 2` (número de jornada a la que quieres volver)');
+            }
+            const matchesABorrar = db.prepare("SELECT * FROM matches WHERE jornada >= ? AND equipo2 != 'BYE'").all(jornadaDestino);
+            let borrados = 0;
+            // Borrar partidos y cerrar sus canales de Discord
+            for (const m of matchesABorrar) {
+                if (m.canal_discord) {
+                    try {
+                        const ch = await guild.channels.fetch(m.canal_discord).catch(() => null);
+                        if (ch) await ch.delete();
+                    } catch(e) { /* ignorar */ }
+                }
+                db.prepare("DELETE FROM matches WHERE id=?").run(m.id);
+                borrados++;
+            }
+            // Actualizar jornada y fase
+            db.prepare("UPDATE settings SET value=? WHERE key='jornada_actual'").run(String(jornadaDestino));
+            db.prepare("UPDATE settings SET value='liga' WHERE key='fase_actual'").run();
+            // Recalcular clasificación desde cero con los partidos que quedan
+            await axios.post('http://localhost:3000/api/bot/recalcular-clasificacion').catch(() => {});
+            await actualizarCanalClasificacion(guild).catch(() => {});
+            await actualizarCanalResultadosPub(guild).catch(() => {});
+            await axios.post('http://localhost:3000/api/jornada-avanzada').catch(() => {});
+            await message.reply(
+                `✅ Revertido a jornada **${jornadaDestino}**.\n` +
+                `• Borrados **${borrados}** partido(s) desde jornada ${jornadaDestino} en adelante.\n` +
+                `• Clasificación revertida automáticamente.\n` +
+                `• Ahora usa \`!admin crear-partido EquipoA vs EquipoB\` para crear los emparejamientos de jornada ${jornadaDestino}.`
+            );
+
         // ── !admin formato [copa] ─────────────────────────────
         // Cambia el torneo en curso de liguilla a semifinal ida+vuelta+final
         } else if (sub === 'formato') {

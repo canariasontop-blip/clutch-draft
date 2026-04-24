@@ -1150,7 +1150,7 @@ app.post('/admin/editar-jugador', requireLogin, requireAdmin, (req, res) => {
     db.prepare(`UPDATE players SET nombre=?, posicion=? WHERE discord_id=?`).run(nombre, posicion, discord_id);
     const p = db.prepare(`SELECT eafc_id FROM players WHERE discord_id=?`).get(discord_id);
     emitNuevoJugador();
-    io.emit('jugador_añadido', { discord_id, nombre: p?.eafc_id || nombre, eafc_id: p?.eafc_id || nombre, posicion });
+    io.emit('jugador_editado', { discord_id, nombre: p?.eafc_id || nombre, eafc_id: p?.eafc_id || nombre, posicion });
     io.emit('activity', `✏️ Jugador editado: ${nombre} (${posicion})`);
     axios.post('http://localhost:3001/api/actualizar-equipos').catch(() => {});
     res.redirect('/admin');
@@ -1539,6 +1539,13 @@ app.post('/admin/recalcular-clasificacion', requireLogin, requireAdmin, (req, re
     io.emit('clasificacion-update');
     axios.post('http://localhost:3001/api/actualizar-clasificacion').catch(() => {});
     res.redirect('/admin?tab=partidos');
+});
+
+// Endpoint interno para que el bot pueda recalcular sin autenticación web
+app.post('/api/bot/recalcular-clasificacion', (req, res) => {
+    recalcularClasificacion();
+    io.emit('clasificacion-update');
+    res.sendStatus(200);
 });
 
 app.post('/admin/ajustar-jornada', requireLogin, requireAdmin, (req, res) => {
