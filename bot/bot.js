@@ -1189,8 +1189,8 @@ function etiquetaFase(jornada) {
     const fases     = JSON.parse(db.prepare("SELECT value FROM settings WHERE key='fases_torneo'").get()?.value || '["liga"]');
     const offset    = jornada - totalLiga - 1;
     const fase      = fases[offset + 1] || fases[fases.length - 1] || 'final';
-    const labels    = { playoffs: 'Play-offs', cuartos: 'Cuartos de Final', semis: 'Semifinales', final: 'Gran Final' };
-    const prefijos  = { playoffs: 'playoffs', cuartos: 'cuartos', semis: 'semis', final: 'final' };
+    const labels    = { playoffs: 'Play-offs', cuartos: 'Cuartos de Final', semis: 'Semifinales', semis_vuelta: 'Semifinales Vuelta', final: 'Gran Final' };
+    const prefijos  = { playoffs: 'playoffs', cuartos: 'cuartos', semis: 'semis', semis_vuelta: 'semis-vuelta', final: 'final' };
     return { prefijo: prefijos[fase] || fase, titulo: labels[fase] || fase, esKO: true };
 }
 
@@ -1688,7 +1688,7 @@ async function actualizarCanalRondasFinalesPub(guild) {
 // ══════════════════════════════════════════════════════════════
 
 function getFormatoTorneo(n) {
-    if (n <= 4)  return { rondasLiga: Math.max(n - 1, 1), fases: ['liga'] };
+    if (n <= 4)  return { rondasLiga: 1, fases: ['liga', 'semis_vuelta', 'final'] }; // semi ida + vuelta + final
     if (n <= 6)  return { rondasLiga: 4, fases: ['liga', 'semis', 'final'] };
     if (n <= 10) return { rondasLiga: 3, fases: ['liga', 'cuartos', 'semis', 'final'] };
     return { rondasLiga: 4, fases: ['liga', 'playoffs', 'cuartos', 'semis', 'final'] };
@@ -1815,7 +1815,7 @@ async function finalizarTorneo(guild) {
 // Generar una fase de knockouts (cuartos, semis, final, playoffs)
 async function generarFaseKnockout(guild, fase, jornada, jornada_anterior, prevFase) {
     const tabla    = getTablaOrdenada();
-    const fasLabels = { playoffs: '🎯 PLAY-OFFS', cuartos: '🏆 CUARTOS DE FINAL', semis: '⚔️ SEMIFINALES', final: '🏆 GRAN FINAL' };
+    const fasLabels = { playoffs: '🎯 PLAY-OFFS', cuartos: '🏆 CUARTOS DE FINAL', semis: '⚔️ SEMIFINALES', semis_vuelta: '⚔️ SEMIFINALES — VUELTA', final: '🏆 GRAN FINAL' };
     let partidos   = [];
 
     if (fase === 'playoffs') {
@@ -1871,10 +1871,35 @@ async function generarFaseKnockout(guild, fase, jornada, jornada_anterior, prevF
             }
         }
 
+    } else if (fase === 'semis_vuelta') {
+        // Vuelta: mismos emparejamientos de la jornada anterior pero con local/visitante invertido
+        const prevMatches = db.prepare("SELECT * FROM matches WHERE jornada=? ORDER BY id").all(jornada_anterior);
+        partidos = prevMatches.map(m => ({ eq1: m.equipo2, eq2: m.equipo1 })).filter(p => p.eq1 && p.eq2 && p.eq2 !== 'BYE');
+
     } else if (fase === 'final') {
-        const res = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='finalizado' ORDER BY id").all(jornada_anterior);
-        const w   = res.map(m => m.goles1 >= m.goles2 ? m.equipo1 : m.equipo2);
-        if (w.length >= 2) partidos = [{ eq1: w[0], eq2: w[1] }];
+        const fasesTorneoDB = JSON.parse(db.prepare("SELECT value FROM settings WHERE key='fases_torneo'").get()?.value || '["liga"]');
+        const prevFaseNombre = fasesTorneoDB[fasesTorneoDB.indexOf('final') - 1];
+
+        if (prevFaseNombre === 'semis_vuelta') {
+            // Ganador por agregado: suma goles de ida (jornada_anterior-1) + vuelta (jornada_anterior)
+            const vuelta = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='finalizado' ORDER BY id").all(jornada_anterior);
+            const ida    = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='finalizado' ORDER BY id").all(jornada_anterior - 1);
+            const winners = ida.map((m) => {
+                const v = vuelta.find(v => v.equipo1 === m.equipo2 && v.equipo2 === m.equipo1);
+                if (!v) return null;
+                const golesEq1 = (m.goles1 || 0) + (v.goles2 || 0);
+                const golesEq2 = (m.goles2 || 0) + (v.goles1 || 0);
+                if (golesEq1 > golesEq2) return m.equipo1;
+                if (golesEq2 > golesEq1) return m.equipo2;
+                // Empate en agregado: goles de visitante en la ida (eq2 marcó más fuera → avanza)
+                return (m.goles2 || 0) >= (v.goles2 || 0) ? m.equipo2 : m.equipo1;
+            }).filter(Boolean);
+            if (winners.length >= 2) partidos = [{ eq1: winners[0], eq2: winners[1] }];
+        } else {
+            const res = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='finalizado' ORDER BY id").all(jornada_anterior);
+            const w   = res.map(m => m.goles1 >= m.goles2 ? m.equipo1 : m.equipo2);
+            if (w.length >= 2) partidos = [{ eq1: w[0], eq2: w[1] }];
+        }
     }
 
     if (!partidos.length) {
@@ -3407,6 +3432,23 @@ client.on('messageCreate', async (message) => {
             notificarPrecio(precio).catch(() => {});
             await lanzarPanelPago(canal, precio);
             await message.reply(`✅ Panel de pago lanzado en anuncios (${precio}€).`);
+
+        // ── !admin formato [copa] ─────────────────────────────
+        // Cambia el torneo en curso de liguilla a semifinal ida+vuelta+final
+        } else if (sub === 'formato') {
+            if (par === 'copa') {
+                db.prepare("UPDATE settings SET value='1' WHERE key='total_rondas_swiss'").run();
+                db.prepare("UPDATE settings SET value=? WHERE key='fases_torneo'").run(JSON.stringify(['liga', 'semis_vuelta', 'final']));
+                await message.reply(
+                    '✅ Formato cambiado a **Copa — Semifinal ida+vuelta+Final**.\n' +
+                    '• Los partidos de **jornada 1** son las **semifinales de ida** (ya creados).\n' +
+                    '• Cuando terminen, se generará automáticamente la **jornada 2 — Semifinal vuelta** (local/visitante invertidos).\n' +
+                    '• Después, la **Final**.\n' +
+                    '• El ganador de cada semi se decide por **goles en agregado**.'
+                );
+            } else {
+                await message.reply('Uso: `!admin formato copa`');
+            }
 
         // ── !admin draft [abrir|cerrar|saltar] ───────────────
         } else if (sub === 'draft') {
