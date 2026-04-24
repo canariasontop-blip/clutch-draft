@@ -125,6 +125,16 @@ db.exec(`
     confirmado  INTEGER DEFAULT 0
   );
 
+  CREATE TABLE IF NOT EXISTS preinscripciones (
+    discord_id  TEXT PRIMARY KEY,
+    username    TEXT NOT NULL,
+    nombre      TEXT NOT NULL,
+    posicion    TEXT NOT NULL,
+    telefono    TEXT,
+    eafc_id     TEXT,
+    fecha       TEXT DEFAULT (datetime('now'))
+  );
+
 `);
 
 // ── VALORES INICIALES ──────────────────────────────────────────
@@ -166,6 +176,8 @@ const initDefaults = db.transaction(() => {
         ['formato_manual',            ''],
         ['caps_por_equipo',           '1'],
         ['canal_votacion_capitan',    ''],
+        ['preinscripcion_abierta',    ''],
+        ['canal_preinscripcion',      ''],
     ];
     for (const [k, v] of defaults) initSetting.run(k, v);
 });

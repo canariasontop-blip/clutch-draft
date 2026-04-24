@@ -1229,6 +1229,37 @@
     <!-- ══ TAB: SISTEMA ══ -->
     <div id="tab-sistema" class="tab-content">
 
+        <!-- Pre-inscripciones siguiente draft -->
+        <div class="section" style="margin-bottom:20px; border-left:4px solid #a066ff;">
+            <div class="section-title"><i class="fas fa-list-alt" style="color:#a066ff;"></i> Pre-inscripciones — Siguiente draft</div>
+            <p style="color:#666; font-size:0.82rem; line-height:1.6; margin-bottom:16px;">
+                Permite que la gente se apunte al <strong style="color:#ccc;">siguiente draft</strong> mientras el actual está en curso.
+                Al hacer <strong>Limpiar todo</strong>, los pre-inscritos pasarán automáticamente como jugadores del nuevo draft.
+                Estado actual: <strong style="color:<%= preinscripcionAbierta ? '#00ffcc' : '#ff4d4d' %>">
+                    <%= preinscripcionAbierta ? '🟢 ABIERTAS' : '🔴 CERRADAS' %>
+                </strong>
+                <% if (totalPreinscritos > 0) { %>
+                · <strong style="color:#a066ff;"><%= totalPreinscritos %> pre-inscritos</strong>
+                <% } %>
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <% if (!preinscripcionAbierta) { %>
+                <form action="/admin/abrir-preinscripcion" method="POST">
+                    <button type="submit" class="btn" style="background:#a066ff;color:#fff;font-weight:700;">
+                        <i class="fas fa-door-open"></i> Abrir pre-inscripciones
+                    </button>
+                </form>
+                <% } else { %>
+                <form action="/admin/cerrar-preinscripcion" method="POST"
+                      onsubmit="return confirm('¿Cerrar las pre-inscripciones? Los jugadores ya apuntados se conservan.')">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-door-closed"></i> Cerrar pre-inscripciones
+                    </button>
+                </form>
+                <% } %>
+            </div>
+        </div>
+
         <!-- Corrección de jornada -->
         <div class="section" style="margin-bottom:20px; border-left:4px solid #ff8800;">
             <div class="section-title"><i class="fas fa-exclamation-triangle" style="color:#ff8800;"></i> Corrección de jornada</div>

@@ -1964,6 +1964,9 @@ async function limpiarDiscord(guild) {
         );
         for (const [, ch] of dinamicos) await ch.delete().catch(() => {});
 
+        // Borrar canal pre-inscripciones si existe
+        await cerrarCanalPreinscripcion(guild).catch(() => {});
+
         // Limpiar panel de inscripciones
         try {
             const chInsc = await guild.channels.fetch(CANAL_INSCRIPCIONES).catch(() => null);
@@ -2043,6 +2046,92 @@ async function limpiarDatos() {
         await axios.post('http://localhost:3000/api/torneo-limpiado').catch(() => {});
         console.log('✅ Fase 2 completada: datos limpiados y web notificada.');
     } catch(e) { console.error('Error en limpiarDatos:', e.message); }
+}
+
+// ── PRE-INSCRIPCIONES SIGUIENTE DRAFT ────────────────────────────
+async function abrirCanalPreinscripcion(guild) {
+    // Borrar canal anterior si existe
+    await cerrarCanalPreinscripcion(guild);
+
+    const canal = await guild.channels.create({
+        name: '📋-siguiente-draft',
+        type: 0,
+        parent: CATEGORIA_DRAFT,
+        permissionOverwrites: [
+            { id: guild.id, allow: ['ViewChannel','ReadMessageHistory','SendMessages'], deny: [] },
+        ],
+    });
+
+    const embed = new EmbedBuilder()
+        .setColor(0xa066ff)
+        .setTitle('📋 Pre-inscripciones — Siguiente Draft')
+        .setDescription(
+            '**El draft actual está en curso.**\n\n' +
+            'Si quieres jugar el **siguiente draft**, apúntate aquí.\n' +
+            'Al terminar el draft actual pasarás automáticamente a la lista de jugadores.\n\n' +
+            '> Pulsa el botón para pre-inscribirte o editar tus datos.'
+        )
+        .addFields({ name: '🌐 También puedes hacerlo desde la web', value: 'clutch-draft.duckdns.org/inscripciones' })
+        .setFooter({ text: 'Los pre-inscritos se transfieren al nuevo draft automáticamente' });
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('preinsc_inscribirse').setLabel('PRE-INSCRIBIRME').setStyle(ButtonStyle.Primary).setEmoji('📋'),
+        new ButtonBuilder().setCustomId('preinsc_cancelar').setLabel('Cancelar pre-inscripción').setStyle(ButtonStyle.Danger),
+    );
+
+    const msg = await canal.send({ embeds: [embed], components: [row] });
+    db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('canal_preinscripcion',?)`).run(canal.id);
+    db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('preinsc_msg_id',?)`).run(msg.id);
+    console.log('✅ Canal pre-inscripción creado:', canal.id);
+}
+
+async function cerrarCanalPreinscripcion(guild) {
+    const chId = db.prepare(`SELECT value FROM settings WHERE key='canal_preinscripcion'`).get()?.value;
+    if (chId) {
+        try {
+            const ch = await guild.channels.fetch(chId).catch(() => null);
+            if (ch) await ch.delete();
+        } catch(e) { /* ya borrado */ }
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('canal_preinscripcion','')`).run();
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('preinsc_msg_id','')`).run();
+    }
+}
+
+async function actualizarMensajePreinscripciones(guild) {
+    const chId  = db.prepare(`SELECT value FROM settings WHERE key='canal_preinscripcion'`).get()?.value;
+    const msgId = db.prepare(`SELECT value FROM settings WHERE key='preinsc_msg_id'`).get()?.value;
+    if (!chId || !msgId) return;
+    try {
+        const ch  = await guild.channels.fetch(chId).catch(() => null);
+        if (!ch) return;
+        const msg = await ch.messages.fetch(msgId).catch(() => null);
+        if (!msg) return;
+        const total = db.prepare(`SELECT COUNT(*) as c FROM preinscripciones`).get().c;
+        const lista = db.prepare(`SELECT eafc_id, posicion FROM preinscripciones ORDER BY fecha`).all();
+        const porPos = {};
+        for (const p of lista) {
+            if (!porPos[p.posicion]) porPos[p.posicion] = [];
+            porPos[p.posicion].push(p.eafc_id || '?');
+        }
+        const campos = Object.entries(porPos).map(([pos, names]) => ({
+            name: pos + ` (${names.length})`,
+            value: names.map(n => `· ${n}`).join('\n') || '—',
+            inline: true,
+        }));
+        const embed = new EmbedBuilder()
+            .setColor(0xa066ff)
+            .setTitle(`📋 Pre-inscripciones — Siguiente Draft (${total})`)
+            .setDescription(
+                '**El draft actual está en curso.**\n\n' +
+                'Si quieres jugar el **siguiente draft**, apúntate aquí.\n' +
+                'Al terminar el draft actual pasarás automáticamente a la lista de jugadores.\n\n' +
+                '> Pulsa el botón para pre-inscribirte o editar tus datos.'
+            );
+        if (campos.length) embed.addFields(campos);
+        embed.addFields({ name: '🌐 También desde la web', value: 'clutch-draft.duckdns.org/inscripciones' });
+        embed.setFooter({ text: 'Los pre-inscritos se transfieren al nuevo draft automáticamente' });
+        await msg.edit({ embeds: [embed] });
+    } catch(e) { console.error('Error actualizando mensaje preinsc:', e.message); }
 }
 
 // LIMPIEZA TOTAL INMEDIATA — para uso manual con !limpiar todo
@@ -4333,6 +4422,72 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     // ══════════════════════════════════════════════════════════
+    //  PRE-INSCRIPCIONES — botones canal siguiente draft
+    // ══════════════════════════════════════════════════════════
+    if (interaction.isButton() && interaction.customId === 'preinsc_inscribirse') {
+        const preinscAbierta = !!db.prepare(`SELECT value FROM settings WHERE key='preinscripcion_abierta'`).get()?.value;
+        if (!preinscAbierta)
+            return interaction.reply({ content: '❌ Las pre-inscripciones están cerradas.', ephemeral: true });
+
+        const yaPreinscrito = db.prepare(`SELECT * FROM preinscripciones WHERE discord_id=?`).get(interaction.user.id);
+        const modal = new ModalBuilder()
+            .setCustomId('modal_preinscripcion')
+            .setTitle('Pre-inscripción — Siguiente Draft');
+        const eafcInput = new TextInputBuilder()
+            .setCustomId('preinsc_eafc').setLabel('Tu nombre en EA Sports FC').setStyle(TextInputStyle.Short)
+            .setRequired(true).setMaxLength(50).setValue(yaPreinscrito?.eafc_id || '');
+        const posInput = new TextInputBuilder()
+            .setCustomId('preinsc_posicion').setLabel('Posición (DC, CARR, MC, DFC, POR)').setStyle(TextInputStyle.Short)
+            .setRequired(true).setMaxLength(4).setValue(yaPreinscrito?.posicion || '');
+        const telInput = new TextInputBuilder()
+            .setCustomId('preinsc_telefono').setLabel('Teléfono de contacto').setStyle(TextInputStyle.Short)
+            .setRequired(true).setMaxLength(20).setValue(yaPreinscrito?.telefono || '');
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(eafcInput),
+            new ActionRowBuilder().addComponents(posInput),
+            new ActionRowBuilder().addComponents(telInput),
+        );
+        return interaction.showModal(modal);
+    }
+
+    if (interaction.isButton() && interaction.customId === 'preinsc_cancelar') {
+        const yaPreinscrito = db.prepare(`SELECT * FROM preinscripciones WHERE discord_id=?`).get(interaction.user.id);
+        if (!yaPreinscrito)
+            return interaction.reply({ content: '❌ No estás pre-inscrito.', ephemeral: true });
+        db.prepare(`DELETE FROM preinscripciones WHERE discord_id=?`).run(interaction.user.id);
+        const guild = interaction.guild;
+        if (guild) actualizarMensajePreinscripciones(guild).catch(() => {});
+        return interaction.reply({ content: '✅ Pre-inscripción cancelada.', ephemeral: true });
+    }
+
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_preinscripcion') {
+        const POSICIONES_VALIDAS = ['DC','CARR','MC','DFC','POR'];
+        const eafc   = interaction.fields.getTextInputValue('preinsc_eafc').trim();
+        const posRaw = interaction.fields.getTextInputValue('preinsc_posicion').trim().toUpperCase();
+        const tel    = interaction.fields.getTextInputValue('preinsc_telefono').trim();
+
+        if (!POSICIONES_VALIDAS.includes(posRaw))
+            return interaction.reply({ content: `❌ Posición **${posRaw}** no válida. Usa: DC, CARR, MC, DFC o POR.`, ephemeral: true });
+
+        db.prepare(`
+            INSERT INTO preinscripciones (discord_id, username, nombre, posicion, telefono, eafc_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(discord_id) DO UPDATE SET
+                nombre=excluded.nombre, posicion=excluded.posicion,
+                telefono=excluded.telefono, eafc_id=excluded.eafc_id
+        `).run(interaction.user.id, interaction.user.username, eafc, posRaw, tel, eafc);
+
+        const guild = interaction.guild;
+        if (guild) actualizarMensajePreinscripciones(guild).catch(() => {});
+
+        const total = db.prepare(`SELECT COUNT(*) as c FROM preinscripciones`).get().c;
+        return interaction.reply({
+            content: `✅ **Pre-inscripción guardada.**\n> EA FC ID: **${eafc}** · Posición: **${posRaw}**\n> Total pre-inscritos: **${total}**\n\nCuando acabe el draft actual pasarás automáticamente al nuevo.`,
+            ephemeral: true
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════
     //  PANEL DE ADMIN — BOTONES admp_*
     // ══════════════════════════════════════════════════════════
     if (interaction.isButton() && interaction.customId.startsWith('admp_')) {
@@ -5261,6 +5416,31 @@ botApp.post('/api/actualizar-clasificacion', async (req, res) => {
 botApp.post('/api/cerrar-inscripciones', (req, res) => {
     cerrarInscripciones();
     res.sendStatus(200);
+});
+
+botApp.post('/api/abrir-preinscripcion', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (!guild) return res.sendStatus(500);
+        await abrirCanalPreinscripcion(guild);
+        res.sendStatus(200);
+    } catch(e) { console.error('Error abriendo pre-inscripción:', e.message); res.sendStatus(500); }
+});
+
+botApp.post('/api/cerrar-preinscripcion', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (guild) await cerrarCanalPreinscripcion(guild);
+        res.sendStatus(200);
+    } catch(e) { res.sendStatus(500); }
+});
+
+botApp.post('/api/actualizar-preinscripciones', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (guild) await actualizarMensajePreinscripciones(guild);
+        res.sendStatus(200);
+    } catch(e) { res.sendStatus(500); }
 });
 
 // Comprobar si un usuario está en el servidor de Discord

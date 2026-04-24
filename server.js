@@ -238,6 +238,9 @@ app.get('/inscripciones', async (req, res) => {
         DC:   db.prepare(`SELECT eafc_id, nombre, discord_id FROM players WHERE posicion='DC'   ORDER BY nombre`).all(),
     };
     const totalJugadores = db.prepare(`SELECT COUNT(*) as c FROM players`).get().c;
+    const preinscripcionAbierta = !!db.prepare(`SELECT value FROM settings WHERE key='preinscripcion_abierta'`).get()?.value;
+    const miPreinscripcion = db.prepare(`SELECT * FROM preinscripciones WHERE discord_id=?`).get(did);
+    const totalPreinscritos = db.prepare(`SELECT COUNT(*) as c FROM preinscripciones`).get().c;
     res.render('inscripciones', {
         user: req.session.user,
         draftAbierto,
@@ -246,8 +249,11 @@ app.get('/inscripciones', async (req, res) => {
         totalJugadores,
         enServidor,
         discordInvite: process.env.DISCORD_INVITE || '#',
-        mensaje: req.query.cancelado ? 'cancelado' : null,
-        tipoMensaje: req.query.cancelado ? 'success' : null
+        mensaje: req.query.cancelado ? 'cancelado' : (req.query.preinsc_ok ? 'preinsc_ok' : null),
+        tipoMensaje: req.query.cancelado ? 'success' : (req.query.preinsc_ok ? 'success' : null),
+        preinscripcionAbierta,
+        miPreinscripcion,
+        totalPreinscritos,
     });
 });
 
@@ -264,6 +270,51 @@ app.post('/inscripciones/cancelar', (req, res) => {
     axios.post('http://localhost:3001/api/actualizar-lista-draft').catch(() => {});
     axios.post('http://localhost:3001/api/actualizar-jugadores-inscritos').catch(() => {});
     return res.redirect('/inscripciones?cancelado=1');
+});
+
+// ── PRE-INSCRIPCIONES (siguiente draft) ────────────────────────
+app.post('/preinscripciones', (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/discord?next=/inscripciones');
+    const preinscAbierta = !!db.prepare(`SELECT value FROM settings WHERE key='preinscripcion_abierta'`).get()?.value;
+    if (!preinscAbierta) return res.redirect('/inscripciones');
+    const did = req.session.user.id;
+    const { eafc_id, posicion, telefono } = req.body;
+    const POSICIONES_VALIDAS = ['DC','CARR','MC','DFC','POR'];
+    if (!eafc_id?.trim() || !posicion || !telefono?.trim()) return res.redirect('/inscripciones');
+    if (!POSICIONES_VALIDAS.includes(posicion)) return res.redirect('/inscripciones');
+    db.prepare(`
+        INSERT INTO preinscripciones (discord_id, username, nombre, posicion, telefono, eafc_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(discord_id) DO UPDATE SET
+            nombre=excluded.nombre, posicion=excluded.posicion,
+            telefono=excluded.telefono, eafc_id=excluded.eafc_id
+    `).run(did, req.session.user.username, eafc_id.trim(), posicion, telefono.trim(), eafc_id.trim());
+    io.emit('activity', `📋 ${req.session.user.username} pre-inscrito para el siguiente draft.`);
+    axios.post('http://localhost:3001/api/actualizar-preinscripciones').catch(() => {});
+    return res.redirect('/inscripciones?preinsc_ok=1');
+});
+
+app.post('/preinscripciones/cancelar', (req, res) => {
+    if (!req.session.user) return res.redirect('/auth/discord?next=/inscripciones');
+    const did = req.session.user.id;
+    db.prepare(`DELETE FROM preinscripciones WHERE discord_id=?`).run(did);
+    io.emit('activity', `🚪 ${req.session.user.username} canceló su pre-inscripción.`);
+    axios.post('http://localhost:3001/api/actualizar-preinscripciones').catch(() => {});
+    return res.redirect('/inscripciones');
+});
+
+app.post('/admin/abrir-preinscripcion', requireLogin, requireAdmin, (req, res) => {
+    db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('preinscripcion_abierta','1')`).run();
+    axios.post('http://localhost:3001/api/abrir-preinscripcion').catch(() => {});
+    io.emit('activity', '📋 Pre-inscripciones para el siguiente draft ABIERTAS.');
+    res.redirect('/admin');
+});
+
+app.post('/admin/cerrar-preinscripcion', requireLogin, requireAdmin, (req, res) => {
+    db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('preinscripcion_abierta','')`).run();
+    axios.post('http://localhost:3001/api/cerrar-preinscripcion').catch(() => {});
+    io.emit('activity', '🔒 Pre-inscripciones para el siguiente draft CERRADAS.');
+    res.redirect('/admin');
 });
 
 app.post('/inscripciones', async (req, res) => {
@@ -686,7 +737,9 @@ app.get('/admin', requireLogin, requireAdmin, (req, res) => {
         formatoManual,
         capsPorEquipo,
         draftTipo,
-        pendingQueue: (db.prepare(`SELECT value FROM settings WHERE key='pending_queue'`).get()?.value || '').split(',').filter(Boolean)
+        pendingQueue: (db.prepare(`SELECT value FROM settings WHERE key='pending_queue'`).get()?.value || '').split(',').filter(Boolean),
+        preinscripcionAbierta: !!db.prepare(`SELECT value FROM settings WHERE key='preinscripcion_abierta'`).get()?.value,
+        totalPreinscritos: db.prepare(`SELECT COUNT(*) as c FROM preinscripciones`).get().c,
     });
 });
 
@@ -1155,17 +1208,34 @@ app.post('/admin/reset-draft', requireLogin, requireAdmin, (req, res) => {
 // ── Limpiar TODA la web + Discord (draft + torneo + jugadores) ─
 app.post('/admin/limpiar-todo', requireLogin, requireAdmin, (req, res) => {
     db.transaction(() => {
+        // Transferir pre-inscritos al nuevo draft
+        const preinscritos = db.prepare(`SELECT * FROM preinscripciones`).all();
+        for (const p of preinscritos) {
+            db.prepare(`
+                INSERT INTO players (discord_id, nombre, posicion, telefono, eafc_id)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(discord_id) DO UPDATE SET
+                    posicion=excluded.posicion, telefono=excluded.telefono, eafc_id=excluded.eafc_id, equipo=NULL
+            `).run(p.discord_id, p.nombre, p.posicion, p.telefono || '', p.eafc_id || p.nombre);
+        }
+        db.prepare(`DELETE FROM preinscripciones`).run();
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('preinscripcion_abierta','')`).run();
+
         db.prepare(`UPDATE players SET equipo=NULL`).run();
         db.prepare(`DELETE FROM picks`).run();
         db.prepare(`DELETE FROM teams`).run();
         db.prepare(`DELETE FROM matches`).run();
         db.prepare(`DELETE FROM clasificacion`).run();
+        db.prepare(`DELETE FROM cocapitanes`).run();
         db.prepare(`UPDATE settings SET value='cerrado' WHERE key='draft_estado'`).run();
         db.prepare(`UPDATE settings SET value='' WHERE key='turno_actual'`).run();
         db.prepare(`UPDATE settings SET value='asc' WHERE key='direccion_snake'`).run();
         db.prepare(`UPDATE settings SET value='1' WHERE key='ronda_actual'`).run();
         db.prepare(`UPDATE settings SET value='1' WHERE key='jornada_actual'`).run();
         db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('torneo_generado','')`).run();
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('total_rondas_swiss','')`).run();
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('fase_actual','')`).run();
+        db.prepare(`INSERT OR REPLACE INTO settings (key,value) VALUES ('fases_torneo','')`).run();
     })();
     cache.draftEstado = 'cerrado';
     cache.turnoActual = '';

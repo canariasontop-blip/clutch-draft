@@ -213,6 +213,65 @@ html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#
                     <a href="/inscripciones" style="color:#a066ff;text-decoration:underline;">Recarga la página</a>
                 </div>
             </div>
+            <% } else if (draftAbierto && preinscripcionAbierta) { %>
+
+            <div class="card-title" style="color:#a066ff;">PRE-INSCRIPCIÓN</div>
+            <div class="card-sub">El draft está en curso. Apúntate para el <strong style="color:#fff;">siguiente draft</strong>.</div>
+
+            <% if (mensaje === 'preinsc_ok') { %>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>¡Pre-inscripción guardada! Te avisaremos cuando arranque el siguiente draft.</span>
+            </div>
+            <% } %>
+
+            <% if (miPreinscripcion) { %>
+            <div class="inscrito-box" style="border-color:rgba(160,102,255,0.2);background:rgba(160,102,255,0.04);">
+                <div class="inscrito-tit" style="color:#a066ff;">✅ Ya estás pre-inscrito — edita tus datos abajo</div>
+                <div class="inscrito-row"><span class="inscrito-key">EA FC ID</span><span><%= miPreinscripcion.eafc_id || '—' %></span></div>
+                <div class="inscrito-row"><span class="inscrito-key">Posición</span><span><%= miPreinscripcion.posicion %></span></div>
+                <div class="inscrito-row"><span class="inscrito-key">Teléfono</span><span><%= miPreinscripcion.telefono || '—' %></span></div>
+            </div>
+            <form method="POST" action="/preinscripciones/cancelar" onsubmit="return confirm('¿Cancelar tu pre-inscripción?')">
+                <button type="submit" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(160,102,255,0.35);background:rgba(160,102,255,0.06);color:#a066ff;font-family:var(--font-b);font-size:0.85rem;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:16px;transition:0.2s;">
+                    <i class="fas fa-sign-out-alt"></i> &nbsp;CANCELAR PRE-INSCRIPCIÓN
+                </button>
+            </form>
+            <% } %>
+
+            <form method="POST" action="/preinscripciones" id="form-preinsc">
+                <div class="field">
+                    <div class="field-label">EA FC ID <span class="req">*</span></div>
+                    <input type="text" name="eafc_id" class="field-input"
+                           placeholder="Tu nombre en EA Sports FC"
+                           value="<%= miPreinscripcion?.eafc_id || '' %>"
+                           required maxlength="50" autocomplete="off">
+                </div>
+                <div class="field">
+                    <div class="field-label">Posición <span class="req">*</span></div>
+                    <div class="pos-grid">
+                        <% ['DC','CARR','MC','DFC','POR'].forEach(p => { %>
+                        <button type="button"
+                                class="pos-btn <%= miPreinscripcion?.posicion === p ? 'selected-'+p : '' %>"
+                                data-pos="<%= p %>"
+                                onclick="selPos('<%= p %>')"><%= p %></button>
+                        <% }) %>
+                    </div>
+                    <input type="hidden" name="posicion" id="posicion-hidden" value="<%= miPreinscripcion?.posicion || '' %>">
+                    <div class="pos-desc" id="pos-desc"></div>
+                </div>
+                <div class="field">
+                    <div class="field-label">Teléfono <span class="req">*</span></div>
+                    <input type="tel" name="telefono" class="field-input"
+                           placeholder="Ej: 600 000 000"
+                           value="<%= miPreinscripcion?.telefono || '' %>"
+                           required maxlength="20">
+                </div>
+                <button type="submit" class="btn-submit" style="background:linear-gradient(135deg,#a066ff,#6633cc);">
+                    <%= miPreinscripcion ? 'ACTUALIZAR PRE-INSCRIPCIÓN' : 'PRE-INSCRIBIRME' %>
+                </button>
+            </form>
+
             <% } else if (draftAbierto) { %>
             <div class="closed-box">
                 <div class="closed-icon"><i class="fas fa-lock"></i></div>
@@ -332,6 +391,11 @@ html,body{min-height:100%;background:var(--bg);font-family:var(--font-b);color:#
                 <div class="lista-titulo">INSCRITOS</div>
                 <div class="lista-total"><span id="total-count"><%= totalJugadores %></span> jugadores</div>
             </div>
+            <% if (preinscripcionAbierta && totalPreinscritos > 0) { %>
+            <div style="background:rgba(160,102,255,0.07);border:1px solid rgba(160,102,255,0.2);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:0.78rem;color:#a066ff;">
+                <i class="fas fa-list-alt"></i> <strong><%= totalPreinscritos %></strong> pre-inscritos para el siguiente draft
+            </div>
+            <% } %>
             <div class="live-row">
                 <div class="live-dot"></div>
                 <span class="live-txt">Se actualiza en tiempo real</span>
