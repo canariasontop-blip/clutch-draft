@@ -3450,6 +3450,51 @@ client.on('messageCreate', async (message) => {
                 await message.reply('Uso: `!admin formato copa`');
             }
 
+        // ── !admin resetear-jornada ──────────────────────────
+        // Borra los partidos PENDIENTES de la jornada actual y sus canales de Discord
+        } else if (sub === 'resetear-jornada') {
+            const jornadaReset = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
+            const pendientesReset = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='pendiente'").all(jornadaReset);
+            if (!pendientesReset.length) {
+                await message.reply(`❌ No hay partidos pendientes en jornada **${jornadaReset}** que borrar.`);
+            } else {
+                for (const m of pendientesReset) {
+                    if (m.canal_discord) {
+                        try {
+                            const ch = await guild.channels.fetch(m.canal_discord).catch(() => null);
+                            if (ch) await ch.delete();
+                        } catch(e) { /* ignorar */ }
+                    }
+                    db.prepare("DELETE FROM matches WHERE id=?").run(m.id);
+                }
+                await message.reply(`✅ Borrados **${pendientesReset.length}** partido(s) pendientes de jornada **${jornadaReset}**.\nAhora usa \`!admin crear-partido NombreEquipo1 vs NombreEquipo2\` para crear los emparejamientos manualmente.`);
+            }
+
+        // ── !admin crear-partido <eq1> vs <eq2> ──────────────
+        // Crea un partido manualmente para la jornada actual
+        } else if (sub === 'crear-partido') {
+            const resto = args.slice(2).join(' ');
+            const partes = resto.split(/\s+vs\s+/i);
+            if (partes.length !== 2) {
+                await message.reply('Uso: `!admin crear-partido NombreEquipo1 vs NombreEquipo2`\n(el nombre debe coincidir exactamente con el `capitan_username` del equipo)');
+            } else {
+                const nombreEq1 = partes[0].trim();
+                const nombreEq2 = partes[1].trim();
+                const team1 = db.prepare("SELECT * FROM teams WHERE capitan_username=?").get(nombreEq1);
+                const team2 = db.prepare("SELECT * FROM teams WHERE capitan_username=?").get(nombreEq2);
+                if (!team1) return message.reply(`❌ No se encontró el equipo **${nombreEq1}**. Comprueba el nombre exacto.`);
+                if (!team2) return message.reply(`❌ No se encontró el equipo **${nombreEq2}**. Comprueba el nombre exacto.`);
+                const jornadaCP = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
+                const r = db.prepare("INSERT INTO matches (jornada, equipo1, equipo2, estado) VALUES (?,?,?,'pendiente')")
+                    .run(jornadaCP, team1.capitan_username, team2.capitan_username);
+                const matchId = r.lastInsertRowid;
+                const canalId = await crearCanalPartido(guild, matchId, jornadaCP, team1.capitan_username, team2.capitan_username, team1.capitan_id, team2.capitan_id);
+                if (canalId) db.prepare('UPDATE matches SET canal_discord=? WHERE id=?').run(canalId, matchId);
+                await actualizarCanalClasificacion(guild).catch(() => {});
+                await actualizarCanalResultadosPub(guild).catch(() => {});
+                await message.reply(`✅ Partido creado en jornada **${jornadaCP}**: **${team1.capitan_username}** vs **${team2.capitan_username}**${canalId ? ` — canal <#${canalId}>` : ''}.`);
+            }
+
         // ── !admin draft [abrir|cerrar|saltar] ───────────────
         } else if (sub === 'draft') {
             if (par === 'abrir') {
