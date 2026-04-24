@@ -1226,11 +1226,17 @@ async function crearCanalPartido(guild, matchId, jornada, eq1, eq2, cap1Id, cap2
             .setTitle(`⚔️ ${titulo} — ${eq1} vs ${eq2}`)
             .setColor(esKO ? 0xf0c040 : 0xa066ff)
             .setDescription(
-                'Este es el canal privado de vuestro partido.\n' +
-                '**Ambos capitanes** deben reportar el resultado con el botón de abajo.\n' +
-                'Si los dos resultados coinciden se registra automáticamente.\n' +
-                'Si hay discrepancia, el admin decide.\n\n' +
-                '> Para añadir co-capitán ve al canal **🤝-co-capitanes**.'
+                'Este es el canal privado de vuestro partido. Solo vosotros y el admin tenéis acceso.\n\n' +
+                '📋 **Cómo reportar el resultado:**\n' +
+                '> **1.** Jugad el partido.\n' +
+                '> **2.** Los dos capitanes (o co-capitanes) pulsáis **📊 Reportar resultado**.\n' +
+                '> **3.** Introducís los goles de cada equipo en el formulario.\n' +
+                '> **4.** Si ambos reportes **coinciden** → resultado confirmado automáticamente ✅\n' +
+                '> **5.** Si los reportes **no coinciden** → el admin es alertado inmediatamente ⚠️\n\n' +
+                '⚠️ **Importante:** El resultado **no se registra** hasta que ambos equipos hayan reportado.\n' +
+                'Si solo reporta uno, el sistema queda en espera.\n\n' +
+                '💡 Si no puedes reportar tú, tu co-capitán puede hacerlo desde este mismo canal.\n' +
+                'Para añadir co-capitán ve al canal **🤝-co-capitanes**.'
             )
             .addFields(
                 { name: '🏠 Local',     value: cap1Id ? `<@${cap1Id}>` : eq1, inline: true },
@@ -1998,11 +2004,19 @@ async function crearCanalCocapitanes(guild) {
         .setTitle('👥 GESTIÓN DE CO-CAPITANES')
         .setColor(0xa066ff)
         .setDescription(
-            'Un **co-capitán** puede reportar resultados de partido en tu nombre.\n\n' +
-            '**Solo necesitas añadirlo una vez.** Se aplicará automáticamente en todos los canales de partido de cada jornada.\n\n' +
-            '▸ **➕ Añadir** — registra a tu co-capitán con su ID de Discord\n' +
-            '▸ **➖ Quitar** — elimina al co-capitán actual\n' +
-            '▸ **👁️ Ver** — consulta quién es tu co-capitán registrado'
+            '¿Qué es un co-capitán? Es alguien de tu equipo que puede **reportar resultados de partido en tu nombre**. ' +
+            'Útil si no puedes estar disponible cuando termina un partido.\n\n' +
+            '📌 **Cómo funciona:**\n' +
+            '> **1.** Añades a tu co-capitán una sola vez desde aquí.\n' +
+            '> **2.** El bot le da acceso automático a todos tus canales de partido.\n' +
+            '> **3.** Tu co-capitán puede pulsar "📊 Reportar resultado" exactamente igual que tú.\n' +
+            '> **4.** El resultado sigue requiriendo confirmación de **ambos equipos** (capitán o co-capitán de cada uno).\n\n' +
+            '🔘 **Botones:**\n' +
+            '▸ **➕ Añadir** — registra a tu co-capitán con su mención o ID de Discord\n' +
+            '▸ **➖ Quitar** — elimina al co-capitán registrado\n' +
+            '▸ **👁️ Ver** — consulta quién es tu co-capitán actual\n\n' +
+            '⚠️ Solo el **capitán principal** puede añadir o quitar co-capitanes.\n' +
+            'Un co-capitán **no puede fichar jugadores** ni modificar el equipo — solo reportar partidos.'
         )
         .setFooter({ text: 'Clutch Draft · Solo capitanes registrados pueden gestionar co-capitanes' })
         .setTimestamp();
@@ -4616,10 +4630,12 @@ client.on('interactionCreate', async (interaction) => {
                         { name: 'Match ID', value: String(matchId), inline: true }
                     )
                     .setTimestamp();
+                // Alerta 1: DM al admin
                 try {
                     const admin = await client.users.fetch(ADMIN_ID);
                     await admin.send({ embeds: [embedConflicto] });
                 } catch(e) { /* DMs bloqueados */ }
+                // Alerta 2: canal de anuncios con mención
                 try {
                     const guild = client.guilds.cache.first();
                     if (guild) {
@@ -4627,7 +4643,26 @@ client.on('interactionCreate', async (interaction) => {
                         await canalAnuncios.send({ content: `<@${ADMIN_ID}> ⚠️ Conflicto de resultado`, embeds: [embedConflicto] });
                     }
                 } catch(e) { /* ignorar */ }
-                return interaction.editReply({ content: '⚠️ Tu resultado difiere del otro capitán. El admin ha sido notificado.' });
+                // Alerta 3: mensaje en el propio canal del partido
+                if (match.canal_discord) {
+                    try {
+                        const ch = await client.channels.fetch(match.canal_discord);
+                        await ch.send({
+                            content: `<@${ADMIN_ID}> ⚠️ Los capitanes han reportado resultados distintos. El admin revisará el partido.`,
+                            embeds: [new EmbedBuilder()
+                                .setTitle('⚠️ CONFLICTO DE RESULTADO — PENDIENTE DE REVISIÓN')
+                                .setColor(0xff4d4d)
+                                .addFields(
+                                    { name: '🏠 ' + match.equipo1 + ' reporta', value: `${r1.g1} - ${r1.g2}`, inline: true },
+                                    { name: '✈️ ' + match.equipo2 + ' reporta', value: `${r2.g1} - ${r2.g2}`, inline: true }
+                                )
+                                .setDescription('El admin ha sido notificado y resolverá el conflicto. El resultado quedará pendiente hasta entonces.')
+                                .setTimestamp()
+                            ]
+                        });
+                    } catch(e) { /* canal puede no existir */ }
+                }
+                return interaction.editReply({ content: '⚠️ Tu resultado difiere del otro capitán. El admin ha sido notificado inmediatamente.' });
             }
         } else {
             return interaction.editReply({ content: `⏳ Resultado registrado (**${g1}-${g2}**). Esperando al otro capitán para confirmar.` });
