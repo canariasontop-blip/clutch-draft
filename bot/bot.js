@@ -239,8 +239,14 @@ function buildPanelEmbed() {
     return new EmbedBuilder()
         .setTitle('🏆 CLUTCH DRAFT — INSCRIPCIONES ABIERTAS')
         .setDescription(
-            '### ¡El draft más competitivo está de vuelta!\n' +
-            '> Elige tu **posición** pulsando uno de los botones de abajo y forma parte del próximo torneo.\n\n' +
+            '### ¡El draft más competitivo está de vuelta!\n\n' +
+            '📋 **Cómo inscribirte (3 pasos):**\n' +
+            '> **1.** Pulsa el botón de tu **posición** (DC, CARR, MC, DFC o POR).\n' +
+            '> **2.** Rellena el formulario que aparece: nombre real, teléfono y tu **ID de EA Sports FC**.\n' +
+            '> **3.** ¡Listo! Aparecerás en la lista de jugadores inscritos.\n\n' +
+            '🔁 Puedes **editar tus datos** en cualquier momento volviendo a pulsar tu posición.\n' +
+            '❌ Si te arrepientes, pulsa **"Salirse del draft"** para borrarte.\n' +
+            '🔍 Con **"Ver mi inscripción"** puedes comprobar los datos que has guardado.\n\n' +
             '```\n⚠️  Las plazas son limitadas — ¡no te quedes fuera!\n```'
         )
         .setColor(0x00ffcc)
@@ -683,14 +689,21 @@ function buildEmbedVotoPrecio() {
     return new EmbedBuilder()
         .setTitle('💰 VOTACIÓN — PRECIO DEL TORNEO')
         .setColor(0xffcc00)
-        .setDescription('Solo jugadores inscritos pueden votar.')
+        .setDescription(
+            'Entre todos los jugadores inscritos decidís cuánto vale la **capitanía** este torneo.\n\n' +
+            '👇 **Cómo votar:**\n' +
+            '> Pulsa el botón con el precio que prefieras. Solo puedes votar **una vez**.\n' +
+            '> Los resultados se actualizan en tiempo real.\n' +
+            '> Al cerrar la votación, el precio con más votos queda fijado automáticamente.\n\n' +
+            '⚠️ Solo jugadores inscritos pueden votar.'
+        )
         .addFields(
             { name: '💶 10 €', value: `${barra(v10)} (${v10} votos)`, inline: false },
             { name: '💶 15 €', value: `${barra(v15)} (${v15} votos)`, inline: false },
             { name: '💶 20 €', value: `${barra(v20)} (${v20} votos)`, inline: false },
             { name: '📊 Total', value: `${total}`, inline: true }
         )
-        .setFooter({ text: '20 minutos · Clutch Draft' })
+        .setFooter({ text: 'Un voto por persona · Clutch Draft' })
         .setTimestamp();
 }
 
@@ -950,7 +963,16 @@ async function lanzarEncuestaCapitan(canal, slotsNecesarios) {
     const embed = new EmbedBuilder()
         .setTitle('👑 ¿QUIERES SER CAPITÁN?')
         .setColor(0xa066ff)
-        .setDescription(`Faltan **${slotsNecesarios}** capitán(es).\nSi quieres ser capitán, pulsa el botón.`)
+        .setDescription(
+            `Faltan **${slotsNecesarios}** capitán(es) para completar el draft.\n\n` +
+            '🏆 **¿Qué significa ser capitán?**\n' +
+            '> • Pagas la **cuota de capitanía** (precio decidido en la votación)\n' +
+            '> • En el draft, **eliges jugadores** uno a uno para formar tu equipo\n' +
+            '> • Gestionas tu equipo desde la web (nombre, escudo, formación)\n' +
+            '> • Eres el responsable de **reportar los resultados** de tus partidos\n' +
+            '> • Puedes añadir un **co-capitán** que te ayude\n\n' +
+            '👇 Si te interesa, pulsa el botón. El admin hará la selección final entre los candidatos.'
+        )
         .addFields({ name: '🙋 Candidatos', value: '*Nadie de momento...*', inline: false })
         .setTimestamp();
     msgVotoCapitan = await canal.send({ content: `<@&${ROL_JUGADOR}>`, embeds: [embed], components: [row] });
@@ -2254,10 +2276,13 @@ async function abrirCanalPreinscripcion(guild) {
         .setColor(0xa066ff)
         .setTitle('📋 Pre-inscripciones — Siguiente Draft')
         .setDescription(
-            '**El draft actual está en curso.**\n\n' +
-            'Si quieres jugar el **siguiente draft**, apúntate aquí.\n' +
-            'Al terminar el draft actual pasarás automáticamente a la lista de jugadores.\n\n' +
-            '> Pulsa el botón para pre-inscribirte o editar tus datos.'
+            '**El draft actual está en curso**, pero ya puedes reservar tu plaza para el siguiente.\n\n' +
+            '📋 **Cómo funciona:**\n' +
+            '> **1.** Pulsa **"PRE-INSCRIBIRME"** y rellena el formulario (EA FC ID, posición y teléfono).\n' +
+            '> **2.** Quedas apuntado en la lista de espera.\n' +
+            '> **3.** Cuando el draft actual termine, pasarás **automáticamente** a la lista de jugadores del nuevo draft sin tener que hacer nada más.\n\n' +
+            '✏️ Puedes volver a pulsar el botón en cualquier momento para **editar tus datos**.\n' +
+            '❌ Si cambias de idea, pulsa **"Cancelar pre-inscripción"** para borrarte.'
         )
         .addFields({ name: '🌐 También puedes hacerlo desde la web', value: 'clutch-draft.duckdns.org/inscripciones' })
         .setFooter({ text: 'Los pre-inscritos se transfieren al nuevo draft automáticamente' });
