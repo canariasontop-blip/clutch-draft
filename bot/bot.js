@@ -1665,7 +1665,8 @@ async function cerrarJornada(guild, jornada) {
     console.log(`✅ Jornada ${jornada} cerrada: canales de partido eliminados.`);
 }
 
-let _generandoJornada = false; // Guard anti-doble ejecución
+let _generandoJornada   = false; // Guard anti-doble ejecución
+let _generandoJornadaTs = 0;    // Timestamp para detectar flag colgado
 
 // Finalizar torneo: guardar historial, anunciar campeón, programar limpieza
 async function finalizarTorneo(guild) {
@@ -1794,13 +1795,14 @@ async function generarFaseKnockout(guild, fase, jornada, jornada_anterior, prevF
     await actualizarCanalClasificacion(guild).catch(() => {});
     await actualizarCanalResultadosPub(guild).catch(() => {});
     await actualizarCanalRondasFinalesPub(guild).catch(() => {});
-    await axios.post('http://localhost:3000/api/jornada-avanzada').catch(() => {});
+    await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => console.warn('[sync] jornada-avanzada falló:', e.message));
     console.log(`✅ Fase ${fase} generada (jornada ${jornada}): ${partidos.length} partido(s).`);
 }
 
 async function generarSiguienteJornada(guild) {
     if (_generandoJornada) return;
-    _generandoJornada = true;
+    _generandoJornada   = true;
+    _generandoJornadaTs = Date.now();
     try {
         const jornadaActual   = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
         const totalRondasLiga = parseInt(db.prepare("SELECT value FROM settings WHERE key='total_rondas_swiss'").get()?.value || '0');
@@ -1847,7 +1849,7 @@ async function generarSiguienteJornada(guild) {
 
             await actualizarCanalClasificacion(guild).catch(() => {});
             await actualizarCanalResultadosPub(guild).catch(() => {});
-            await axios.post('http://localhost:3000/api/jornada-avanzada').catch(() => {});
+            await axios.post('http://localhost:3000/api/jornada-avanzada').catch(e => console.warn('[sync] jornada-avanzada falló:', e.message));
             console.log(`✅ Jornada ${siguiente} generada con ${partidos.length} partido(s).`);
 
         } else if (faseActual === 'final') {
@@ -1969,7 +1971,11 @@ async function anunciarCampeon(guild, campeon, subcampeon, tabla) {
 }
 
 async function comprobarFinTorneo() {
-    // Fallback cron: comprueba si la jornada actual está completa y avanza si es necesario
+    // Safety: si el flag lleva más de 5 min colgado, resetear
+    if (_generandoJornada && Date.now() - _generandoJornadaTs > 5 * 60 * 1000) {
+        console.warn('[jornada] Flag _generandoJornada colgado >5min — reseteando');
+        _generandoJornada = false;
+    }
     try {
         const torneoGenerado = db.prepare("SELECT value FROM settings WHERE key='torneo_generado'").get()?.value;
         if (!torneoGenerado) return;
@@ -1982,9 +1988,13 @@ async function comprobarFinTorneo() {
     } catch(e) { console.error('Error en comprobarFinTorneo:', e.message); }
 }
 
-// Limpieza automática desactivada — gestionar manualmente desde el panel de admin
+// Comprobación automática de avance de jornada cada 5 minutos
+cron.schedule('*/5 * * * *', async () => {
+    await comprobarFinTorneo();
+}, { timezone: 'Europe/Madrid' });
+
+// Limpieza automática — gestionar manualmente desde el panel de admin
 // cron.schedule('*/5 * * * *', async () => {
-//     await comprobarFinTorneo();
 //     await comprobarLimpiezaAutomatica();
 // }, { timezone: 'Europe/Madrid' });
 
@@ -2119,7 +2129,7 @@ async function limpiarDatos() {
         db.prepare("INSERT OR REPLACE INTO settings (key,value) VALUES ('fase_actual','')").run();
         db.prepare("INSERT OR REPLACE INTO settings (key,value) VALUES ('fases_torneo','')").run();
 
-        await axios.post('http://localhost:3000/api/torneo-limpiado').catch(() => {});
+        await axios.post('http://localhost:3000/api/torneo-limpiado').catch(e => console.warn('[sync] torneo-limpiado falló:', e.message));
         console.log('✅ Fase 2 completada: datos limpiados y web notificada.');
     } catch(e) { console.error('Error en limpiarDatos:', e.message); }
 }
@@ -5183,7 +5193,7 @@ client.on('interactionCreate', async (interaction) => {
                 for (const m of pendientesCheck) {
                     const g1 = Math.floor(Math.random() * 5);
                     const g2 = Math.floor(Math.random() * 5);
-                    await axios.post('http://localhost:3000/api/resultado-confirmado', { match_id: m.id, goles1: g1, goles2: g2 }).catch(() => {});
+                    await axios.post('http://localhost:3000/api/resultado-confirmado', { match_id: m.id, goles1: g1, goles2: g2 }).catch(e => console.warn('[sync] resultado-confirmado falló:', e.message));
                     simulados++;
                 }
                 await comprobarAvanceJornada(guild).catch(() => {});
