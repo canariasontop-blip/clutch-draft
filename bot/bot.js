@@ -780,6 +780,84 @@ async function lanzarCapitaniaDoble(guild) {
     return { ok: true };
 }
 
+async function enviarDMBienvenidaCapitan(member) {
+    try {
+        const imgPath = require('path').join(__dirname, '../public/uploads/playstyles_banneados.png');
+
+        // ── 1. Bienvenida + personalización web ──────────────────
+        const embedWeb = new EmbedBuilder()
+            .setTitle('👑 ¡Eres capitán! — Personaliza tu equipo')
+            .setColor(0x00ffcc)
+            .setDescription('¡Enhorabuena! Ya eres **Capitán** en el Clutch Draft.\n\nDesde la web puedes personalizar todo tu equipo:')
+            .addFields(
+                { name: '🌐 Acceso', value: '**[clutch-draft.duckdns.org/draft](https://clutch-draft.duckdns.org/draft)**\nInicia sesión con Discord.', inline: false },
+                { name: '✏️ Nombre del equipo', value: 'Cambia el nombre de tu equipo desde el panel de capitán.', inline: true },
+                { name: '🛡️ Escudo', value: 'Sube la imagen que quieras como logo de tu equipo.', inline: true },
+                { name: '⚙️ Formación', value: 'Elige entre **3-1-4-2** y **3-5-2**.\n⚠️ Solo puedes cambiarla mientras el draft está **cerrado**.', inline: false }
+            )
+            .setFooter({ text: 'Clutch Draft · Panel de capitán' });
+        await member.send({ embeds: [embedWeb] });
+
+        // ── 2. Cómo seguir el torneo ──────────────────────────────
+        const embedTorneo = new EmbedBuilder()
+            .setTitle('🏆 Cómo seguir el torneo')
+            .setColor(0xa066ff)
+            .addFields(
+                {
+                    name: '🌐 Web',
+                    value: [
+                        '• **[Inicio](https://clutch-draft.duckdns.org/hub)** — estado general',
+                        '• **[Draft](https://clutch-draft.duckdns.org/draft)** — tu equipo y fichajes en directo',
+                        '• **[Clasificación](https://clutch-draft.duckdns.org/clasificacion)** — tabla actualizada',
+                        '• **[Directo](https://clutch-draft.duckdns.org/directo)** — streams en directo',
+                    ].join('\n'),
+                    inline: false,
+                },
+                {
+                    name: '💬 Discord',
+                    value: [
+                        '• `📊-clasificacion` — tabla tras cada jornada',
+                        '• `📅-calendario` — partidos de cada jornada',
+                        '• `📢-anuncios` — novedades del torneo',
+                        '• Tu **canal privado de partido** — se crea automáticamente antes de cada match',
+                    ].join('\n'),
+                    inline: false,
+                }
+            )
+            .setFooter({ text: 'Clutch Draft · Sigue todo el torneo' });
+        await member.send({ embeds: [embedTorneo] });
+
+        // ── 3. Normativa resumida + imagen perks vetados ──────────
+        const embedNorma = new EmbedBuilder()
+            .setTitle('📜 Normativa — Lo que debes saber')
+            .setColor(0xff4d4d)
+            .addFields(
+                { name: '📏 Alturas', value: 'DFC máx. **187 cm** · Otras posiciones máx. **182 cm** · POR máx. **192 cm**\n⚠️ Grabar las alturas es **obligatorio** siempre.', inline: false },
+                { name: '🛡️ DFC al ataque', value: 'Los defensas **no pueden subir de forma fija** antes del minuto **75**.', inline: false },
+                { name: '🔌 Reinicios', value: '**Una sola salida**, antes del **minuto 10**. Después se juega con quienes estén.', inline: false },
+                { name: '🐍 Snake Draft', value: 'Turnos de **90 segundos**. Si expira, se salta automáticamente. Orden snake (ida en rondas impares, vuelta en pares).', inline: false },
+                { name: '✅ Límites de plantilla', value: '`DC: 2` · `MC: 3` · `CARR: 2` · `DFC: 3` · `POR: 1`', inline: false },
+                { name: '⚖️ Staff', value: 'La decisión del Staff es **final e inapelable**. Ante cualquier duda, pregunta **antes** de actuar.', inline: false }
+            )
+            .setFooter({ text: 'Normativa completa disponible en el canal #normativa' });
+
+        const embedPerks = new EmbedBuilder()
+            .setTitle('🚫 Playstyles / Perks VETADOS')
+            .setColor(0xff4d4d)
+            .setDescription('Los siguientes playstyles están **completamente prohibidos** en todas las competiciones de Clutch Draft.')
+            .setImage('attachment://playstyles_banneados.png');
+
+        if (fs.existsSync(imgPath)) {
+            const adjunto = new AttachmentBuilder(imgPath, { name: 'playstyles_banneados.png' });
+            await member.send({ embeds: [embedNorma, embedPerks], files: [adjunto] });
+        } else {
+            await member.send({ embeds: [embedNorma] });
+        }
+    } catch(e) {
+        console.warn(`No se pudo enviar DM bienvenida capitán ${member?.user?.username}:`, e.message);
+    }
+}
+
 async function ejecutarRuletaCapitanes(guild, numSlots) {
     const candidatos = db.prepare(`SELECT * FROM candidatos_capitan WHERE confirmado=0`).all();
     if (candidatos.length === 0) return { ok: false, error: 'No hay candidatos en la ruleta.' };
@@ -796,7 +874,7 @@ async function ejecutarRuletaCapitanes(guild, numSlots) {
             db.prepare(`UPDATE candidatos_capitan SET confirmado=1 WHERE discord_id=?`).run(cap.discord_id);
             if (member) {
                 await member.roles.add(ROL_CAPITAN).catch(() => {});
-                await member.send('🎡 **¡La Ruleta de Capitanes te ha elegido!** Ya tienes el rol de Capitán. ¡Mucha suerte en el draft!').catch(() => {});
+                await enviarDMBienvenidaCapitan(member);
             }
         } catch(e) { console.error('Error procesando ganador ruleta:', cap.discord_id, e.message); }
     }
@@ -836,7 +914,7 @@ async function ejecutarTodosCapitanes(guild) {
             db.prepare(`UPDATE candidatos_capitan SET confirmado=1 WHERE discord_id=?`).run(cap.discord_id);
             if (member) {
                 await member.roles.add(ROL_CAPITAN).catch(() => {});
-                await member.send('👑 ¡Todos los candidatos han sido aceptados! Ya tienes el rol de Capitán. ¡Mucha suerte en el draft!').catch(() => {});
+                await enviarDMBienvenidaCapitan(member);
             }
         } catch(e) { console.error('Error procesando capitán (todos):', cap.discord_id, e.message); }
     }
@@ -3752,7 +3830,7 @@ client.on('interactionCreate', async (interaction) => {
                     db.prepare(`INSERT OR IGNORE INTO teams (capitan_id, capitan_username, formacion) VALUES (?,?,'3-1-4-2')`).run(targetId, member.user.username);
                     db.prepare(`INSERT OR IGNORE INTO clasificacion (capitan_id, equipo_nombre) VALUES (?,?)`).run(targetId, member.user.username);
                 }
-                try { await member.send('👑 ¡Tu pago ha sido confirmado! Ya tienes el rol **Capitán**.'); } catch(e) {}
+                await enviarDMBienvenidaCapitan(member);
                 const rowDone = new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('done').setLabel(`✅ Aprobado: ${member.user.username}`).setStyle(ButtonStyle.Success).setDisabled(true)
                 );
@@ -3918,6 +3996,7 @@ client.on('interactionCreate', async (interaction) => {
                      `👑 Equipo: **${nombreEquipo}** · Posición: **${posicion}**\n` +
                      `Rol Capitán asignado correctamente.`
         });
+        await enviarDMBienvenidaCapitan(member);
         await refrescarWeb().catch(() => {});
         return;
     }
@@ -4023,7 +4102,7 @@ client.on('interactionCreate', async (interaction) => {
             // Auto-registrar cap2 como co-capitán para que tenga permisos en canales de partido y pueda reportar resultados
             db.prepare(`INSERT OR IGNORE INTO cocapitanes (capitan_id, cocapitan_id) VALUES (?, ?)`)
                 .run(cap1Id, targetId);
-            try { await member.send('👑 ¡Aprobado! Eres el **segundo capitán** de tu equipo. Ya tienes el rol Capitán.'); } catch(e) {}
+            await enviarDMBienvenidaCapitan(member);
             const rowDone = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('done').setLabel(`✅ Cap2 aprobado: ${member.user.username}`).setStyle(ButtonStyle.Success).setDisabled(true)
             );
