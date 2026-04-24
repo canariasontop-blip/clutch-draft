@@ -871,6 +871,13 @@
                                             <button type="submit" class="btn btn-ghost" style="padding:5px 10px; font-size:0.7rem;">Liberar</button>
                                         </form>
                                     <% } %>
+                                    <button type="button" class="btn btn-ghost btn-editar-jugador"
+                                        style="padding:5px 10px;font-size:0.7rem;border-color:rgba(0,255,204,0.3);color:#00ffcc;"
+                                        data-id="<%= j.discord_id %>"
+                                        data-nombre="<%= j.nombre %>"
+                                        data-posicion="<%= j.posicion %>">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
                                     <form action="/admin/borrar-jugador" method="POST" style="display:inline;" onsubmit="return confirm('¿Borrar a <%= j.nombre %>?')">
                                         <input type="hidden" name="discord_id" value="<%= j.discord_id %>">
                                         <button type="submit" class="btn btn-danger" style="padding:5px 10px; font-size:0.7rem;">
@@ -1622,6 +1629,52 @@
     });
   });
 })();
+</script>
+<!-- Modal editar jugador -->
+<div id="modal-editar-jugador" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#0b0b14;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:28px 28px 24px;width:340px;max-width:95vw;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;margin-bottom:18px;color:#00ffcc;">EDITAR JUGADOR</div>
+        <form action="/admin/editar-jugador" method="POST">
+            <input type="hidden" name="discord_id" id="edit-discord-id">
+            <div style="margin-bottom:14px;">
+                <label style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:6px;">Nombre</label>
+                <input type="text" name="nombre" id="edit-nombre" required
+                    style="width:100%;background:#111;border:1px solid #333;color:#fff;border-radius:8px;padding:9px 12px;font-size:.9rem;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="font-size:.72rem;color:#aaa;text-transform:uppercase;letter-spacing:1.5px;display:block;margin-bottom:6px;">Posición</label>
+                <select name="posicion" id="edit-posicion"
+                    style="width:100%;background:#111;border:1px solid #333;color:#fff;border-radius:8px;padding:9px 12px;font-size:.9rem;">
+                    <option value="DC">DC — Delantero</option>
+                    <option value="CARR">CARR — Carrilero</option>
+                    <option value="MC">MC — Mediocentro</option>
+                    <option value="DFC">DFC — Defensa</option>
+                    <option value="POR">POR — Portero</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button type="submit" class="btn" style="flex:1;background:#00ffcc;color:#000;font-weight:700;">Guardar</button>
+                <button type="button" onclick="cerrarEditarJugador()" class="btn btn-ghost" style="flex:1;">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.querySelectorAll('.btn-editar-jugador').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.getElementById('edit-discord-id').value = btn.dataset.id;
+        document.getElementById('edit-nombre').value    = btn.dataset.nombre;
+        document.getElementById('edit-posicion').value  = btn.dataset.posicion;
+        var m = document.getElementById('modal-editar-jugador');
+        m.style.display = 'flex';
+    });
+});
+function cerrarEditarJugador() {
+    document.getElementById('modal-editar-jugador').style.display = 'none';
+}
+document.getElementById('modal-editar-jugador').addEventListener('click', function(e) {
+    if (e.target === this) cerrarEditarJugador();
+});
 </script>
 </body>
 </html>
