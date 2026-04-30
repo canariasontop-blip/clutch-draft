@@ -1216,6 +1216,46 @@
             </div>
         </div>
 
+        <!-- Gestión de jornadas (comandos nuevos) -->
+        <div class="controls-grid three" style="margin-bottom:20px;">
+            <!-- Resetear jornada actual -->
+            <div class="section" style="border-left:3px solid #ff4d4d;">
+                <div class="section-title"><i class="fas fa-redo" style="color:#ff4d4d;"></i> Resetear jornada actual</div>
+                <p style="color:#888; font-size:0.8rem; margin-bottom:12px;">Borra todos los partidos <strong>pendientes</strong> de la jornada actual. Los partidos ya finalizados no se tocan.</p>
+                <form action="/admin/resetear-jornada" method="POST" onsubmit="return confirm('¿Borrar los partidos pendientes de la jornada actual?')">
+                    <button type="submit" class="btn btn-danger" style="width:100%;">
+                        <i class="fas fa-redo"></i> Resetear jornada
+                    </button>
+                </form>
+            </div>
+
+            <!-- Ir a jornada N -->
+            <div class="section" style="border-left:3px solid #ff8800;">
+                <div class="section-title"><i class="fas fa-backward" style="color:#ff8800;"></i> Ir a jornada</div>
+                <p style="color:#888; font-size:0.8rem; margin-bottom:12px;">Borra todos los partidos desde jornada N en adelante y recalcula la clasificación. Úsalo para revertir una jornada generada incorrectamente.</p>
+                <form action="/admin/ir-a-jornada" method="POST" onsubmit="return confirm('¿Revertir al inicio de esta jornada? Se borrarán todos los partidos desde ahí en adelante.')">
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label">Número de jornada destino</label>
+                        <input type="number" name="jornada" min="1" placeholder="Ej: 2" style="width:100%;" required>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; background:#ff8800; color:#000; font-weight:700;">
+                        <i class="fas fa-backward"></i> Ir a jornada
+                    </button>
+                </form>
+            </div>
+
+            <!-- Formato copa -->
+            <div class="section" style="border-left:3px solid #a066ff;">
+                <div class="section-title"><i class="fas fa-trophy" style="color:#a066ff;"></i> Formato copa (4 equipos)</div>
+                <p style="color:#888; font-size:0.8rem; margin-bottom:12px;">Cambia el formato del torneo actual a <strong>Semifinal ida+vuelta → Final</strong>. Solo úsalo si el torneo tiene 4 equipos y empezó como liguilla por error.</p>
+                <form action="/admin/formato-copa" method="POST" onsubmit="return confirm('¿Cambiar el formato a Copa (Semis ida+vuelta + Final)?')">
+                    <button type="submit" class="btn btn-accent" style="width:100%;">
+                        <i class="fas fa-trophy"></i> Aplicar formato copa
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- Lista de partidos -->
         <div class="section">
             <div class="section-title"><i class="fas fa-calendar"></i> Todos los partidos</div>

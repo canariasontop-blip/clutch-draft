@@ -1562,6 +1562,30 @@ app.post('/admin/borrar-jornada', requireLogin, requireAdmin, (req, res) => {
     res.redirect('/admin#tab-sistema');
 });
 
+app.post('/admin/resetear-jornada', requireLogin, requireAdmin, (req, res) => {
+    const jornadaActual = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
+    db.prepare("DELETE FROM matches WHERE jornada=? AND estado='pendiente'").run(jornadaActual);
+    res.redirect('/admin#tab-partidos');
+});
+
+app.post('/admin/ir-a-jornada', requireLogin, requireAdmin, (req, res) => {
+    const jornada = parseInt(req.body.jornada);
+    if (isNaN(jornada) || jornada < 1) return res.redirect('/admin#tab-partidos');
+    db.prepare("DELETE FROM matches WHERE jornada >= ?").run(jornada);
+    db.prepare("UPDATE settings SET value=? WHERE key='jornada_actual'").run(String(jornada));
+    db.prepare("UPDATE settings SET value='liga' WHERE key='fase_actual'").run();
+    recalcularClasificacion();
+    io.emit('clasificacion-update');
+    axios.post('http://localhost:3001/api/actualizar-panel-inscripciones').catch(() => {});
+    res.redirect('/admin#tab-partidos');
+});
+
+app.post('/admin/formato-copa', requireLogin, requireAdmin, (req, res) => {
+    db.prepare("UPDATE settings SET value='1' WHERE key='total_rondas_swiss'").run();
+    db.prepare("UPDATE settings SET value=? WHERE key='fases_torneo'").run(JSON.stringify(['liga', 'semis_vuelta', 'final']));
+    res.redirect('/admin#tab-partidos');
+});
+
 // ══════════════════════════════════════════════════════════════
 //  API PARA EL BOT
 // ══════════════════════════════════════════════════════════════

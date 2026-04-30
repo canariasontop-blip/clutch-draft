@@ -2966,6 +2966,7 @@ function buildAdminPanelBlocks() {
             new ButtonBuilder().setCustomId('admp_limpiar_todo').setLabel('💥 LIMPIAR TODO').setStyle(ButtonStyle.Danger),
             new ButtonBuilder().setCustomId('admp_refresh').setLabel('🔄 Actualizar estado').setStyle(ButtonStyle.Success),
             new ButtonBuilder().setCustomId('admp_guia_app').setLabel('📱 Publicar guía app').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('admp_borrar_jugadores').setLabel('🗑️ Borrar jugadores').setStyle(ButtonStyle.Danger),
         ),
     ];
 
@@ -2994,6 +2995,12 @@ function buildAdminPanelBlocks() {
         new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('admp_ajustar_jornada').setLabel('✏️ Ajustar jornada actual').setStyle(ButtonStyle.Primary),
             new ButtonBuilder().setCustomId('admp_borrar_jornada').setLabel('🗑️ Borrar partidos de jornada').setStyle(ButtonStyle.Danger),
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('admp_formato_copa').setLabel('🏆 Formato copa (4 eq)').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('admp_ir_a_jornada').setLabel('⏪ Ir a jornada').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId('admp_crear_partido').setLabel('⚽ Crear partido manual').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('admp_resetear_jornada').setLabel('🔄 Resetear jornada actual').setStyle(ButtonStyle.Danger),
         ),
     ];
 
@@ -4469,6 +4476,50 @@ client.on('interactionCreate', async (interaction) => {
         return interaction.editReply({ content: `✅ **${partidos}** partido(s) de la jornada **${jornada}** eliminados de la DB.\n\n⚠️ Los canales de Discord de esa jornada **no se han borrado** — usa el botón **🗑️ Limpiar canales partido** si quieres eliminarlos también.` });
     }
 
+    // ── Modal: ir a jornada ──────────────────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_ir_a_jornada') {
+        await interaction.deferReply({ ephemeral: true });
+        const guild = interaction.guild;
+        const jornadaDestino = parseInt(interaction.fields.getTextInputValue('iaj_jornada').trim());
+        if (isNaN(jornadaDestino) || jornadaDestino < 1) return interaction.editReply({ content: '❌ Número de jornada inválido.' });
+        const matchesABorrar = db.prepare("SELECT * FROM matches WHERE jornada >= ? AND equipo2 != 'BYE'").all(jornadaDestino);
+        let borrados = 0;
+        for (const m of matchesABorrar) {
+            if (m.canal_discord) {
+                try { const ch = await guild.channels.fetch(m.canal_discord).catch(() => null); if (ch) await ch.delete(); } catch(e) {}
+            }
+            db.prepare('DELETE FROM matches WHERE id=?').run(m.id);
+            borrados++;
+        }
+        db.prepare("UPDATE settings SET value=? WHERE key='jornada_actual'").run(String(jornadaDestino));
+        db.prepare("UPDATE settings SET value='liga' WHERE key='fase_actual'").run();
+        await axios.post('http://localhost:3000/api/bot/recalcular-clasificacion').catch(() => {});
+        await actualizarCanalClasificacion(guild).catch(() => {});
+        await actualizarCanalResultadosPub(guild).catch(() => {});
+        await axios.post('http://localhost:3000/api/jornada-avanzada').catch(() => {});
+        return interaction.editReply({ content: `✅ Revertido a jornada **${jornadaDestino}**.\n• Borrados **${borrados}** partido(s) desde jornada ${jornadaDestino} en adelante.\n• Clasificación recalculada.\n• Usa **⚽ Crear partido manual** para crear los emparejamientos.` });
+    }
+
+    // ── Modal: crear partido manual ──────────────────────────
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_crear_partido') {
+        await interaction.deferReply({ ephemeral: true });
+        const guild = interaction.guild;
+        const nombreEq1 = interaction.fields.getTextInputValue('cp_equipo1').trim();
+        const nombreEq2 = interaction.fields.getTextInputValue('cp_equipo2').trim();
+        const team1 = db.prepare('SELECT * FROM teams WHERE capitan_username=?').get(nombreEq1);
+        const team2 = db.prepare('SELECT * FROM teams WHERE capitan_username=?').get(nombreEq2);
+        if (!team1) return interaction.editReply({ content: `❌ No se encontró el equipo **${nombreEq1}**. Comprueba el nombre exacto (capitan_username).` });
+        if (!team2) return interaction.editReply({ content: `❌ No se encontró el equipo **${nombreEq2}**. Comprueba el nombre exacto (capitan_username).` });
+        const jornadaCP = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
+        const r = db.prepare("INSERT INTO matches (jornada, equipo1, equipo2, estado) VALUES (?,?,?,'pendiente')").run(jornadaCP, team1.capitan_username, team2.capitan_username);
+        const matchId = r.lastInsertRowid;
+        const canalId = await crearCanalPartido(guild, matchId, jornadaCP, team1.capitan_username, team2.capitan_username, team1.capitan_id, team2.capitan_id);
+        if (canalId) db.prepare('UPDATE matches SET canal_discord=? WHERE id=?').run(canalId, matchId);
+        await actualizarCanalClasificacion(guild).catch(() => {});
+        await actualizarCanalResultadosPub(guild).catch(() => {});
+        return interaction.editReply({ content: `✅ Partido creado en jornada **${jornadaCP}**: **${team1.capitan_username}** vs **${team2.capitan_username}**${canalId ? ` — canal <#${canalId}>` : ''}.` });
+    }
+
     // ── Modal: crear canal de partido ────────────────────────
     if (interaction.isModalSubmit() && interaction.customId === 'modal_canal_crear') {
         await interaction.deferReply({ ephemeral: true });
@@ -5933,6 +5984,73 @@ client.on('interactionCreate', async (interaction) => {
                 );
                 await interaction.showModal(modal);
                 return;
+
+            // ── Formato copa ──────────────────────────────────────
+            } else if (id === 'admp_formato_copa') {
+                db.prepare("UPDATE settings SET value='1' WHERE key='total_rondas_swiss'").run();
+                db.prepare("UPDATE settings SET value=? WHERE key='fases_torneo'").run(JSON.stringify(['liga', 'semis_vuelta', 'final']));
+                await interaction.editReply({ content: '✅ Formato cambiado a **Copa — Semifinal ida+vuelta+Final**.\n• J1 = Semifinales de ida.\n• J2 = Semifinales vuelta (local/visitante invertidos).\n• J3 = Final (ganadores por agregado).' });
+
+            // ── Ir a jornada ──────────────────────────────────────
+            } else if (id === 'admp_ir_a_jornada') {
+                const modal = new ModalBuilder().setCustomId('modal_ir_a_jornada').setTitle('Ir a jornada');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('iaj_jornada').setLabel('Número de jornada destino (ej: 2)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: 2').setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
+
+            // ── Crear partido manual ──────────────────────────────
+            } else if (id === 'admp_crear_partido') {
+                const modal = new ModalBuilder().setCustomId('modal_crear_partido').setTitle('Crear partido manual');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cp_equipo1').setLabel('Equipo 1 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Mizrra').setRequired(true)
+                    ),
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder().setCustomId('cp_equipo2').setLabel('Equipo 2 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Barou').setRequired(true)
+                    )
+                );
+                await interaction.showModal(modal);
+                return;
+
+            // ── Resetear jornada actual ───────────────────────────
+            } else if (id === 'admp_resetear_jornada') {
+                const jornadaReset = parseInt(db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '1');
+                const pendientesReset = db.prepare("SELECT * FROM matches WHERE jornada=? AND estado='pendiente'").all(jornadaReset);
+                if (!pendientesReset.length) {
+                    await interaction.editReply({ content: `⚠️ No hay partidos pendientes en jornada **${jornadaReset}** que borrar.` });
+                } else {
+                    for (const m of pendientesReset) {
+                        if (m.canal_discord) {
+                            try { const ch = await guild.channels.fetch(m.canal_discord).catch(() => null); if (ch) await ch.delete(); } catch(e) {}
+                        }
+                        db.prepare('DELETE FROM matches WHERE id=?').run(m.id);
+                    }
+                    await interaction.editReply({ content: `✅ Borrados **${pendientesReset.length}** partido(s) pendientes de jornada **${jornadaReset}**.\nUsa **⚽ Crear partido manual** para crear los emparejamientos.` });
+                }
+
+            // ── Borrar jugadores ──────────────────────────────────
+            } else if (id === 'admp_borrar_jugadores') {
+                const total = db.prepare('SELECT COUNT(*) as c FROM players').get()?.c || 0;
+                if (!total) {
+                    await interaction.editReply({ content: 'ℹ️ No hay jugadores registrados.' });
+                } else {
+                    const rowConfirm = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('admp_borrar_jugadores_confirm').setLabel(`🗑️ Sí, borrar ${total} jugadores`).setStyle(ButtonStyle.Danger),
+                        new ButtonBuilder().setCustomId('admp_limpiar_todo_cancel').setLabel('❌ Cancelar').setStyle(ButtonStyle.Secondary)
+                    );
+                    await interaction.editReply({ content: `⚠️ Esto borrará **${total} jugador(es)** registrados, sus picks y preinscripciones. Esta acción **no borra equipos ni partidos**. ¿Continuar?`, components: [rowConfirm] });
+                }
+                return;
+
+            } else if (id === 'admp_borrar_jugadores_confirm') {
+                db.prepare('DELETE FROM players').run();
+                db.prepare('DELETE FROM picks').run();
+                db.prepare('DELETE FROM preinscripciones').run();
+                await interaction.editReply({ content: '✅ Lista de jugadores, picks y preinscripciones eliminados.', components: [] });
             }
 
         } catch(e) {
