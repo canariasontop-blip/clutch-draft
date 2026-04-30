@@ -3719,6 +3719,16 @@ client.on('messageCreate', async (message) => {
             // Forzar comprobación inmediata
             await comprobarAvanceJornada(guild).catch(() => {});
 
+        // ── !admin borrar-jugadores ───────────────────────────
+        } else if (sub === 'borrar-jugadores') {
+            const total = db.prepare('SELECT COUNT(*) as c FROM players').get()?.c || 0;
+            if (!total) return message.reply('ℹ️ No hay jugadores registrados.');
+            db.prepare('DELETE FROM players').run();
+            db.prepare('DELETE FROM picks').run();
+            db.prepare('DELETE FROM preinscripciones').run();
+            await axios.post('http://localhost:3000/api/torneo-limpiado').catch(() => {});
+            await message.reply(`✅ Borrados **${total}** jugadores. La lista queda vacía para el siguiente torneo.`);
+
         // ── !admin seed [10] ──────────────────────────────────
         // Carga datos de prueba directamente sin tocar la terminal
         } else if (sub === 'seed') {
