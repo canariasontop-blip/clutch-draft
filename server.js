@@ -63,6 +63,8 @@ try {
 } catch(e) {
     console.warn('Error creando tabla historial_torneos:', e.message);
 }
+// Migración: añadir columna partidos si no existe
+try { db.prepare(`ALTER TABLE historial_torneos ADD COLUMN partidos TEXT DEFAULT NULL`).run(); } catch(e) {}
 
 const app    = express();
 const server = http.createServer(app);
@@ -1576,7 +1578,7 @@ app.post('/admin/ir-a-jornada', requireLogin, requireAdmin, (req, res) => {
     db.prepare("UPDATE settings SET value='liga' WHERE key='fase_actual'").run();
     recalcularClasificacion();
     io.emit('clasificacion-update');
-    axios.post('http://localhost:3001/api/actualizar-panel-inscripciones').catch(() => {});
+    axios.post('http://localhost:3001/api/actualizar-clasificacion').catch(() => {});
     res.redirect('/admin#tab-partidos');
 });
 

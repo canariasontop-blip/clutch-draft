@@ -2089,11 +2089,25 @@ async function guardarHistorial() {
     try {
         const tabla = db.prepare('SELECT * FROM clasificacion ORDER BY puntos DESC, pg DESC, gf DESC').all();
         if (!tabla.length) return null;
-        const campeon    = tabla[0]?.equipo_nombre || 'N/A';
-        const subcampeon = tabla[1]?.equipo_nombre || 'N/A';
+        let campeon    = tabla[0]?.equipo_nombre || 'N/A';
+        let subcampeon = tabla[1]?.equipo_nombre || 'N/A';
+
+        // Para formato copa (fases con 'final'), determinar campeón desde el resultado real de la final
+        const fasesRaw = db.prepare("SELECT value FROM settings WHERE key='fases_torneo'").get()?.value;
+        const fases = fasesRaw ? JSON.parse(fasesRaw) : [];
+        if (fases.includes('final')) {
+            const finalMatch = db.prepare("SELECT * FROM matches WHERE estado='finalizado' ORDER BY id DESC LIMIT 1").get();
+            if (finalMatch && finalMatch.goles1 !== null && finalMatch.goles2 !== null && finalMatch.goles1 !== finalMatch.goles2) {
+                campeon    = finalMatch.goles1 > finalMatch.goles2 ? finalMatch.equipo1 : finalMatch.equipo2;
+                subcampeon = finalMatch.goles1 > finalMatch.goles2 ? finalMatch.equipo2 : finalMatch.equipo1;
+            }
+        }
+
         const nEquipos   = tabla.length;
         let formato = 'Liga';
-        if (nEquipos <= 6) formato = '2 Grupos + Final';
+        if (fases.includes('final') && fases.includes('semis_vuelta')) formato = 'Copa (Semis ida+vuelta+Final)';
+        else if (fases.includes('final')) formato = 'Eliminatoria';
+        else if (nEquipos <= 6) formato = '2 Grupos + Final';
         else if (nEquipos <= 12) formato = '2 Grupos + Semis + Final';
         const fechaInicio = db.prepare("SELECT value FROM settings WHERE key='torneo_inicio'").get()?.value || new Date().toISOString();
         const partidos = db.prepare(`SELECT * FROM matches ORDER BY jornada ASC, id ASC`).all();
@@ -5390,6 +5404,62 @@ client.on('interactionCreate', async (interaction) => {
             return;
         }
 
+        // Botones que abren modal — deben ir ANTES de deferReply
+        if (id === 'admp_ajustar_jornada') {
+            const jornadaActualAhora = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';
+            const modal = new ModalBuilder().setCustomId('modal_ajustar_jornada').setTitle('Ajustar jornada actual');
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('aj_valor')
+                        .setLabel(`Jornada actual (ahora: ${jornadaActualAhora}) → nueva:`)
+                        .setStyle(TextInputStyle.Short)
+                        .setPlaceholder('Ej: 1')
+                        .setRequired(true)
+                )
+            );
+            await interaction.showModal(modal);
+            return;
+        }
+        if (id === 'admp_borrar_jornada') {
+            const modal = new ModalBuilder().setCustomId('modal_borrar_jornada').setTitle('Borrar partidos de jornada');
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('bj_jornada')
+                        .setLabel('Número de jornada a borrar (ej: 3)')
+                        .setStyle(TextInputStyle.Short)
+                        .setPlaceholder('Ej: 3')
+                        .setRequired(true)
+                )
+            );
+            await interaction.showModal(modal);
+            return;
+        }
+        if (id === 'admp_ir_a_jornada') {
+            const modal = new ModalBuilder().setCustomId('modal_ir_a_jornada').setTitle('Ir a jornada');
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder().setCustomId('iaj_jornada').setLabel('Número de jornada destino (ej: 2)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: 2').setRequired(true)
+                )
+            );
+            await interaction.showModal(modal);
+            return;
+        }
+        if (id === 'admp_crear_partido') {
+            const modal = new ModalBuilder().setCustomId('modal_crear_partido').setTitle('Crear partido manual');
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder().setCustomId('cp_equipo1').setLabel('Equipo 1 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Mizrra').setRequired(true)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder().setCustomId('cp_equipo2').setLabel('Equipo 2 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Barou').setRequired(true)
+                )
+            );
+            await interaction.showModal(modal);
+            return;
+        }
+
         await interaction.deferReply({ ephemeral: true });
 
         try {
@@ -5898,37 +5968,6 @@ client.on('interactionCreate', async (interaction) => {
             } else if (id === 'admp_forzar_jornada_cancelar') {
                 await interaction.editReply({ content: '↩️ Operación cancelada.', components: [] });
 
-            } else if (id === 'admp_ajustar_jornada') {
-                const jornadaActualAhora = db.prepare("SELECT value FROM settings WHERE key='jornada_actual'").get()?.value || '?';
-                const modal = new ModalBuilder().setCustomId('modal_ajustar_jornada').setTitle('Ajustar jornada actual');
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('aj_valor')
-                            .setLabel(`Jornada actual (ahora: ${jornadaActualAhora}) → nueva:`)
-                            .setStyle(TextInputStyle.Short)
-                            .setPlaceholder('Ej: 1')
-                            .setRequired(true)
-                    )
-                );
-                await interaction.showModal(modal);
-                return;
-
-            } else if (id === 'admp_borrar_jornada') {
-                const modal = new ModalBuilder().setCustomId('modal_borrar_jornada').setTitle('Borrar partidos de jornada');
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder()
-                            .setCustomId('bj_jornada')
-                            .setLabel('Número de jornada a borrar (ej: 3)')
-                            .setStyle(TextInputStyle.Short)
-                            .setPlaceholder('Ej: 3')
-                            .setRequired(true)
-                    )
-                );
-                await interaction.showModal(modal);
-                return;
-
             // ── Canales de Partido ─────────────────────────────────
             } else if (id === 'admp_canal_lista') {
                 const todosPartidos = db.prepare("SELECT id, jornada, equipo1, equipo2, estado, canal_discord FROM matches ORDER BY jornada, id").all();
@@ -5990,31 +6029,6 @@ client.on('interactionCreate', async (interaction) => {
                 db.prepare("UPDATE settings SET value='1' WHERE key='total_rondas_swiss'").run();
                 db.prepare("UPDATE settings SET value=? WHERE key='fases_torneo'").run(JSON.stringify(['liga', 'semis_vuelta', 'final']));
                 await interaction.editReply({ content: '✅ Formato cambiado a **Copa — Semifinal ida+vuelta+Final**.\n• J1 = Semifinales de ida.\n• J2 = Semifinales vuelta (local/visitante invertidos).\n• J3 = Final (ganadores por agregado).' });
-
-            // ── Ir a jornada ──────────────────────────────────────
-            } else if (id === 'admp_ir_a_jornada') {
-                const modal = new ModalBuilder().setCustomId('modal_ir_a_jornada').setTitle('Ir a jornada');
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder().setCustomId('iaj_jornada').setLabel('Número de jornada destino (ej: 2)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: 2').setRequired(true)
-                    )
-                );
-                await interaction.showModal(modal);
-                return;
-
-            // ── Crear partido manual ──────────────────────────────
-            } else if (id === 'admp_crear_partido') {
-                const modal = new ModalBuilder().setCustomId('modal_crear_partido').setTitle('Crear partido manual');
-                modal.addComponents(
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder().setCustomId('cp_equipo1').setLabel('Equipo 1 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Mizrra').setRequired(true)
-                    ),
-                    new ActionRowBuilder().addComponents(
-                        new TextInputBuilder().setCustomId('cp_equipo2').setLabel('Equipo 2 (capitan_username exacto)').setStyle(TextInputStyle.Short).setPlaceholder('Ej: Barou').setRequired(true)
-                    )
-                );
-                await interaction.showModal(modal);
-                return;
 
             // ── Resetear jornada actual ───────────────────────────
             } else if (id === 'admp_resetear_jornada') {
