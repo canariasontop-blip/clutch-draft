@@ -3391,6 +3391,7 @@ client.on('messageCreate', async (message) => {
                     }
                 } catch(e) { console.error('Error publicando panel inscripciones:', e.message); }
                 await anunciarInscripcionesAbiertas(guild).catch(() => {});
+                await publicarListaDraft(guild).catch(() => {});
                 await message.reply('✅ Inscripciones **abiertas** y panel publicado en <#' + CANAL_INSCRIPCIONES + '>.');
             } else if (par === 'cerrar') {
                 await cerrarInscripciones();
@@ -5367,6 +5368,7 @@ client.on('interactionCreate', async (interaction) => {
                     }
                 } catch(e) { console.error('Error publicando panel inscripciones:', e.message); }
                 await anunciarInscripcionesAbiertas(guild).catch(() => {});
+                await publicarListaDraft(guild).catch(() => {});
                 await interaction.editReply({ content: '✅ Inscripciones **abiertas** y panel publicado en <#' + CANAL_INSCRIPCIONES + '>.' });
 
             } else if (id === 'admp_insc_cerrar') {
